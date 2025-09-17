@@ -1,6 +1,5 @@
 package com.example.webserver.handler;
 
-
 import org.java_websocket.client.WebSocketClient;
 import org.java_websocket.handshake.ServerHandshake;
 import org.springframework.web.socket.CloseStatus;
@@ -14,33 +13,35 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class ProxyWebSocketHandler extends TextWebSocketHandler {
 
-    // 保存客户端session -> 对应的后端代理连接
+    // A map to store client sessions and their corresponding WebSocket proxy connections
     private final Map<WebSocketSession, WebSocketClient> proxies = new ConcurrentHashMap<>();
 
-    // 真实 license （这里写死，也可以从配置文件里读）
-    private static final String REAL_LICENSE = "sk_navtalk_nrVpx4iGVsy8vfCbCBmkCeFnk8P2iOfL";
+    // Real license key (used to replace the frontend's license during proxy connection)
+    private static final String REAL_LICENSE = "sk_navtalk_key";
 
 
     @Override
     public void afterConnectionEstablished(WebSocketSession clientSession) throws Exception {
-        // 原始 URL 参数
-        String query = clientSession.getUri().getQuery(); // license=xxx&characterName=man2
+        // Get the original query parameters from the client's URL (e.g., license=xxx&characterName=man2)
+        String query = clientSession.getUri().getQuery();
         String newQuery = rewriteQuery(query);
 
-        // 拼接目标地址：改 domain，保留路径和其他参数
+        // Construct the target URL by changing the domain, but keeping the path and other query parameters
         final String targetUrl = "wss://transfer.navtalk.ai/api/realtime-api"
                 + (!newQuery.isEmpty() ? "?" + newQuery : "");
 
-        // 创建到目标服务的代理连接
+        // Create a proxy WebSocket connection to the target service
         WebSocketClient proxy = new WebSocketClient(new URI(targetUrl)) {
             @Override
             public void onOpen(ServerHandshake handshakedata) {
-                System.out.println("代理已连接到目标: " + targetUrl);
+                // Log when the proxy connection to the target is established
+                System.out.println("Proxy connected to target: " + targetUrl);
             }
 
             @Override
             public void onMessage(String message) {
                 try {
+                    // Send the received message to the client session if it is still open
                     if (clientSession.isOpen()) {
                         clientSession.sendMessage(new TextMessage(message));
                     }
@@ -52,6 +53,7 @@ public class ProxyWebSocketHandler extends TextWebSocketHandler {
             @Override
             public void onClose(int code, String reason, boolean remote) {
                 try {
+                    // Close the client session if the proxy connection is closed
                     if (clientSession.isOpen()) {
                         clientSession.close();
                     }
@@ -64,48 +66,55 @@ public class ProxyWebSocketHandler extends TextWebSocketHandler {
             }
         };
 
+        // Connect the proxy and add it to the proxies map
         proxy.connect();
         proxies.put(clientSession, proxy);
-        System.out.println("前端连接进来: " + clientSession.getId());
+        System.out.println("Frontend connected: " + clientSession.getId());
     }
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) {
         WebSocketClient proxy = proxies.get(session);
         if (proxy != null && proxy.isOpen()) {
+            // Send the client's message to the proxy WebSocket
             proxy.send(message.getPayload());
         }
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) {
+        // Clean up the proxy connection when the client session is closed
         WebSocketClient proxy = proxies.remove(session);
         if (proxy != null && proxy.isOpen()) {
             proxy.close();
         }
-        System.out.println("连接关闭: " + session.getId());
+        System.out.println("Connection closed: " + session.getId());
     }
 
+    // This method rewrites the query parameters, replacing the license value with the real license
     private String rewriteQuery(String query) {
         if (query == null) return "";
         StringBuilder sb = new StringBuilder();
         for (String part : query.split("&")) {
             if (part.startsWith("license=")) {
+                // Log the license value from the frontend
+                System.out.println("License from frontend: " + part.split("=")[1]);
+
                 // ===============================
-                // ⚠️ 注意：
-                // 这里 demo 是写死替换成一个真实的 license。
-                // 实际项目里，你应该根据前端传递的 license 占位符（例如 "Your_token"），
-                // 去数据库 / Redis / 配置中心查询真正对应的 license，
-                // 然后替换掉。
+                // ⚠️ Note:
+                // Here, we are hardcoding the license replacement.
+                // In a real-world project, you should replace the license value
+                // with the actual one, typically fetched from a database, Redis, or a config center.
                 // ===============================
+
+                // Replace the license value with the real license
                 sb.append("license=").append(REAL_LICENSE);
             } else {
                 sb.append(part);
             }
             sb.append("&");
         }
-        if (sb.length() > 0) sb.setLength(sb.length() - 1); // 去掉最后一个&
+        if (sb.length() > 0) sb.setLength(sb.length() - 1); // Remove the trailing "&"
         return sb.toString();
     }
-
 }

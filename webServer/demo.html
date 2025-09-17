@@ -164,40 +164,40 @@
             border-radius: 10px;
         }
 
-        
+
         /* Chat container */
         .item .item-content {
-        padding: 12px 18px;
-        border-radius: 18px;
-        font-size: 16px;
-        line-height: 1.4;
-        animation: fadeIn 0.3s ease-out;
-        margin-bottom: 15px;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 16px;
+            line-height: 1.4;
+            animation: fadeIn 0.3s ease-out;
+            margin-bottom: 15px;
         }
 
         .item {
-        display: flex;
+            display: flex;
         }
 
         .item.item-left {
-        justify-content: start;
+            justify-content: start;
         }
 
         .item.item-left .item-content {
-        background: white;
-        color: #333;
-        border-bottom-left-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background: white;
+            color: #333;
+            border-bottom-left-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
 
         .item.item-right {
-        justify-content: end;
+            justify-content: end;
         }
 
         .item.item-right .item-content {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        color: white;
-        border-bottom-right-radius: 4px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-bottom-right-radius: 4px;
         }
 
 
@@ -346,13 +346,13 @@
     <!-- Chat content -->
     <div class="ah-character-chat" :hidden="false">
 
-                <div class="scroller"></div>
+        <div class="scroller"></div>
 
         <div class="character-chat-item item-user" style="display: none;">
-            
+
         </div>
         <div class="character-chat-item item-character" style="display: none;">
-           
+
         </div>
 
     </div>
@@ -365,20 +365,31 @@
 
 
 <script>
+    // ❗You need to manually modify the following variables.
+    // ✒️ api key
+    const LICENSE = "your_key"
+
+    // ✒️ character name. Currently supported characters include: man2, man3, man4, girl2, girl3, girl4, girl5, girl6, girl7, girl8
+    // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
+    const CHARACTER_NAME = "man2"
+
+    // ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
+    // You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
+    const VOICE = "cedar"
+
+    // ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
+    const PROMPT = "You are a helpful assistant."
+
+    // web server url
+    let baseUrl = "localhost:8810"
+    let webrtcUrl = "transfer.navtalk.ai"
     // Global variable for connection state
     let peerConnectionA = null;
     let resultSocket = null;
     // Global state management
     let pc = null;
     let currentTracks = [];
-
-    let backendUrl = "localhost:8810"
-    let baseUrl = "transfer.navtalk.ai"
-
     let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-
-    // license = "sk_navtalk_gJPEiHXxspVQ7HQrjjgqPEQUyWsFf4DC"
-    license = "Your_token"
 
     // Digital human agent, real-time voice conversation button
     async function initDigtalHumanRealtimeButton() {
@@ -396,7 +407,6 @@
 
         // Render chat history
         // renderRealtimeChatHistory();
-
         const realtimeButton = document.getElementById('btnRealtime');
         const conversationBg = document.querySelector('.conversation-bg'); // Select the entire div containing the background image
 
@@ -531,9 +541,9 @@
         }
 
         async function startWebSocket() {
-            websocketUrl = "ws://"+backendUrl+"/api/realtime-api";
+            websocketUrl = "ws://"+baseUrl+"/api/realtime-api";
             // Retrieve license information from Chrome storage
-            const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(license)}&characterName=man2`;
+            const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
 
             // Initialize the WebSocket connection
             socket = new WebSocket(websocketUrlWithParams);
@@ -594,7 +604,7 @@
 
             let targetSessionId = "123";
             console.log("Start connecting " + (new Date()).toLocaleTimeString())
-            resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + license);  // Replace with your WebSocket server address
+            resultSocket = new WebSocket('wss://'+webrtcUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
 
             let localStream;
 
@@ -772,14 +782,14 @@
             let sessionConfig = {
                 type: "session.update",
                 session: {
-                    instructions: "chat",
+                    instructions: PROMPT,
                     turn_detection: {
                         type: "server_vad",
                         threshold: 0.5,
                         prefix_padding_ms: 300,
                         silence_duration_ms: 500
                     },
-                    voice: "ash",
+                    voice: VOICE,
                     temperature: 1,
                     max_response_output_tokens: 4096,
                     modalities: ["text", "audio"],
@@ -954,7 +964,7 @@
                     console.log("data：" + data)
                     handleFunctionCall(data);
                     break;
-                
+
                 case "session.gpu_full":
                     this.$message.error("The gpu resources are full. Please try again later!")
                     break;
@@ -962,7 +972,7 @@
                 case "session.insufficient_balance":
                     this.$message.error("Insufficient balance, service has stopped, please recharge!")
                     break;
-          
+
                 default:
                     console.warn("Unhandled event type: " + data.type);
             }
@@ -1006,7 +1016,7 @@
                     },
                     body: JSON.stringify({
                         userInput: userInput,  // Pass user input to backend
-                        license: license,
+                        license: LICENSE,
                         chatId: chatId
                     }),
                 })
@@ -1186,7 +1196,7 @@
             return tmp.buffer;
         }
 
-       
+
 
         async function appendRealtimeChatHistory(role, content) {
             let history = localStorage.getItem("realtimeChatHistory");
@@ -1196,43 +1206,43 @@
 
             localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
         }
-        
+
     }
 
     async function initDigtalHumanHistoryData(){
 
-      let realtimeChatHistory = [];
+        let realtimeChatHistory = [];
 
-      const historyStr = localStorage.getItem("realtimeChatHistory");
-      realtimeChatHistory = historyStr ? JSON.parse(historyStr) : [];
+        const historyStr = localStorage.getItem("realtimeChatHistory");
+        realtimeChatHistory = historyStr ? JSON.parse(historyStr) : [];
 
-      // 进入页面，渲染历史对话记录
-      if (realtimeChatHistory && realtimeChatHistory.length > 0) {
-        realtimeChatHistory.forEach(item => {
-          appendContentToList(item.role, item.content);
-        })
-        document.querySelector('.scroller').scrollTop = document.querySelector('.scroller').scrollHeight;
-      }
+        // 进入页面，渲染历史对话记录
+        if (realtimeChatHistory && realtimeChatHistory.length > 0) {
+            realtimeChatHistory.forEach(item => {
+                appendContentToList(item.role, item.content);
+            })
+            document.querySelector('.scroller').scrollTop = document.querySelector('.scroller').scrollHeight;
+        }
     }
 
     function appendContentToList(role, context) {
-      const container = document.createElement('div');
-      container.classList.add('item', role === 'user' ? 'item-right' : 'item-left');
+        const container = document.createElement('div');
+        container.classList.add('item', role === 'user' ? 'item-right' : 'item-left');
 
-      const contentDiv = document.createElement('div');
-      contentDiv.classList.add('item-content');
-      const contentSpan = document.createElement('span');
-      contentSpan.textContent = context; // Display transcribed user input text
-      contentDiv.appendChild(contentSpan);
-      container.appendChild(contentDiv);
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('item-content');
+        const contentSpan = document.createElement('span');
+        contentSpan.textContent = context; // Display transcribed user input text
+        contentDiv.appendChild(contentSpan);
+        container.appendChild(contentDiv);
 
-      // Add the user message to the chat box
-      const chatContent = document.querySelector('.scroller');
-      chatContent.appendChild(container);
-      return contentSpan;
+        // Add the user message to the chat box
+        const chatContent = document.querySelector('.scroller');
+        chatContent.appendChild(container);
+        return contentSpan;
     }
 
-    
+
     initDigtalHumanHistoryData();
 
     initDigtalHumanRealtimeButton();
