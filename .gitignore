@@ -1,0 +1,42 @@
+# Root ignore for this repo
+
+# Node / Vite (VueClient)
+VueClient/node_modules/
+VueClient/dist/
+VueClient/.vite/
+VueClient/.cache/
+VueClient/npm-debug.log*
+VueClient/yarn-debug.log*
+VueClient/yarn-error.log*
+VueClient/pnpm-debug.log*
+VueClient/.env
+VueClient/.env.*
+!VueClient/.env.example
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Logs (anywhere)
+**/*.log
+logs/
+
+# Java / Maven / Gradle (WebServer and anywhere)
+WebServer/target/
+WebServer/.gradle/
+WebServer/build/
+WebServer/*.iml
+WebServer/.project
+WebServer/.classpath
+WebServer/.settings/
+**/target/
+**/build/
+
+# Maven wrapper binaries (optional to ignore)
+.mvn/wrapper/
+mvnw.cmd
+mvnw
+
+
