@@ -41,7 +41,7 @@ import { initDigtalHumanRealtimeButton, initDigtalHumanHistoryData } from '../li
 // Optional: import a Prism theme css from node_modules if desired
 // import 'prismjs/themes/prism.css'
 
-const staticImageSrc = 'https://easyaistorageaccount.blob.core.windows.net/easyai/man2.png'
+const staticImageSrc = 'https://api.navtalk.ai/uploadFiles/navtalk.Alex.png'
 const bgImageSrc = 'https://gd-hbimg.huaban.com/67869c1b642e1accb9378fb4af28a6f5729bd35530722-xfzjYw_fw1200'
 
 // Expose marked and Prism to window for legacy code compatibility if needed

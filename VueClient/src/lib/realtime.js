@@ -1,9 +1,18 @@
 // Ported from HtmlClient/demo.js to an ES module for Vue usage
 
-// Configuration variables (consider moving to environment variables)
+ // ❗You need to manually modify the following variables.
+// ✒️ api key
 const LICENSE = "sk_navtalk_your_key";
-const CHARACTER_NAME = "man2";
+
+// ✒️ character name. Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
+// You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
+const CHARACTER_NAME = "navtalk.Alex";
+
+// ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
+    // You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const VOICE = "cedar";
+
+// ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
 const PROMPT = "You are a helpful assistant.";
 
 let baseUrl = "transfer.navtalk.ai";
