@@ -1,67 +1,112 @@
 # NavTalk Samples
 
-本仓库是 **NavTalk 实时虚拟数字人平台** 的官方示例代码和软件开发工具包（SDK），专注于构建下一代实时数字人系统，尤其适用于智能客服和虚拟助手等领域。
+> Official sample code and Software Development Kit (SDK) for **NavTalk Real-time Virtual Digital Human Platform**
+
+Focused on building next-generation real-time digital human systems, especially suitable for intelligent customer service and virtual assistant applications.
 
 [![API Documentation](https://img.shields.io/badge/API-Documentation-green)](https://www.navtalk.ai/docs)
 [![License](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/licenses/MIT)
 [![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/navtalk/Samples/actions)
 
-## ✨ 核心特性
+---
 
-通过 NavTalk SDK，您的数字人将拥有以下能力：
+## ✨ Core Features
 
--  **智能对话与决策** - 核心对话能力由大语言模型驱动，实现深度的语言理解和多轮推理。
--  **多语言实时交互** - 支持 50+ 语言的实时语音识别与合成，准确率超过 95%。
--  **自然表情与口型同步** - 基于深度学习实现精准的音频-口型同步，提升数字人表达的自然度和真实感。
--  **情感感知与自适应** - 通过情感识别技术，数字人能够感知用户的情绪并根据情绪调整回应方式，使互动更加贴近人类的沟通方式。
--  **高度可定制化** - 可定义角色的人格、语言风格、外观和个性化设置，完全满足不同场景的需求。
--  **低延迟实时通信** - 基于 WebSocket 和 WebRTC 构建，确保端到端的通信延迟低于 2000ms，适应实时交互场景。
+With NavTalk SDK, your digital human will have the following capabilities:
 
-未来，NavTalk SDK 还将支持更多功能，如**摄像头捕捉**、**在线联网**等，进一步提升数字人的表现力和互动体验。
+- **🧠 Intelligent Conversation & Decision Making** - Core conversational abilities powered by large language models, enabling deep language understanding and multi-turn reasoning
+- **🌍 Multi-language Real-time Interaction** - Supports real-time speech recognition and synthesis for 50+ languages with over 95% accuracy
+- **👄 Natural Expression & Lip Sync** - Deep learning-based precise audio-lip synchronization, enhancing the naturalness and realism of digital human expressions
+- **😊 Emotional Perception & Adaptation** - Through emotion recognition technology, digital humans can perceive user emotions and adjust responses accordingly, making interactions more human-like
+- **🎨 Highly Customizable** - Define character personality, language style, appearance, and personalized settings to fully meet different scenario requirements
+- **⚡ Low-latency Real-time Communication** - Built on WebSocket and WebRTC, ensuring end-to-end communication latency below 2000ms
 
-## 📁 项目结构
+### 🔮 Future Roadmap
 
-该仓库包含以下主要目录和文件：
+NavTalk SDK will also support more features such as **camera capture**, **online connectivity**, and more to further enhance digital human expressiveness and interactive experience.
 
-- **`HtmlClient/`**：基础的 HTML 客户端示例，展示了如何使用原生 HTML 和 JavaScript 构建前端应用。
-- **`VueClient/`**：基于 Vue.js 的前端示例，展示了如何使用 Vue.js 构建现代化的前端应用。
-- **`WebServer/`**：一个简单的 Web 服务器示例，展示了如何使用 Java 构建后端服务来与前端进行交互。
+---
 
+## 📁 Project Structure
 
-## 🛠️ 技术栈
+```
+Samples/
+├── HtmlClient/          # Basic HTML client example
+├── VueClient/           # Vue.js frontend example
+└── WebServer/           # Java backend service example
+```
 
-- **前端**：HTML, JavaScript, Vue.js
-- **后端**：Java（使用 Maven 管理依赖）
+### Directory Description
 
-## 🚀 快速开始
+- **`HtmlClient/`** - Basic HTML client example demonstrating how to build frontend applications using native HTML and JavaScript
+- **`VueClient/`** - Vue.js-based frontend example demonstrating how to build modern frontend applications using Vue.js
+- **`WebServer/`** - Simple web server example demonstrating how to build backend services using Java to interact with frontend
 
-### 1. 克隆仓库
+---
 
-首先，克隆本仓库到本地：
-`git clone https://github.com/navtalk/Samples.git`
-### 2. 安装依赖
+## 🛠️ Tech Stack
 
-- 对于 **VueClient/**，您需要安装前端依赖：
-`cd VueClient
-npm install`
-- 对于 **WebServer/**，您需要使用 Maven 来安装后端依赖：
-`cd WebServer
-mvn install`
-### 3. 运行项目
-- **前端**：根据项目配置，运行 Vue 客户端或 HTML 客户端来启动前端应用。
-- **后端**：运行 Java 后端服务，启动 Web 服务器：
-根据不同的项目结构和需求，启动相应的前端和后端服务以进行开发和测试。
+| Layer | Technology |
+|-------|------------|
+| **Frontend** | HTML, JavaScript, Vue.js |
+| **Backend** | Java (Maven dependency management) |
+| **Communication** | WebSocket, WebRTC |
 
-## 📄 许可协议
+---
 
-该项目使用 [MIT 许可证](https://opensource.org/licenses/MIT)。
+## 🚀 Quick Start
 
+### 1. Clone Repository
 
-## 🌐 官方网站
+```bash
+git clone https://github.com/navtalk/Samples.git
+cd Samples
+```
 
-有关 NavTalk SDK 的更多信息，请访问 [NavTalk 官方网站](https://www.navtalk.ai)。
+### 2. Install Dependencies
 
-## 📜 API 文档
+#### Frontend Dependencies (VueClient)
 
-为了更好地理解 NavTalk 的 API，您可以参考我们的官方文档：[NavTalk API 文档](https://www.navtalk.ai/docs) 📖.
+```bash
+cd VueClient
+npm install
+```
+
+#### Backend Dependencies (WebServer)
+
+```bash
+cd WebServer
+mvn install
+```
+
+### 3. Run Project
+
+#### Start Frontend Application
+
+- **HTML Client**: Open `HtmlClient/demo.html` directly in your browser
+- **Vue Client**: Run `npm run dev` to start the development server
+
+#### Start Backend Service
+
+```bash
+cd WebServer
+mvn spring-boot:run
+```
+
+---
+
+## 📚 Documentation Resources
+
+- **🌐 Official Website**: [NavTalk Official Website](https://www.navtalk.ai)
+- **📖 API Documentation**: [NavTalk API Documentation](https://www.navtalk.ai/docs)
+- **📄 License**: [MIT License](https://opensource.org/licenses/MIT)
+
+---
+
+## 📞 Support
+
+If you encounter any issues during use, please contact us through the following channels:
+
+- Visit [Official Website](https://www.navtalk.ai) for support
+- Check [API Documentation](https://www.navtalk.ai/docs) for detailed instructions
 
