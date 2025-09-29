@@ -1,0 +1,523 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		175AB6533E5A1965BDB960D2 /* Pods_NavTalk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4A354636D9D3F9B4FF581 /* Pods_NavTalk.framework */; };
+		A94A34012E85413900563F7A /* RecordAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A94A34002E85413900563F7A /* RecordAudioManager.swift */; };
+		A9779AB62E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9779AB42E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift */; };
+		A9779AB72E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = A9779AB52E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib */; };
+		A9779ABB2E8A74DB002E9831 /* NetworkMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9779ABA2E8A74DB002E9831 /* NetworkMonitor.swift */; };
+		A9C0AAD52E84D420004F64C9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AAD42E84D420004F64C9 /* AppDelegate.swift */; };
+		A9C0AADE2E84D421004F64C9 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = A9C0AADD2E84D421004F64C9 /* Assets.xcassets */; };
+		A9C0AAE12E84D421004F64C9 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = A9C0AADF2E84D421004F64C9 /* LaunchScreen.storyboard */; };
+		A9C0AAF52E84D57D004F64C9 /* RealTimeTalkVC.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AAF42E84D57D004F64C9 /* RealTimeTalkVC.swift */; };
+		A9C0AAF72E85143F004F64C9 /* WebSocketManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AAF62E85143F004F64C9 /* WebSocketManager.swift */; };
+		A9C0AAF92E85144F004F64C9 /* WebRTCManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AAF82E85144F004F64C9 /* WebRTCManager.swift */; };
+		A9C0AB192E851869004F64C9 /* ChatTableViewAnswerCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = A9C0AB162E851869004F64C9 /* ChatTableViewAnswerCell.xib */; };
+		A9C0AB1C2E851869004F64C9 /* ChatTableViewAnswerCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AB152E851869004F64C9 /* ChatTableViewAnswerCell.swift */; };
+		A9C0AB1E2E8518AB004F64C9 /* CommonDefineClass.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AB1D2E8518AB004F64C9 /* CommonDefineClass.swift */; };
+		A9C0AB202E852C34004F64C9 /* Extention+MBProgress.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9C0AB1F2E852C34004F64C9 /* Extention+MBProgress.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		72A4A354636D9D3F9B4FF581 /* Pods_NavTalk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NavTalk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		8FB263EC3324E36043610D5F /* Pods-NavTalk.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NavTalk.debug.xcconfig"; path = "Target Support Files/Pods-NavTalk/Pods-NavTalk.debug.xcconfig"; sourceTree = "<group>"; };
+		A94A34002E85413900563F7A /* RecordAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordAudioManager.swift; sourceTree = "<group>"; };
+		A9779AB42E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableViewQuestionCell.swift; sourceTree = "<group>"; };
+		A9779AB52E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChatTableViewQuestionCell.xib; sourceTree = "<group>"; };
+		A9779ABA2E8A74DB002E9831 /* NetworkMonitor.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NetworkMonitor.swift; sourceTree = "<group>"; };
+		A9C0AAD12E84D420004F64C9 /* NavTalk.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NavTalk.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		A9C0AAD42E84D420004F64C9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		A9C0AADD2E84D421004F64C9 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		A9C0AAE02E84D421004F64C9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
+		A9C0AAE22E84D421004F64C9 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		A9C0AAF42E84D57D004F64C9 /* RealTimeTalkVC.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RealTimeTalkVC.swift; sourceTree = "<group>"; };
+		A9C0AAF62E85143F004F64C9 /* WebSocketManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebSocketManager.swift; sourceTree = "<group>"; };
+		A9C0AAF82E85144F004F64C9 /* WebRTCManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WebRTCManager.swift; sourceTree = "<group>"; };
+		A9C0AAFA2E851582004F64C9 /* NavTalk-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = "NavTalk-Bridging-Header.h"; sourceTree = "<group>"; };
+		A9C0AB152E851869004F64C9 /* ChatTableViewAnswerCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableViewAnswerCell.swift; sourceTree = "<group>"; };
+		A9C0AB162E851869004F64C9 /* ChatTableViewAnswerCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChatTableViewAnswerCell.xib; sourceTree = "<group>"; };
+		A9C0AB1D2E8518AB004F64C9 /* CommonDefineClass.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CommonDefineClass.swift; sourceTree = "<group>"; };
+		A9C0AB1F2E852C34004F64C9 /* Extention+MBProgress.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extention+MBProgress.swift"; sourceTree = "<group>"; };
+		D99CB4CC5CA61C628D40E1E5 /* Pods-NavTalk.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NavTalk.release.xcconfig"; path = "Target Support Files/Pods-NavTalk/Pods-NavTalk.release.xcconfig"; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		A9C0AACE2E84D420004F64C9 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				175AB6533E5A1965BDB960D2 /* Pods_NavTalk.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		554A490458E8D592DC94B48B /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				72A4A354636D9D3F9B4FF581 /* Pods_NavTalk.framework */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
+		A9C0AAC82E84D420004F64C9 = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAEA2E84D4FF004F64C9 /* NavTalk */,
+				A9C0AAD22E84D420004F64C9 /* Products */,
+				CBD496E66970409BC40CAB36 /* Pods */,
+				554A490458E8D592DC94B48B /* Frameworks */,
+			);
+			sourceTree = "<group>";
+		};
+		A9C0AAD22E84D420004F64C9 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAD12E84D420004F64C9 /* NavTalk.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A9C0AAEA2E84D4FF004F64C9 /* NavTalk */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAD42E84D420004F64C9 /* AppDelegate.swift */,
+				A9C0AAFA2E851582004F64C9 /* NavTalk-Bridging-Header.h */,
+				A9C0AAE22E84D421004F64C9 /* Info.plist */,
+				A9C0AAEB2E84D511004F64C9 /* Resource */,
+				A9C0AAED2E84D52F004F64C9 /* Models */,
+			);
+			path = NavTalk;
+			sourceTree = "<group>";
+		};
+		A9C0AAEB2E84D511004F64C9 /* Resource */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AADD2E84D421004F64C9 /* Assets.xcassets */,
+				A9C0AADF2E84D421004F64C9 /* LaunchScreen.storyboard */,
+				A9C0AB1D2E8518AB004F64C9 /* CommonDefineClass.swift */,
+				A9C0AB1F2E852C34004F64C9 /* Extention+MBProgress.swift */,
+				A9779ABA2E8A74DB002E9831 /* NetworkMonitor.swift */,
+			);
+			path = Resource;
+			sourceTree = "<group>";
+		};
+		A9C0AAED2E84D52F004F64C9 /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAF32E84D562004F64C9 /* Model */,
+				A9C0AAF22E84D55D004F64C9 /* View */,
+				A9C0AAF12E84D54C004F64C9 /* Contrtoller */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		A9C0AAF12E84D54C004F64C9 /* Contrtoller */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAF42E84D57D004F64C9 /* RealTimeTalkVC.swift */,
+			);
+			path = Contrtoller;
+			sourceTree = "<group>";
+		};
+		A9C0AAF22E84D55D004F64C9 /* View */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AB152E851869004F64C9 /* ChatTableViewAnswerCell.swift */,
+				A9C0AB162E851869004F64C9 /* ChatTableViewAnswerCell.xib */,
+				A9779AB42E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift */,
+				A9779AB52E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib */,
+			);
+			path = View;
+			sourceTree = "<group>";
+		};
+		A9C0AAF32E84D562004F64C9 /* Model */ = {
+			isa = PBXGroup;
+			children = (
+				A9C0AAF62E85143F004F64C9 /* WebSocketManager.swift */,
+				A9C0AAF82E85144F004F64C9 /* WebRTCManager.swift */,
+				A94A34002E85413900563F7A /* RecordAudioManager.swift */,
+			);
+			path = Model;
+			sourceTree = "<group>";
+		};
+		CBD496E66970409BC40CAB36 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				8FB263EC3324E36043610D5F /* Pods-NavTalk.debug.xcconfig */,
+				D99CB4CC5CA61C628D40E1E5 /* Pods-NavTalk.release.xcconfig */,
+			);
+			path = Pods;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		A9C0AAD02E84D420004F64C9 /* NavTalk */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = A9C0AAE42E84D421004F64C9 /* Build configuration list for PBXNativeTarget "NavTalk" */;
+			buildPhases = (
+				1FB278494892196107D6577E /* [CP] Check Pods Manifest.lock */,
+				A9C0AACD2E84D420004F64C9 /* Sources */,
+				A9C0AACE2E84D420004F64C9 /* Frameworks */,
+				A9C0AACF2E84D420004F64C9 /* Resources */,
+				8B873F04C042164A1D5A7532 /* [CP] Embed Pods Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = NavTalk;
+			productName = NavTalk;
+			productReference = A9C0AAD12E84D420004F64C9 /* NavTalk.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		A9C0AAC92E84D420004F64C9 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 1610;
+				LastUpgradeCheck = 1610;
+				TargetAttributes = {
+					A9C0AAD02E84D420004F64C9 = {
+						CreatedOnToolsVersion = 16.1;
+						LastSwiftMigration = 1610;
+					};
+				};
+			};
+			buildConfigurationList = A9C0AACC2E84D420004F64C9 /* Build configuration list for PBXProject "NavTalk" */;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+				Base,
+			);
+			mainGroup = A9C0AAC82E84D420004F64C9;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A9C0AAD22E84D420004F64C9 /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				A9C0AAD02E84D420004F64C9 /* NavTalk */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		A9C0AACF2E84D420004F64C9 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9C0AAE12E84D421004F64C9 /* LaunchScreen.storyboard in Resources */,
+				A9779AB72E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib in Resources */,
+				A9C0AB192E851869004F64C9 /* ChatTableViewAnswerCell.xib in Resources */,
+				A9C0AADE2E84D421004F64C9 /* Assets.xcassets in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1FB278494892196107D6577E /* [CP] Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+				"${PODS_PODFILE_DIR_PATH}/Podfile.lock",
+				"${PODS_ROOT}/Manifest.lock",
+			);
+			name = "[CP] Check Pods Manifest.lock";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(DERIVED_FILE_DIR)/Pods-NavTalk-checkManifestLockResult.txt",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_PODFILE_DIR_PATH}/Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [ $? != 0 ] ; then\n    # print error to STDERR\n    echo \"error: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\" >&2\n    exit 1\nfi\n# This output is used by Xcode 'outputs' to avoid re-running this script phase.\necho \"SUCCESS\" > \"${SCRIPT_OUTPUT_FILE_0}\"\n";
+			showEnvVarsInLog = 0;
+		};
+		8B873F04C042164A1D5A7532 /* [CP] Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NavTalk/Pods-NavTalk-frameworks-${CONFIGURATION}-input-files.xcfilelist",
+			);
+			name = "[CP] Embed Pods Frameworks";
+			outputFileListPaths = (
+				"${PODS_ROOT}/Target Support Files/Pods-NavTalk/Pods-NavTalk-frameworks-${CONFIGURATION}-output-files.xcfilelist",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${PODS_ROOT}/Target Support Files/Pods-NavTalk/Pods-NavTalk-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		A9C0AACD2E84D420004F64C9 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				A9C0AB1E2E8518AB004F64C9 /* CommonDefineClass.swift in Sources */,
+				A9C0AAF92E85144F004F64C9 /* WebRTCManager.swift in Sources */,
+				A9C0AB202E852C34004F64C9 /* Extention+MBProgress.swift in Sources */,
+				A9C0AB1C2E851869004F64C9 /* ChatTableViewAnswerCell.swift in Sources */,
+				A9C0AAD52E84D420004F64C9 /* AppDelegate.swift in Sources */,
+				A9779AB62E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift in Sources */,
+				A94A34012E85413900563F7A /* RecordAudioManager.swift in Sources */,
+				A9779ABB2E8A74DB002E9831 /* NetworkMonitor.swift in Sources */,
+				A9C0AAF52E84D57D004F64C9 /* RealTimeTalkVC.swift in Sources */,
+				A9C0AAF72E85143F004F64C9 /* WebSocketManager.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		A9C0AADF2E84D421004F64C9 /* LaunchScreen.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				A9C0AAE02E84D421004F64C9 /* Base */,
+			);
+			name = LaunchScreen.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
+/* Begin XCBuildConfiguration section */
+		A9C0AAE52E84D421004F64C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 8FB263EC3324E36043610D5F /* Pods-NavTalk.debug.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 65GGU7L5YK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NavTalk/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = NavTalk;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The App needs record audio data.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.navtalk.dev1.NavTalk;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "NavTalk/NavTalk-Bridging-Header.h";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
+		A9C0AAE62E84D421004F64C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = D99CB4CC5CA61C628D40E1E5 /* Pods-NavTalk.release.xcconfig */;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CLANG_ENABLE_MODULES = YES;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 65GGU7L5YK;
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = NavTalk/Info.plist;
+				INFOPLIST_KEY_CFBundleDisplayName = NavTalk;
+				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The App needs record audio data.";
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
+				INFOPLIST_KEY_UIMainStoryboardFile = "";
+				INFOPLIST_KEY_UIStatusBarStyle = "";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = UIInterfaceOrientationPortrait;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown";
+				IPHONEOS_DEPLOYMENT_TARGET = 15.6;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = com.navtalk.dev1.NavTalk;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SWIFT_EMIT_LOC_STRINGS = YES;
+				SWIFT_OBJC_BRIDGING_HEADER = "NavTalk/NavTalk-Bridging-Header.h";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		A9C0AAE72E84D421004F64C9 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)";
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+			};
+			name = Debug;
+		};
+		A9C0AAE82E84D421004F64C9 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++20";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu17;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 18.1;
+				LOCALIZATION_PREFERS_STRING_CATALOGS = YES;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		A9C0AACC2E84D420004F64C9 /* Build configuration list for PBXProject "NavTalk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A9C0AAE72E84D421004F64C9 /* Debug */,
+				A9C0AAE82E84D421004F64C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		A9C0AAE42E84D421004F64C9 /* Build configuration list for PBXNativeTarget "NavTalk" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A9C0AAE52E84D421004F64C9 /* Debug */,
+				A9C0AAE62E84D421004F64C9 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = A9C0AAC92E84D420004F64C9 /* Project object */;
+}

@@ -1,0 +1,11 @@
+
+use_frameworks!
+
+target 'NavTalk' do
+
+  pod 'MBProgressHUD'
+  pod 'Starscream'
+  pod "GoogleWebRTC"
+  pod 'SDWebImage'
+  
+end
