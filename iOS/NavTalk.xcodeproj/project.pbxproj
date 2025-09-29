@@ -315,7 +315,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NavTalk/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NavTalk;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The App needs record video data.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The App needs record audio data.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The App needs get image.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
@@ -353,7 +355,9 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NavTalk/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = NavTalk;
+				INFOPLIST_KEY_NSCameraUsageDescription = "The App needs record video data.";
 				INFOPLIST_KEY_NSMicrophoneUsageDescription = "The App needs record audio data.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "The App needs get image.";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchStoryboardName = LaunchScreen;
 				INFOPLIST_KEY_UIMainStoryboardFile = "";
