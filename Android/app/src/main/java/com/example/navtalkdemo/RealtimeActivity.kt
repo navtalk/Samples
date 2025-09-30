@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
 import android.media.AudioAttributes
+import android.media.AudioDeviceInfo
 import android.media.AudioFormat
 import android.media.AudioManager
 import android.media.AudioRecord
@@ -12,6 +13,7 @@ import android.media.MediaRecorder
 import android.media.audiofx.AcousticEchoCanceler
 import android.media.audiofx.AutomaticGainControl
 import android.media.audiofx.NoiseSuppressor
+import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -25,6 +27,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.app.AppCompatActivity.MODE_PRIVATE
 import androidx.compose.ui.graphics.Color
@@ -54,7 +57,7 @@ class RealtimeActivity : AppCompatActivity() {
 
     // TODO: Replace with your service configuration
     private val baseUrl = "transfer.navtalk.ai"
-    private var license = "sk_navtalk_UydlLalHZ7mOi2Mx7FMC07TVZzTYVat7"
+    private var license = "your_license"
 
     // Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
     // Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
@@ -70,6 +73,8 @@ class RealtimeActivity : AppCompatActivity() {
 
     // Audio
     private var audioRecord: AudioRecord? = null
+    private var audioTrack:  android.media.AudioTrack? = null
+
     private var audioJob: Job? = null
     private var audioSending = false
     private val sampleRate = 24000
@@ -94,7 +99,6 @@ class RealtimeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRealtimeBinding.inflate(layoutInflater)
         setContentView(binding.root)
-
         setupUi()
         initWebRtc()
 
@@ -114,14 +118,11 @@ class RealtimeActivity : AppCompatActivity() {
     }
 
     private fun initWebRtc() {
+
         eglBase = EglBase.create()
         binding.remoteRenderer.init(eglBase.eglBaseContext, null)
         binding.remoteRenderer.setEnableHardwareScaler(true)
         binding.remoteRenderer.setMirror(false)
-        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.isSpeakerphoneOn = true
-        audioManager.isBluetoothScoOn = false
 
         val initializationOptions = PeerConnectionFactory.InitializationOptions.builder(this)
             .createInitializationOptions()
@@ -138,14 +139,19 @@ class RealtimeActivity : AppCompatActivity() {
             .createPeerConnectionFactory()
     }
 
-    private fun setSpeakerphoneOn(enable: Boolean) {
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun setSpeakerphoneOn() {
         val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-        audioManager.isSpeakerphoneOn = enable
+        audioManager.setMode(AudioManager.MODE_IN_COMMUNICATION)
+        val devices = audioManager.availableCommunicationDevices
+        val speaker = devices.find { it.type == AudioDeviceInfo.TYPE_BUILTIN_SPEAKER }
+        speaker?.let {
+            val success = audioManager.setCommunicationDevice(it)
+            Log.d("Audio", "Set speaker success: $success")
+        }
     }
 
     private fun toggleRealtime() {
-//        license = binding.etKey.text.toString()
         if(license.isNotEmpty()) {
             val active = binding.llRealtime.tag == true
             if (active) {
@@ -410,22 +416,18 @@ class RealtimeActivity : AppCompatActivity() {
     private fun startAudioCapture() {
         if (audioSending) return
         audioSending = true
-//        audioRecord = createAudioRecord()
-
-//        val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-//        audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-//        audioManager.isSpeakerphoneOn = true
-//        audioManager.isBluetoothScoOn = false
-
         val minBuf = AudioRecord.getMinBufferSize(
             sampleRate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT
         )
         val bufferSize = (minBuf * 2).coerceAtLeast(4096)
+
         if (ActivityCompat.checkSelfPermission(
                 this,
                 Manifest.permission.RECORD_AUDIO
             ) != PackageManager.PERMISSION_GRANTED
         ) {
+            Toast.makeText(this, "Please grant RECORD_AUDIO permission", Toast.LENGTH_SHORT).show()
+            audioSending = false
             return
         }
 
@@ -433,25 +435,6 @@ class RealtimeActivity : AppCompatActivity() {
             MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize
         )
-
-        val audioTrack = android.media.AudioTrack.Builder()
-            .setAudioAttributes(
-                AudioAttributes.Builder()
-                    .setUsage(AudioAttributes.USAGE_VOICE_COMMUNICATION)
-                    .setContentType(AudioAttributes.CONTENT_TYPE_SPEECH)
-                    .build()
-            )
-            .setAudioFormat(
-                AudioFormat.Builder()
-                    .setEncoding(AudioFormat.ENCODING_PCM_16BIT)
-                    .setSampleRate(sampleRate)
-                    .setChannelMask(AudioFormat.CHANNEL_OUT_MONO)
-                    .build()
-            )
-            .setBufferSizeInBytes(bufferSize)
-            .setSessionId(audioRecord!!.audioSessionId)
-            .build()
-
 
         audioRecord?.let { ar ->
             if (NoiseSuppressor.isAvailable()) {
@@ -464,10 +447,8 @@ class RealtimeActivity : AppCompatActivity() {
                 AutomaticGainControl.create(audioRecord!!.audioSessionId)
             }
         }
+
         audioRecord?.startRecording()
-
-        audioTrack.play()
-
 
         audioJob = CoroutineScope(Dispatchers.IO).launch {
             val buf = ByteArray(bufferSize)
@@ -503,6 +484,10 @@ class RealtimeActivity : AppCompatActivity() {
         audioRecord?.stop()
         audioRecord?.release()
         audioRecord = null
+        audioTrack?.stop()
+        audioTrack?.release()
+        audioTrack = null
+
     }
 
     // WebRTC signaling processing
@@ -552,13 +537,14 @@ class RealtimeActivity : AppCompatActivity() {
         peerConnectionA?.addIceCandidate(candidate)
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun buildPeerConnection() {
+        setSpeakerphoneOn()
         val rtcConfig = PeerConnection.RTCConfiguration(
             listOf(PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer())
         ).apply {
             sdpSemantics = PeerConnection.SdpSemantics.UNIFIED_PLAN
         }
-
         peerConnectionA = peerConnectionFactory.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate ?: return
@@ -580,11 +566,9 @@ class RealtimeActivity : AppCompatActivity() {
                     track.addSink(binding.remoteRenderer)
                     runOnUiThread { binding.staticImage.visibility = View.GONE }
                 }
-//                if (track is AudioTrack) {
-//                    val audioManager = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-//                    audioManager.mode = AudioManager.MODE_IN_COMMUNICATION
-//                    audioManager.isSpeakerphoneOn = true
-//                }
+                if (track is AudioTrack){
+                    track.setEnabled(true)
+                }
             }
 
             // Other callbacks can be implemented as needed
@@ -702,7 +686,7 @@ class RealtimeActivity : AppCompatActivity() {
     // Helper functions
     private fun String.urlEncode(): String = URLEncoder.encode(this, "UTF-8")
     private fun toast(msg: String) = runOnUiThread {
-        android.widget.Toast.makeText(this, msg, android.widget.Toast.LENGTH_SHORT).show()
+        Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
     }
 
     override fun onDestroy() {
@@ -743,13 +727,6 @@ class ChatAdapter(context: Context) : RecyclerView.Adapter<ChatAdapter.ChatViewH
         notifyDataSetChanged()
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun clearAll() {
-        sp.edit().putString("realtimeChatHistory","[]").apply()
-        chatMessages.clear()
-        notifyDataSetChanged()
-    }
-
     fun submit(message: ChatMsg) {
         chatMessages.add(message)
         notifyItemInserted(chatMessages.size - 1)
@@ -768,16 +745,6 @@ class ChatAdapter(context: Context) : RecyclerView.Adapter<ChatAdapter.ChatViewH
         }
     }
 
-    @SuppressLint("NotifyDataSetChanged")
-    fun update(message: String, index:Int) {
-        val oldMessage = chatMessages.lastOrNull{it.role == "assistant"}
-        if(oldMessage!=null) {
-            oldMessage.content += message
-            chatMessages[index] = oldMessage
-        }
-        notifyDataSetChanged()
-    }
-
     inner class ChatViewHolder(private val binding: ItemChatBinding) : RecyclerView.ViewHolder(binding.root) {
 
         @SuppressLint("ResourceAsColor")
@@ -789,15 +756,12 @@ class ChatAdapter(context: Context) : RecyclerView.Adapter<ChatAdapter.ChatViewH
                     "user" -> {
                         messageTextView.text = chatMsg.content
                         messageTextView.setBackgroundResource(R.drawable.bg_user_message)
-//                        params.gravity = Gravity.END
                         params.gravity = Gravity.START
-//                        textView.setTextColor(R.color.black)
                         textView.layoutParams = params
                     }
                     "assistant" -> {
                         messageTextView.text = chatMsg.content
                         messageTextView.setBackgroundResource(R.drawable.bg_assistant_message)
-//                        textView.setTextColor(R.color.white)
                         params.gravity = Gravity.START
                         textView.layoutParams = params
                     }
