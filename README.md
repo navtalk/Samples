@@ -6,7 +6,6 @@
 
 [![API Documentation](https://img.shields.io/badge/API-Documentation-green)](https://www.navtalk.ai/docs)
 [![License](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/licenses/MIT)
-[![Build Status](https://img.shields.io/badge/Build-Passing-brightgreen)](https://github.com/navtalk/Samples/actions)
 
 </div>
 
@@ -104,7 +103,7 @@ mvn spring-boot:run
 ## 📚 Documentation Resources
 
 - **🌐 Official Website**: [NavTalk Official Website](https://www.navtalk.ai)
-- **📖 API Documentation**: [NavTalk API Documentation](https://www.navtalk.ai/docs)
+- **📖 API Documentation**: [NavTalk API Documentation](https://navtalk.gitbook.io/api)
 - **📄 License**: [MIT License](https://opensource.org/licenses/MIT)
 
 
@@ -113,5 +112,5 @@ mvn spring-boot:run
 If you encounter any issues during use, please contact us through the following channels:
 
 - Visit [Official Website](https://navtalk.ai/support/) for support
-- Check [API Documentation](https://www.navtalk.ai/docs) for detailed instructions
+- Check [API Documentation](https://navtalk.gitbook.io/api) for detailed instructions
 
