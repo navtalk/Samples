@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🚀 NavTalk
+# <img src="https://api.navtalk.ai/uploadFiles/navtalk.png" alt="NavTalk Logo" width="250" height="auto">
 
 **Real-time Virtual Digital Human Platform**
 
