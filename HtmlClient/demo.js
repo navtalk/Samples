@@ -15,7 +15,7 @@ const PROMPT = "You are a helpful assistant."
 
 // web server url
 let baseUrl = "transfer.navtalk.ai"
-let webrtcUrl = "transfer.navtalk.ai"
+
 // Global variable for connection state
 let peerConnectionA = null;
 let resultSocket = null;
@@ -237,7 +237,7 @@ async function initDigtalHumanRealtimeButton() {
 
         let targetSessionId = "123";
         console.log("Start connecting " + (new Date()).toLocaleTimeString())
-        resultSocket = new WebSocket('wss://'+webrtcUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
+        resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
 
         let localStream;
 

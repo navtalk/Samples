@@ -91,7 +91,7 @@ mvn install
 #### Start Frontend Application
 
 - **HTML Client**: Open `HtmlClient/demo.html` directly in your browser
-- **Vue Client**: Run `npm run dev` to start the development server
+- **Vue Client**: Run `npm start` to start the development server
 
 #### Start Backend Service
 

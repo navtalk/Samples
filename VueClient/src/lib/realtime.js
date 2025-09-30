@@ -2,7 +2,7 @@
 
  // ❗You need to manually modify the following variables.
 // ✒️ api key
-const LICENSE = "sk_navtalk_your_key";
+const LICENSE = "sk_navtalk_9p9flyCQXGKXuu1iPZXaBYsQhQRq0ZDm";
 
 // ✒️ character name. Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
@@ -16,7 +16,6 @@ const VOICE = "cedar";
 const PROMPT = "You are a helpful assistant.";
 
 let baseUrl = "transfer.navtalk.ai";
-let webrtcUrl = "transfer.navtalk.ai";
 
 let peerConnectionA = null;
 let resultSocket = null;
@@ -172,7 +171,7 @@ export async function initDigtalHumanRealtimeButton() {
 
     let remoteVideoA = document.getElementById('character-avatar-video');
     let targetSessionId = "123";
-    resultSocket = new WebSocket('wss://' + webrtcUrl + '/api/webrtc?userId=' + targetSessionId);
+    resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);
 
     resultSocket.onopen = () => {
       const message = { type: 'create', targetSessionId: targetSessionId };
