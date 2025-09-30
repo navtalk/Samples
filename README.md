@@ -35,9 +35,7 @@ NavTalk SDK will also support more features such as **camera capture**, **online
 
 
 
-## 📁 Project Structure
-
-<div align="center">
+## Project Structure
 
 ```
 Samples/
@@ -48,35 +46,18 @@ Samples/
 └── iOS/                 # iOS mobile app example
 ```
 
-</div>
+### Directory Description
 
-### 📂 Directory Overview
-
-| Directory | Description | Technology | Platform |
-|:---:|:---|:---:|:---:|
-| **`HtmlClient/`** | Basic HTML client demonstrating native web integration | HTML, JavaScript, CSS | 🌐 Web |
-| **`VueClient/`** | Modern Vue.js frontend with component-based architecture | Vue.js, Vite, JavaScript | 🌐 Web |
-| **`WebServer/`** | Java backend service with WebSocket support | Java, Spring Boot, Maven | ⚙️ Backend |
-| **`Android/`** | Native Android mobile application with WebRTC | Kotlin, WebRTC, Gradle | 📱 Android |
-| **`iOS/`** | Native iOS mobile application with WebRTC | Swift, WebRTC, CocoaPods | 🍎 iOS |
-
-### 🎯 Platform Support
-
-<div align="center">
-
-| Platform | Status | Technology Stack | Features |
-|:---:|:---:|:---:|:---:|
-| 🌐 **Web** | ✅ Ready | HTML5, JavaScript, Vue.js | Real-time chat, voice interaction |
-| 📱 **Android** | ✅ Ready | Kotlin, WebRTC, Gradle | Native mobile app, voice synthesis |
-| 🍎 **iOS** | ✅ Ready | Swift, WebRTC, CocoaPods | Native mobile app, voice recognition |
-| ⚙️ **Backend** | ✅ Ready | Java, Spring Boot, WebSocket | API server, real-time communication |
-
-</div>
+- **`HtmlClient/`** - Basic HTML client demonstrating native web integration
+- **`VueClient/`** - Modern Vue.js frontend with component-based architecture
+- **`WebServer/`** - Java backend service with WebSocket support
+- **`Android/`** - Native Android mobile application with WebRTC
+- **`iOS/`** - Native iOS mobile application with WebRTC
 
 
-## 🚀 Quick Start
+## Quick Start
 
-### 📋 Prerequisites
+### Prerequisites
 
 - **Node.js** (v16+) - for Vue.js frontend
 - **Java** (v11+) - for backend server
@@ -85,106 +66,93 @@ Samples/
 - **Xcode** - for iOS development (macOS only)
 - **Git** - for version control
 
-### 1️⃣ Clone Repository
+### 1. Clone Repository
 
 ```bash
 git clone https://github.com/navtalk/Samples.git
 cd Samples
 ```
 
-### 2️⃣ Install Dependencies
+### 2. Install Dependencies
 
-<details>
-<summary><b>🌐 Web Applications</b></summary>
+#### Web Applications
 
-#### HTML Client
+**HTML Client**
 ```bash
 # No installation required - just open the HTML file
 ```
 
-#### Vue.js Client
+**Vue.js Client**
 ```bash
 cd VueClient
 npm install
 ```
 
-#### Backend Server
+**Backend Server**
 ```bash
 cd WebServer
 mvn clean install
 ```
 
-</details>
+#### Mobile Applications
 
-<details>
-<summary><b>📱 Mobile Applications</b></summary>
-
-#### Android
+**Android**
 ```bash
 cd Android
 ./gradlew build
 ```
 
-#### iOS
+**iOS**
 ```bash
 cd iOS
 pod install
 ```
 
-</details>
+### 3. Run Applications
 
-### 3️⃣ Run Applications
+#### Web Applications
 
-<details>
-<summary><b>🌐 Start Web Applications</b></summary>
-
-#### HTML Client
+**HTML Client**
 ```bash
 # Simply open in browser
 open HtmlClient/demo.html
 ```
 
-#### Vue Client
+**Vue Client**
 ```bash
 cd VueClient
 npm start
 ```
 
-#### Backend Server
+**Backend Server**
 ```bash
 cd WebServer
 mvn spring-boot:run
 ```
 
-</details>
+#### Mobile Applications
 
-<details>
-<summary><b>📱 Start Mobile Applications</b></summary>
-
-#### Android
+**Android**
 ```bash
 cd Android
 ./gradlew installDebug
 # Or open in Android Studio and run
 ```
 
-#### iOS
+**iOS**
 ```bash
 # Open NavTalk.xcworkspace in Xcode and run
 open iOS/NavTalk.xcworkspace
 ```
 
-</details>
 
+## Documentation Resources
 
-## 📚 Documentation Resources
+- **Official Website**: [NavTalk Official Website](https://www.navtalk.ai)
+- **API Documentation**: [NavTalk API Documentation](https://navtalk.gitbook.io/api)
+- **License**: [MIT License](https://opensource.org/licenses/MIT)
 
-- **🌐 Official Website**: [NavTalk Official Website](https://www.navtalk.ai)
-- **📖 API Documentation**: [NavTalk API Documentation](https://navtalk.gitbook.io/api)
-- **📄 License**: [MIT License](https://opensource.org/licenses/MIT)
-
-
-## 📞 Support
+## Support
 
 If you encounter any issues during use, please contact us through the following channels:
 
