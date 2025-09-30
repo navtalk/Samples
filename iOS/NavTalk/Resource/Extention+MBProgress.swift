@@ -55,7 +55,7 @@ extension MBProgressHUD {
         hud.isUserInteractionEnabled = true//true: other UI in view is clicked invalid
         currentMBProgressHUD = hud
         
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now()+15) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now()+25) {
             for value in view.subviews{
                 if value == hud{
                     if hud.isHidden == false{

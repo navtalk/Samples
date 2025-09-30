@@ -25,7 +25,8 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     var socket: WebSocket!
     
     let baseUrl = "transfer.navtalk.ai"
-    let license = "sk_navtalk_9p9flyCQXGKXuu1iPZXaBYsQhQRq0ZDm"
+    let license = "Your Api Key"
+   
     // Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, ...
     let characterName = "navtalk.Leo"
     // alloy/shimmer/ballad/coral/echo/ash/sage/verse
