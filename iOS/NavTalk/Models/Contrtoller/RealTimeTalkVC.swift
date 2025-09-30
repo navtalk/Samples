@@ -27,17 +27,14 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         tableView.delegate = self
         tableView.separatorStyle = .none
 
-        //添加渐变遮罩 -- 逐渐虚化过程
         let gradientLayer = CAGradientLayer()
         gradientLayer.frame = tableView.bounds
         gradientLayer.colors = [
             UIColor.black.cgColor,
             UIColor.black.withAlphaComponent(0).cgColor,
         ]
-        //渐变从顶部开始，到达底部，蒙版黑色(挡住)到透明(不挡住)
         gradientLayer.startPoint = CGPoint(x: 0.5, y: 1.0)
         gradientLayer.endPoint  =  CGPoint(x: 0.5, y: 0.1)
-        //不要加在table上，要加在View上
         tableView.layer.mask = gradientLayer
         
         return tableView
