@@ -48,15 +48,16 @@ export async function initDigtalHumanRealtimeButton() {
   let audioStream;
   let currentAudioSource = null;
 
-  let activeCharacterLogId = await getFromStorage("digitalHumanLogId");
-  let loading = document.querySelector('.ah-chat-loading');
-  let aiMessageElement;
-  let accumulatedTranscript = '';
   let audioQueue = [];
   let isPlaying = false;
   let responseSpans = new Map();
-  let playVideo = false;
   let markdownBuffer = new Map();
+
+  function stopRecording() {
+    if (audioProcessor) audioProcessor.disconnect();
+    if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+    if (socket) socket.close();
+  }
 
   if (realtimeButton) {
     realtimeButton.addEventListener('click', async function () {
@@ -170,7 +171,7 @@ export async function initDigtalHumanRealtimeButton() {
     };
 
     let remoteVideoA = document.getElementById('character-avatar-video');
-    let targetSessionId = "123";
+    let targetSessionId = LICENSE;
     resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);
 
     resultSocket.onopen = () => {
@@ -197,8 +198,11 @@ export async function initDigtalHumanRealtimeButton() {
 
     function handleOffer(message) {
       const targetId = message.targetSessionId;
+      console.log('Handling offer for targetSessionId:', targetId);
       const offer = new RTCSessionDescription(message.sdp);
+      console.log('Created offer SDP:', offer);
       peerConnectionA = new RTCPeerConnection(configuration);
+      console.log('Created peer connection:', peerConnectionA);
       peerConnectionA.setRemoteDescription(offer)
         .then(() => peerConnectionA.createAnswer())
         .then(answer => peerConnectionA.setLocalDescription(answer))
@@ -212,12 +216,31 @@ export async function initDigtalHumanRealtimeButton() {
         })
         .catch(err => console.error('Error handling offer:', err));
 
-      peerConnectionA.oniceconnectionstatechange = () => {};
+      peerConnectionA.oniceconnectionstatechange = () => {
+        console.log('ICE connection state changed:', peerConnectionA.iceConnectionState);
+        if (peerConnectionA.iceConnectionState === 'connected' || peerConnectionA.iceConnectionState === 'completed') {
+          console.log('WebRTC connection established successfully');
+        } else if (peerConnectionA.iceConnectionState === 'failed') {
+          console.error('WebRTC connection failed');
+        }
+      };
 
       peerConnectionA.ontrack = (event) => {
+        console.log('Received remote track:', event);
+        console.log('Streams:', event.streams);
         if (remoteVideoA) {
           remoteVideoA.srcObject = event.streams[0];
-          setTimeout(() => { try { remoteVideoA.play(); } catch {} }, 1000);
+          console.log('Set video source object:', remoteVideoA.srcObject);
+          setTimeout(() => { 
+            try { 
+              remoteVideoA.play(); 
+              console.log('Video play started successfully');
+            } catch (e) { 
+              console.error('Video play failed:', e); 
+            } 
+          }, 1000);
+        } else {
+          console.error('Remote video element not found');
         }
       };
 
@@ -225,7 +248,7 @@ export async function initDigtalHumanRealtimeButton() {
         if (event.candidate) {
           const message = {
             type: 'iceCandidate',
-            targetSessionId: targetSessionId,
+            targetSessionId: targetId,
             candidate: event.candidate
           };
           resultSocket.send(JSON.stringify(message));
@@ -263,8 +286,11 @@ export async function initDigtalHumanRealtimeButton() {
     }
 
     function handleIceCandidate(message) {
+      console.log('Handling ICE candidate:', message.candidate);
       const candidate = new RTCIceCandidate(message.candidate);
-      peerConnectionA.addIceCandidate(candidate).catch(err => console.error('Error adding ICE candidate:', err));
+      peerConnectionA.addIceCandidate(candidate)
+        .then(() => console.log('ICE candidate added successfully'))
+        .catch(err => console.error('Error adding ICE candidate:', err));
     }
 
     function showErrorTip(message) {
@@ -479,11 +505,6 @@ export async function initDigtalHumanRealtimeButton() {
       return btoa(binary);
     }
 
-    function stopRecording() {
-      if (audioProcessor) audioProcessor.disconnect();
-      if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-      if (socket) socket.close();
-    }
 
     function playNextAudio() {
       if (audioQueue.length > 0) {

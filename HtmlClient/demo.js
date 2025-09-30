@@ -49,22 +49,10 @@ async function initDigtalHumanRealtimeButton() {
     let audioStream;
     let currentAudioSource = null; // Currently playing audio source
 
-    // Get the stored digitalHumanLogId of the currently active character
-    let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
-    // const activeCharacter = realtimeChatHistory.find(character => character.digitalHumanLogId == activeCharacterLogId);
-
-    // Loading animation
-    let loading = document.querySelector('.ah-chat-loading');
-    let aiMessageElement;
-    // Define a variable to store accumulated transcript content
-    let accumulatedTranscript = '';
-
     let audioQueue = []; // Used to store audio chunks
-    let isPlaying = false; // Flag to indicate whether audio is currently playing
     // Use a Map to store the span element corresponding to each response_id
     let responseSpans = new Map();
 
-    let playVideo = false;
     // Define a buffer object to accumulate incomplete Markdown content
     let markdownBuffer = new Map();
 
@@ -235,7 +223,7 @@ async function initDigtalHumanRealtimeButton() {
         // WebSocket for receiving video results
         let remoteVideoA = document.getElementById('character-avatar-video');
 
-        let targetSessionId = "123";
+        let targetSessionId = LICENSE;
         console.log("Start connecting " + (new Date()).toLocaleTimeString())
         resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
 
@@ -278,11 +266,12 @@ async function initDigtalHumanRealtimeButton() {
         };
 
         function handleOffer(message) {
-            console.log("handleOffer")
+            console.log("Handling offer for targetSessionId:", message.targetSessionId);
             const targetId = message.targetSessionId;
             const offer = new RTCSessionDescription(message.sdp);
+            console.log("Created offer SDP:", offer);
             peerConnectionA = new RTCPeerConnection(configuration);
-            console.log("peerConnectionA", JSON.stringify(peerConnectionA))
+            console.log("Created peer connection:", peerConnectionA);
 
             peerConnectionA.setRemoteDescription(offer)
                 .then(() => peerConnectionA.createAnswer())
@@ -309,12 +298,22 @@ async function initDigtalHumanRealtimeButton() {
             };
 
             peerConnectionA.ontrack = (event) => {
-                console.log("ontrack")
-                console.log(event)
-                remoteVideoA.srcObject = event.streams[0]; // Show remote video
-                setTimeout(() => {
-                    remoteVideoA.play()
-                }, 1000)
+                console.log("Received remote track:", event);
+                console.log("Streams:", event.streams);
+                if (remoteVideoA) {
+                    remoteVideoA.srcObject = event.streams[0]; // Show remote video
+                    console.log("Set video source object:", remoteVideoA.srcObject);
+                    setTimeout(() => {
+                        try {
+                            remoteVideoA.play();
+                            console.log("Video play started successfully");
+                        } catch (e) {
+                            console.error("Video play failed:", e);
+                        }
+                    }, 1000);
+                } else {
+                    console.error("Remote video element not found");
+                }
             };
 
             // Logs when handling ICE Candidate
@@ -323,7 +322,7 @@ async function initDigtalHumanRealtimeButton() {
                 if (event.candidate) {
                     const message = {
                         type: 'iceCandidate',
-                        targetSessionId: targetSessionId,
+                        targetSessionId: targetId,
                         candidate: event.candidate
                     };
                     resultSocket.send(JSON.stringify(message));
@@ -372,9 +371,11 @@ async function initDigtalHumanRealtimeButton() {
         }
 
         function handleIceCandidate(message) {
+            console.log('Handling ICE candidate:', message.candidate);
             const candidate = new RTCIceCandidate(message.candidate);
-            console.log(candidate)
+            console.log('Created ICE candidate:', candidate);
             peerConnectionA.addIceCandidate(candidate)
+                .then(() => console.log('ICE candidate added successfully'))
                 .catch(err => console.error('Error adding ICE candidate:', err));
         }
     }
