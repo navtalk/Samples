@@ -138,12 +138,12 @@ cd Samples
   <table>
     <tr>
       <td>
-        <a href="https://www.youtube.com/watch?v=YoyZqpvqzPE" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.youtube.com/watch?v=YoyZqpvqzPE" target="_blank" rel="noopener noreferrer" title="Watch the NavTalk Platform Overview" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">
           <img src="https://img.youtube.com/vi/YoyZqpvqzPE/hqdefault.jpg" alt="NavTalk Platform Overview" width="320">
         </a>
       </td>
       <td>
-        <a href="https://www.youtube.com/watch?v=ja3YgHNaPWc" target="_blank" rel="noopener noreferrer">
+        <a href="https://www.youtube.com/watch?v=ja3YgHNaPWc" target="_blank" rel="noopener noreferrer" title="Watch the NavTalk In-depth Walkthrough" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">
           <img src="https://img.youtube.com/vi/ja3YgHNaPWc/hqdefault.jpg" alt="NavTalk In-depth Walkthrough" width="320">
         </a>
       </td>
