@@ -81,7 +81,7 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         AudioUnitSetProperty(audioUnit,
                              kAudioUnitProperty_StreamFormat,
                              kAudioUnitScope_Output,
-                             1, // 输入bus
+                             1, // Input bus
                              &audioFormat,
                              UInt32(MemoryLayout<AudioStreamBasicDescription>.size)
         )
