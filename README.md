@@ -44,6 +44,7 @@ NavTalk SDK will also support more features such as **camera capture**, **online
 ```
 Samples/
 ├── Avatars/             # Downloadable avatar reference videos
+├── Expo/                # React Native Expo experience mirroring the iOS demo
 ├── HtmlClient/          # Basic HTML client example
 ├── ReactClient/         # React frontend example built with Vite
 ├── VueClient/           # Vue.js frontend example
@@ -56,6 +57,7 @@ Samples/
 ### Directory Overview
 
 - **`Avatars/`** – Reference MP4 clips for customizing avatar appearances.
+- **`Expo/`** – React Native Expo experience that mirrors the native iOS demo layout and flow.
 - **`HtmlClient/`** – Minimal HTML implementation for quick WebSocket/WebRTC testing.
 - **`ReactClient/`** – React + Vite front-end showcasing a modern component workflow.
 - **`VueClient/`** – Component-based Vue.js front-end with a richer UI experience.
@@ -92,6 +94,7 @@ cd Samples
 | Project | Commands |
 | --- | --- |
 | HTML Client | No installation required—open the HTML file directly. |
+| Expo App | `cd Expo && npm install` |
 | Vue.js Client | `cd VueClient && npm install` |
 | React Client | `cd ReactClient && npm install` |
 | Backend Server | `cd WebServer && mvn clean install` |
@@ -112,6 +115,7 @@ cd Samples
 | HTML Client | Open `HtmlClient/demo.html` in your browser. |
 | Vue Client | `cd VueClient && npm start` |
 | React Client | `cd ReactClient && npm start` |
+| Expo App | `cd Expo && npm start` (runs the Expo Dev Server; use Expo Go or simulators to load) |
 | Backend Server | `cd WebServer && mvn spring-boot:run` |
 
 **Mobile Applications**
