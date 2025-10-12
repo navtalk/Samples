@@ -130,3 +130,26 @@ cd Samples
 
 Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
 
+
+## Contributing
+
+We welcome feedback and community contributions that improve these samples. To propose a change:
+
+1. Fork the repository and create a feature branch.
+2. Make your updates, ensuring code style and lint rules for the specific platform are followed.
+3. Test your changes locally (web clients with `npm run build`, mobile projects with the respective IDE or CLI tools, and the Java backend using `mvn test`).
+4. Submit a pull request summarizing the motivation and verification steps.
+
+If you find a bug or have an enhancement idea but cannot submit code, please [open an issue](https://github.com/navtalk/Samples/issues) with as much detail as possible (logs, steps to reproduce, expected vs. actual behavior, environment info, etc.).
+
+
+## Troubleshooting Checklist
+
+Before opening an issue, verify the following common fixes:
+
+- **Environment Versions** – Ensure the Node.js, Java, Android Studio, Xcode, and Flutter SDK versions match the prerequisites listed above.
+- **Dependency Installs** – Delete lockfiles and `node_modules`/`Pods` directories if package installs fail, then reinstall (`npm install`, `pod install`, etc.).
+- **WebRTC Permissions** – When testing in browsers or on mobile, allow microphone/camera access or provide mock input sources to avoid connection failures.
+- **Backend Connectivity** – Confirm the WebServer sample is reachable and configured with valid NavTalk credentials before running web or mobile clients.
+- **Gradle/CocoaPods Caches** – Clear caches (`./gradlew clean`, `pod cache clean --all`) if builds behave inconsistently after updates.
+
