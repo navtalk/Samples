@@ -132,6 +132,11 @@ cd Samples
 - **API Documentation** – [NavTalk API Documentation](https://navtalk.gitbook.io/api)
 - **License** – [MIT License](https://opensource.org/licenses/MIT)
 
+## Demo Videos
+
+- [NavTalk Platform Overview](https://www.youtube.com/watch?v=YoyZqpvqzPE)
+- [NavTalk In-depth Walkthrough](https://www.youtube.com/watch?v=ja3YgHNaPWc)
+
 Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
 
 
