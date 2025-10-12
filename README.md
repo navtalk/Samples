@@ -43,7 +43,9 @@ NavTalk SDK will also support more features such as **camera capture**, **online
 
 ```
 Samples/
+├── Avatars/             # Downloadable avatar reference videos
 ├── HtmlClient/          # Basic HTML client example
+├── ReactClient/         # React frontend example built with Vite
 ├── VueClient/           # Vue.js frontend example
 ├── WebServer/           # Java backend service example
 ├── Android/             # Android mobile app example
@@ -52,7 +54,9 @@ Samples/
 
 ### Directory Overview
 
+- **`Avatars/`** – Reference MP4 clips you can use when customizing avatar appearances.
 - **`HtmlClient/`** – Minimal HTML implementation for quick WebSocket/WebRTC testing.
+- **`ReactClient/`** – React + Vite front-end showcasing a modern component workflow.
 - **`VueClient/`** – Component-based Vue.js front-end showcasing a richer UI experience.
 - **`WebServer/`** – Java backend service with WebSocket support and integration examples.
 - **`Android/`** – Native Android app demonstrating mobile real-time communication via WebRTC.
@@ -65,7 +69,7 @@ Samples/
 
 | Tool | Purpose |
 | --- | --- |
-| Node.js (v16+) | Required for the Vue.js front-end. |
+| Node.js (v16+) | Required for the Vue.js and React front-ends. |
 | Java (v11+) | Required for the backend server. |
 | Maven (v3.6+) | Java dependency management and builds. |
 | Android Studio | Android development environment. |
@@ -87,6 +91,7 @@ cd Samples
 | --- | --- |
 | HTML Client | No installation required—open the HTML file directly. |
 | Vue.js Client | `cd VueClient && npm install` |
+| React Client | `cd ReactClient && npm install` |
 | Backend Server | `cd WebServer && mvn clean install` |
 
 **Mobile Applications**
@@ -104,6 +109,7 @@ cd Samples
 | --- | --- |
 | HTML Client | Open `HtmlClient/demo.html` in your browser. |
 | Vue Client | `cd VueClient && npm start` |
+| React Client | `cd ReactClient && npm start` |
 | Backend Server | `cd WebServer && mvn spring-boot:run` |
 
 **Mobile Applications**
