@@ -4,8 +4,12 @@
 
 **Real-time Virtual Digital Human Platform**
 
-[![API Documentation](https://img.shields.io/badge/API-Documentation-green)](https://www.navtalk.ai/docs)
-[![License](https://img.shields.io/badge/License-MIT-green)](https://opensource.org/licenses/MIT)
+<a href="https://www.navtalk.ai/docs" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.shields.io/badge/API-Documentation-green" alt="API Documentation Badge">
+</a>
+<a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">
+  <img src="https://img.shields.io/badge/License-MIT-green" alt="MIT License Badge">
+</a>
 
 </div>
 
@@ -128,9 +132,9 @@ cd Samples
 
 ## Documentation & Support
 
-- **Official Website** – [navtalk.ai](https://www.navtalk.ai)
-- **API Documentation** – [NavTalk API Documentation](https://navtalk.gitbook.io/api)
-- **License** – [MIT License](https://opensource.org/licenses/MIT)
+- **Official Website** – <a href="https://www.navtalk.ai" target="_blank" rel="noopener noreferrer">navtalk.ai</a>
+- **API Documentation** – <a href="https://navtalk.gitbook.io/api" target="_blank" rel="noopener noreferrer">NavTalk API Documentation</a>
+- **License** – <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
 
 ## Demo Videos
 
@@ -155,7 +159,7 @@ cd Samples
   </table>
 </div>
 
-Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
+Need help? Visit the <a href="https://navtalk.ai/support/" target="_blank" rel="noopener noreferrer">support portal</a> or consult the <a href="https://navtalk.gitbook.io/api" target="_blank" rel="noopener noreferrer">API documentation</a> for detailed guides and troubleshooting tips.
 
 
 ## Contributing
@@ -167,7 +171,7 @@ We welcome feedback and community contributions that improve these samples. To p
 3. Test your changes locally (web clients with `npm run build`, mobile projects with the respective IDE or CLI tools, and the Java backend using `mvn test`).
 4. Submit a pull request summarizing the motivation and verification steps.
 
-If you find a bug or have an enhancement idea but cannot submit code, please [open an issue](https://github.com/navtalk/Samples/issues) with as much detail as possible (logs, steps to reproduce, expected vs. actual behavior, environment info, etc.).
+If you find a bug or have an enhancement idea but cannot submit code, please <a href="https://github.com/navtalk/Samples/issues" target="_blank" rel="noopener noreferrer">open an issue</a> with as much detail as possible (logs, steps to reproduce, expected vs. actual behavior, environment info, etc.).
 
 
 ## Troubleshooting Checklist
