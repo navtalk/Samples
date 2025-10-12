@@ -132,6 +132,29 @@ cd Samples
 - **API Documentation** – [NavTalk API Documentation](https://navtalk.gitbook.io/api)
 - **License** – [MIT License](https://opensource.org/licenses/MIT)
 
+## Demo Videos
+
+<div align="center">
+  <table>
+    <tr>
+      <td>
+        <a href="https://www.youtube.com/watch?v=YoyZqpvqzPE" target="_blank" rel="noopener noreferrer" title="Watch the NavTalk Platform Overview" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">
+          <img src="https://img.youtube.com/vi/YoyZqpvqzPE/hqdefault.jpg" alt="NavTalk Platform Overview" width="320">
+        </a>
+      </td>
+      <td>
+        <a href="https://www.youtube.com/watch?v=ja3YgHNaPWc" target="_blank" rel="noopener noreferrer" title="Watch the NavTalk In-depth Walkthrough" onclick="window.open(this.href, '_blank', 'noopener,noreferrer'); return false;">
+          <img src="https://img.youtube.com/vi/ja3YgHNaPWc/hqdefault.jpg" alt="NavTalk In-depth Walkthrough" width="320">
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center"><em>NavTalk Platform Overview</em></td>
+      <td align="center"><em>NavTalk In-depth Walkthrough</em></td>
+    </tr>
+  </table>
+</div>
+
 Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
 
 
