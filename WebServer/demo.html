@@ -1229,7 +1229,7 @@
         const historyStr = localStorage.getItem("realtimeChatHistory");
         realtimeChatHistory = historyStr ? JSON.parse(historyStr) : [];
 
-        // 进入页面，渲染历史对话记录
+        // Render the historical conversation when the page loads
         if (realtimeChatHistory && realtimeChatHistory.length > 0) {
             realtimeChatHistory.forEach(item => {
                 appendContentToList(item.role, item.content);
