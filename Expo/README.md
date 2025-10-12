@@ -15,7 +15,7 @@ Key touches carried over from the iOS build include:
 ## Getting started
 
 ```bash
-cd ExpoNavTalk
+cd Expo
 npm install
 npm start
 ```
