@@ -1,0 +1,27 @@
+{
+  "expo": {
+    "name": "NavTalk Expo Demo",
+    "slug": "navtalk-expo-demo",
+    "scheme": "navtalk",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "backgroundColor": "#000000"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#000000"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    }
+  }
+}
