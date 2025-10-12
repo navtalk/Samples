@@ -1,0 +1,17 @@
+# Flutter/Dart/Pub related
+.dart_tool/
+.packages
+.pub/
+build/
+# IntelliJ related
+.idea/
+*.iml
+# VS Code related
+.vscode/
+# Flutter generated
+.flutter-plugins
+.flutter-plugins-dependencies
+.melos_tool
+**/Generated.xcconfig
+# macOS
+**/Flutter/ephemeral/

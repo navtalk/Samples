@@ -43,6 +43,7 @@ Samples/
 ├── VueClient/           # Vue.js frontend example  
 ├── WebServer/           # Java backend service example
 ├── Android/             # Android mobile app example
+├── Flutter/             # Flutter cross-platform mobile sample
 └── iOS/                 # iOS mobile app example
 ```
 
@@ -52,6 +53,7 @@ Samples/
 - **`VueClient/`** - Modern Vue.js frontend with component-based architecture
 - **`WebServer/`** - Java backend service with WebSocket support
 - **`Android/`** - Native Android mobile application with WebRTC
+- **`Flutter/`** - Cross-platform Flutter client mirroring the mobile experience
 - **`iOS/`** - Native iOS mobile application with WebRTC
 
 
