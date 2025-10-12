@@ -134,8 +134,26 @@ cd Samples
 
 ## Demo Videos
 
-- [NavTalk Platform Overview](https://www.youtube.com/watch?v=YoyZqpvqzPE)
-- [NavTalk In-depth Walkthrough](https://www.youtube.com/watch?v=ja3YgHNaPWc)
+<div align="center">
+  <table>
+    <tr>
+      <td>
+        <a href="https://www.youtube.com/watch?v=YoyZqpvqzPE" target="_blank" rel="noopener noreferrer">
+          <img src="https://img.youtube.com/vi/YoyZqpvqzPE/hqdefault.jpg" alt="NavTalk Platform Overview" width="320">
+        </a>
+      </td>
+      <td>
+        <a href="https://www.youtube.com/watch?v=ja3YgHNaPWc" target="_blank" rel="noopener noreferrer">
+          <img src="https://img.youtube.com/vi/ja3YgHNaPWc/hqdefault.jpg" alt="NavTalk In-depth Walkthrough" width="320">
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td align="center"><em>NavTalk Platform Overview</em></td>
+      <td align="center"><em>NavTalk In-depth Walkthrough</em></td>
+    </tr>
+  </table>
+</div>
 
 Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
 
