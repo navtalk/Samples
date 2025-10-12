@@ -17,7 +17,7 @@ A Flutter implementation of the NavTalk real-time virtual human demo. This sampl
 The project was added without running `flutter create` in this repository. After cloning, run the following once to generate the platform folders:
 
 ```bash
-cd Flutter/navtalk_flutter
+cd Flutter
 flutter create .
 ```
 
