@@ -49,11 +49,18 @@ Samples/
 ├── VueClient/           # Vue.js frontend example
 ├── WebServer/           # Java backend service example
 ├── Android/             # Android mobile app example
+├── Flutter/             # Flutter cross-platform mobile sample
 └── iOS/                 # iOS mobile app example
 ```
 
 ### Directory Overview
 
+- **`HtmlClient/`** - Basic HTML client demonstrating native web integration
+- **`VueClient/`** - Modern Vue.js frontend with component-based architecture
+- **`WebServer/`** - Java backend service with WebSocket support
+- **`Android/`** - Native Android mobile application with WebRTC
+- **`Flutter/`** - Cross-platform Flutter client mirroring the mobile experience
+- **`iOS/`** - Native iOS mobile application with WebRTC
 - **`Avatars/`** – Reference MP4 clips you can use when customizing avatar appearances.
 - **`HtmlClient/`** – Minimal HTML implementation for quick WebSocket/WebRTC testing.
 - **`ReactClient/`** – React + Vite front-end showcasing a modern component workflow.
