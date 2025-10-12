@@ -52,6 +52,9 @@ export async function initDigtalHumanRealtimeButton() {
   let isPlaying = false;
   let responseSpans = new Map();
   let markdownBuffer = new Map();
+  let playVideo = false;
+
+  const cleanupCallbacks = [];
 
   function stopRecording() {
     if (audioProcessor) audioProcessor.disconnect();
@@ -59,38 +62,50 @@ export async function initDigtalHumanRealtimeButton() {
     if (socket) socket.close();
   }
 
-  if (realtimeButton) {
-    realtimeButton.addEventListener('click', async function () {
-      const staticImage = document.getElementById('character-static-image');
-      const videoElement = document.getElementById('character-avatar-video');
+  async function onRealtimeButtonClick() {
+    const staticImage = document.getElementById('character-static-image');
+    const videoElement = document.getElementById('character-avatar-video');
 
-      if (realtimeButton.classList.contains('active')) {
-        realtimeButton.classList.remove('active');
-        stopRecording();
-        if (conversationBg) conversationBg.style.display = 'none';
-        if (staticImage) staticImage.style.display = 'block';
-        if (videoElement) {
-          videoElement.style.display = 'none';
-          try { videoElement.pause(); } catch {}
-        }
-        audioQueue = [];
-        isPlaying = false;
-        document.querySelectorAll('.character-chat-item').forEach(item => {
-          item.style.display = 'none';
-        });
-      } else {
-        realtimeButton.classList.add('active');
-        startWebSocket();
-        if (conversationBg) conversationBg.style.display = 'block';
-        if (staticImage) staticImage.style.display = 'none';
-        if (videoElement) {
-          videoElement.style.display = 'block';
-          try { await videoElement.play(); } catch (e) { console.error('Video play failed:', e); }
-        }
-        document.querySelectorAll('.character-chat-item').forEach(item => {
-          item.style.display = 'block';
-        });
+    if (realtimeButton.classList.contains('active')) {
+      realtimeButton.classList.remove('active');
+      stopRecording();
+      try {
+        await cleanupResources();
+      } catch (err) {
+        console.error('Error cleaning up resources during toggle off', err);
       }
+      if (conversationBg) conversationBg.style.display = 'none';
+      if (staticImage) staticImage.style.display = 'block';
+      if (videoElement) {
+        videoElement.style.display = 'none';
+        try { videoElement.pause(); } catch {}
+      }
+      audioQueue = [];
+      isPlaying = false;
+      responseSpans = new Map();
+      markdownBuffer = new Map();
+      document.querySelectorAll('.character-chat-item').forEach(item => {
+        item.style.display = 'none';
+      });
+    } else {
+      realtimeButton.classList.add('active');
+      startWebSocket();
+      if (conversationBg) conversationBg.style.display = 'block';
+      if (staticImage) staticImage.style.display = 'none';
+      if (videoElement) {
+        videoElement.style.display = 'block';
+        try { await videoElement.play(); } catch (e) { console.error('Video play failed:', e); }
+      }
+      document.querySelectorAll('.character-chat-item').forEach(item => {
+        item.style.display = 'block';
+      });
+    }
+  }
+
+  if (realtimeButton) {
+    realtimeButton.addEventListener('click', onRealtimeButtonClick);
+    cleanupCallbacks.push(() => {
+      realtimeButton.removeEventListener('click', onRealtimeButtonClick);
     });
   }
 
@@ -506,6 +521,14 @@ export async function initDigtalHumanRealtimeButton() {
     }
 
 
+    function handleReceivedBinaryMessage(arrayBuffer) {
+      if (!(arrayBuffer instanceof ArrayBuffer)) return;
+      audioQueue.push(arrayBuffer);
+      if (!isPlaying) {
+        playNextAudio();
+      }
+    }
+
     function playNextAudio() {
       if (audioQueue.length > 0) {
         isPlaying = true;
@@ -565,7 +588,43 @@ export async function initDigtalHumanRealtimeButton() {
       realtimeChatHistory.push({ role, content });
       localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
     }
+
+    cleanupCallbacks.push(() => {
+      try {
+        stopRecording();
+      } catch (err) {
+        console.error('Failed to stop recording during cleanup', err);
+      }
+      try {
+        if (resultSocket && resultSocket.readyState !== WebSocket.CLOSED) {
+          resultSocket.close();
+        }
+      } catch (err) {
+        console.error('Failed to close result socket during cleanup', err);
+      }
+      socket = null;
+      resultSocket = null;
+      cleanupResources().catch(err => console.error('Cleanup error during teardown', err));
+      responseSpans = new Map();
+      markdownBuffer = new Map();
+      audioQueue = [];
+      isPlaying = false;
+    });
   }
+
+  return () => {
+    cleanupCallbacks.reverse().forEach(cb => {
+      try {
+        cb();
+      } catch (err) {
+        console.error('Cleanup callback failed', err);
+      }
+    });
+    const realtimeButtonElement = document.getElementById('btnRealtime');
+    if (realtimeButtonElement && realtimeButtonElement.classList.contains('active')) {
+      realtimeButtonElement.classList.remove('active');
+    }
+  };
 }
 
 export async function initDigtalHumanHistoryData() {

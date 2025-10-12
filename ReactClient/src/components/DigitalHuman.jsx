@@ -18,11 +18,23 @@ function DigitalHuman() {
   }, [])
 
   useEffect(() => {
+    let disposed = false
+    let cleanupRealtime = () => {}
+
     async function setup() {
       await initDigtalHumanHistoryData()
-      await initDigtalHumanRealtimeButton()
+      const cleanup = await initDigtalHumanRealtimeButton()
+      if (!disposed && typeof cleanup === 'function') {
+        cleanupRealtime = cleanup
+      }
     }
+
     setup()
+
+    return () => {
+      disposed = true
+      cleanupRealtime?.()
+    }
   }, [])
 
   return (
