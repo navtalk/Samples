@@ -12,22 +12,26 @@
 
 # NavTalk Samples
 
-> Official sample code and Software Development Kit (SDK) for **NavTalk Real-time Virtual Digital Human Platform**
+> Official sample code and Software Development Kit (SDK) for the **NavTalk Real-time Virtual Digital Human Platform**.
 
-Focused on building next-generation real-time digital human systems, especially suitable for intelligent customer service and virtual assistant applications.
+NavTalk provides everything you need to build immersive, real-time digital human experiences. These samples demonstrate how to
+integrate NavTalk across web, mobile, and backend applications, making it ideal for intelligent customer service and virtual
+assistant scenarios.
 
 
 
 ## ✨ Core Features
 
-With NavTalk SDK, your digital human will have the following capabilities:
+NavTalk SDK enables your digital human applications with:
 
-- **🧠 Intelligent Conversation & Decision Making** - Core conversational abilities powered by large language models, enabling deep language understanding and multi-turn reasoning
-- **🌍 Multi-language Real-time Interaction** - Supports real-time speech recognition and synthesis for 50+ languages with over 95% accuracy
-- **👄 Natural Expression & Lip Sync** - Deep learning-based precise audio-lip synchronization, enhancing the naturalness and realism of digital human expressions
-- **😊 Emotional Perception & Adaptation** - Through emotion recognition technology, digital humans can perceive user emotions and adjust responses accordingly, making interactions more human-like
-- **🎨 Highly Customizable** - Define character personality, language style, appearance, and personalized settings to fully meet different scenario requirements
-- **⚡ Low-latency Real-time Communication** - Built on WebSocket and WebRTC, ensuring end-to-end communication latency below 2000ms
+| Capability | Description |
+| --- | --- |
+| 🧠 Intelligent Conversation & Decision Making | Large language models deliver deep language understanding and multi-turn reasoning. |
+| 🌍 Multi-language Real-time Interaction | Supports real-time speech recognition and synthesis for 50+ languages with over 95% accuracy. |
+| 👄 Natural Expression & Lip Sync | Deep learning-powered lip synchronization makes on-screen avatars feel natural and expressive. |
+| 😊 Emotional Perception & Adaptation | Emotion recognition detects user sentiment and adjusts responses for human-like interactions. |
+| 🎨 Highly Customizable | Tune persona, tone, appearance, and other settings to match any scenario. |
+| ⚡ Low-latency Real-time Communication | WebSocket/WebRTC architecture keeps end-to-end latency below 2000 ms. |
 
 ### Future Roadmap
 
@@ -40,122 +44,81 @@ NavTalk SDK will also support more features such as **camera capture**, **online
 ```
 Samples/
 ├── HtmlClient/          # Basic HTML client example
-├── VueClient/           # Vue.js frontend example  
+├── VueClient/           # Vue.js frontend example
 ├── WebServer/           # Java backend service example
 ├── Android/             # Android mobile app example
 └── iOS/                 # iOS mobile app example
 ```
 
-### Directory Description
+### Directory Overview
 
-- **`HtmlClient/`** - Basic HTML client demonstrating native web integration
-- **`VueClient/`** - Modern Vue.js frontend with component-based architecture
-- **`WebServer/`** - Java backend service with WebSocket support
-- **`Android/`** - Native Android mobile application with WebRTC
-- **`iOS/`** - Native iOS mobile application with WebRTC
+- **`HtmlClient/`** – Minimal HTML implementation for quick WebSocket/WebRTC testing.
+- **`VueClient/`** – Component-based Vue.js front-end showcasing a richer UI experience.
+- **`WebServer/`** – Java backend service with WebSocket support and integration examples.
+- **`Android/`** – Native Android app demonstrating mobile real-time communication via WebRTC.
+- **`iOS/`** – Native iOS app mirroring Android functionality with platform-specific tooling.
 
 
 ## Quick Start
 
 ### Prerequisites
 
-- **Node.js** (v16+) - for Vue.js frontend
-- **Java** (v11+) - for backend server
-- **Maven** (v3.6+) - for Java dependency management
-- **Android Studio** - for Android development
-- **Xcode** - for iOS development (macOS only)
-- **Git** - for version control
+| Tool | Purpose |
+| --- | --- |
+| Node.js (v16+) | Required for the Vue.js front-end. |
+| Java (v11+) | Required for the backend server. |
+| Maven (v3.6+) | Java dependency management and builds. |
+| Android Studio | Android development environment. |
+| Xcode | iOS development (macOS only). |
+| Git | Version control and repository cloning. |
 
-### 1. Clone Repository
+### 1. Clone the repository
 
 ```bash
 git clone https://github.com/navtalk/Samples.git
 cd Samples
 ```
 
-### 2. Install Dependencies
+### 2. Install dependencies
 
-#### Web Applications
+**Web Applications**
 
-**HTML Client**
-```bash
-# No installation required - just open the HTML file
-```
+| Project | Commands |
+| --- | --- |
+| HTML Client | No installation required—open the HTML file directly. |
+| Vue.js Client | `cd VueClient && npm install` |
+| Backend Server | `cd WebServer && mvn clean install` |
 
-**Vue.js Client**
-```bash
-cd VueClient
-npm install
-```
+**Mobile Applications**
 
-**Backend Server**
-```bash
-cd WebServer
-mvn clean install
-```
+| Platform | Commands |
+| --- | --- |
+| Android | `cd Android && ./gradlew build` |
+| iOS | `cd iOS && pod install` |
 
-#### Mobile Applications
+### 3. Run the samples
 
-**Android**
-```bash
-cd Android
-./gradlew build
-```
+**Web Applications**
 
-**iOS**
-```bash
-cd iOS
-pod install
-```
+| Project | How to run |
+| --- | --- |
+| HTML Client | Open `HtmlClient/demo.html` in your browser. |
+| Vue Client | `cd VueClient && npm start` |
+| Backend Server | `cd WebServer && mvn spring-boot:run` |
 
-### 3. Run Applications
+**Mobile Applications**
 
-#### Web Applications
-
-**HTML Client**
-```bash
-# Simply open in browser
-open HtmlClient/demo.html
-```
-
-**Vue Client**
-```bash
-cd VueClient
-npm start
-```
-
-**Backend Server**
-```bash
-cd WebServer
-mvn spring-boot:run
-```
-
-#### Mobile Applications
-
-**Android**
-```bash
-cd Android
-./gradlew installDebug
-# Or open in Android Studio and run
-```
-
-**iOS**
-```bash
-# Open NavTalk.xcworkspace in Xcode and run
-open iOS/NavTalk.xcworkspace
-```
+| Platform | How to run |
+| --- | --- |
+| Android | `cd Android && ./gradlew installDebug` or run from Android Studio. |
+| iOS | Open `iOS/NavTalk.xcworkspace` in Xcode and run on a simulator or device. |
 
 
-## Documentation Resources
+## Documentation & Support
 
-- **Official Website**: [NavTalk Official Website](https://www.navtalk.ai)
-- **API Documentation**: [NavTalk API Documentation](https://navtalk.gitbook.io/api)
-- **License**: [MIT License](https://opensource.org/licenses/MIT)
+- **Official Website** – [navtalk.ai](https://www.navtalk.ai)
+- **API Documentation** – [NavTalk API Documentation](https://navtalk.gitbook.io/api)
+- **License** – [MIT License](https://opensource.org/licenses/MIT)
 
-## Support
-
-If you encounter any issues during use, please contact us through the following channels:
-
-- Visit [Official Website](https://navtalk.ai/support/) for support
-- Check [API Documentation](https://navtalk.gitbook.io/api) for detailed instructions
+Need help? Visit the [support portal](https://navtalk.ai/support/) or consult the [API documentation](https://navtalk.gitbook.io/api) for detailed guides and troubleshooting tips.
 
