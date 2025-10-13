@@ -134,6 +134,7 @@ cd Samples
 
 - **Official Website** – <a href="https://www.navtalk.ai" target="_blank" rel="noopener noreferrer">navtalk.ai</a>
 - **API Documentation** – <a href="https://navtalk.gitbook.io/api" target="_blank" rel="noopener noreferrer">NavTalk API Documentation</a>
+- **Community Discord** – <a href="https://discord.gg/A9VE3zXM9p" target="_blank" rel="noopener noreferrer">Join the NavTalk Discord</a>
 - **License** – <a href="https://opensource.org/licenses/MIT" target="_blank" rel="noopener noreferrer">MIT License</a>
 
 ## Demo Videos
