@@ -61,7 +61,7 @@ class RealtimeActivity : AppCompatActivity() {
 
     // Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
     // Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
-    private val characterName = "navtalk.Alex"
+    private val characterName = "your_character"
     // WebRTC
     private lateinit var eglBase: EglBase
     private lateinit var peerConnectionFactory: PeerConnectionFactory
@@ -224,6 +224,7 @@ class RealtimeActivity : AppCompatActivity() {
                 webSocket.send(createMsg.toString())
             }
 
+            @RequiresApi(Build.VERSION_CODES.S)
             override fun onMessage(webSocket: WebSocket, text: String) {
                 try {
                     val msg = JSONObject(text)
@@ -432,7 +433,7 @@ class RealtimeActivity : AppCompatActivity() {
         }
 
         audioRecord = AudioRecord(
-            MediaRecorder.AudioSource.VOICE_COMMUNICATION, sampleRate,
+            MediaRecorder.AudioSource.MIC, sampleRate,
             AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, bufferSize
         )
 
@@ -455,6 +456,8 @@ class RealtimeActivity : AppCompatActivity() {
             while (isActive && audioSending && realtimeSocket != null) {
                 val n = audioRecord?.read(buf, 0, buf.size) ?: 0
                 if (n > 0) {
+                    audioTrack?.write(buf, 0, n)
+
                     val b64 = Base64.encodeToString(buf.copyOf(n), Base64.NO_WRAP)
                     val chunkSize = 4096
                     var i = 0
@@ -491,6 +494,7 @@ class RealtimeActivity : AppCompatActivity() {
     }
 
     // WebRTC signaling processing
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun handleOffer(msg: JSONObject) {
         val sdpObj = msg.getJSONObject("sdp")
         val desc = SessionDescription(
