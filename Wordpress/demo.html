@@ -15,7 +15,7 @@
         window.NavTalkConfig = window.NavTalkConfig || {};
         
         // ✒️ API Key - Your NavTalk API key
-        window.NavTalkConfig.API_KEY = window.NavTalkConfig.API_KEY || "sk_navtalk_your_api_key";
+        window.NavTalkConfig.API_KEY = window.NavTalkConfig.API_KEY || "sk_navtalk_9p9flyCQXGKXuu1iPZXaBYsQhQRq0ZDm";
         
         // ✒️ Character Name 
         // Check available characters at: https://console.navtalk.ai/login#/playground/realtime_digital_human
@@ -831,8 +831,21 @@
                 console.log("  readyState:", resultSocket.readyState);
             };
 
-            function handleOffer(message) {
-                console.log("Handling offer for targetSessionId:", message.targetSessionId);
+            async function handleOffer(message) {
+                // Fetch ICE servers configuration
+                try {
+                    const res = await fetch('https://' + webrtcUrl + '/api/webrtc/generate-ice-servers', { method: 'POST' });
+                    const data = await res.json();
+                    console.log("handleOffer - ICE servers response:", data);
+                    if (data && data.code === 200 && data.data && data.data.iceServers) {
+                        configuration.iceServers = data.data.iceServers;
+                        console.log("handleOffer - Updated configuration:", configuration);
+                    }
+                } catch (error) {
+                    console.error("handleOffer - Failed to fetch ICE servers:", error);
+                    // Continue with default configuration if fetch fails
+                }
+                
                 const targetId = message.targetSessionId;
                 const offer = new RTCSessionDescription(message.sdp);
                 console.log("Created offer SDP:", offer);
