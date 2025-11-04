@@ -196,11 +196,24 @@ export async function initDigtalHumanRealtimeButton() {
 
     resultSocket.onclose = () => {};
 
-    function handleOffer(message) {
+    async function handleOffer(message) {
       const targetId = message.targetSessionId;
       console.log('Handling offer for targetSessionId:', targetId);
       const offer = new RTCSessionDescription(message.sdp);
       console.log('Created offer SDP:', offer);
+      try {
+        const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
+        const res = await fetch(endpoint, { method: 'POST' })
+        if (res.ok) {
+          const data = await res.json()
+          const servers = data?.data?.iceServers ?? data?.iceServers
+          if (Array.isArray(servers) && servers.length > 0) {
+            configuration = { iceServers: servers }
+          }
+        }
+      } catch (e) {
+        // keep default configuration
+      }
       peerConnectionA = new RTCPeerConnection(configuration);
       console.log('Created peer connection:', peerConnectionA);
       peerConnectionA.setRemoteDescription(offer)
@@ -231,13 +244,13 @@ export async function initDigtalHumanRealtimeButton() {
         if (remoteVideoA) {
           remoteVideoA.srcObject = event.streams[0];
           console.log('Set video source object:', remoteVideoA.srcObject);
-          setTimeout(() => { 
-            try { 
-              remoteVideoA.play(); 
+          setTimeout(() => {
+            try {
+              remoteVideoA.play();
               console.log('Video play started successfully');
-            } catch (e) { 
-              console.error('Video play failed:', e); 
-            } 
+            } catch (e) {
+              console.error('Video play failed:', e);
+            }
           }, 1000);
         } else {
           console.error('Remote video element not found');

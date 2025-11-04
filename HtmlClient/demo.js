@@ -265,11 +265,24 @@ async function initDigtalHumanRealtimeButton() {
             console.log("  readyState:", resultSocket.readyState);
         };
 
-        function handleOffer(message) {
+        async function handleOffer(message) {
             console.log("Handling offer for targetSessionId:", message.targetSessionId);
             const targetId = message.targetSessionId;
             const offer = new RTCSessionDescription(message.sdp);
             console.log("Created offer SDP:", offer);
+            try {
+                const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
+                const res = await fetch(endpoint, { method: 'POST' })
+                if (res.ok) {
+                    const data = await res.json()
+                    const servers = data?.data?.iceServers ?? data?.iceServers
+                    if (Array.isArray(servers) && servers.length > 0) {
+                        configuration = { iceServers: servers }
+                    }
+                }
+            } catch (e) {
+                // keep default configuration
+            }
             peerConnectionA = new RTCPeerConnection(configuration);
             console.log("Created peer connection:", peerConnectionA);
 
@@ -598,7 +611,7 @@ async function initDigtalHumanRealtimeButton() {
                 console.log("data：" + data)
                 handleFunctionCall(data);
                 break;
-            
+
             case "session.gpu_full":
                 this.$message.error("The gpu resources are full. Please try again later!")
                 break;
@@ -606,7 +619,7 @@ async function initDigtalHumanRealtimeButton() {
             case "session.insufficient_balance":
                 this.$message.error("Insufficient balance, service has stopped, please recharge!")
                 break;
-      
+
             default:
                 console.warn("Unhandled event type: " + data.type);
         }
@@ -830,7 +843,7 @@ async function initDigtalHumanRealtimeButton() {
         return tmp.buffer;
     }
 
-   
+
 
     async function appendRealtimeChatHistory(role, content) {
         let history = localStorage.getItem("realtimeChatHistory");
@@ -840,7 +853,7 @@ async function initDigtalHumanRealtimeButton() {
 
         localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
     }
-    
+
 }
 
 async function initDigtalHumanHistoryData(){
@@ -876,7 +889,7 @@ function appendContentToList(role, context) {
   return contentSpan;
 }
 
- 
+
 initDigtalHumanHistoryData();
 
 initDigtalHumanRealtimeButton();
