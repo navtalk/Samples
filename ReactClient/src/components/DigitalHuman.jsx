@@ -3,7 +3,7 @@ import { marked } from 'marked'
 import Prism from 'prismjs'
 import { initDigtalHumanHistoryData, initDigtalHumanRealtimeButton } from '../lib/realtime'
 
-const staticImageSrc = 'https://api.navtalk.ai/uploadFiles/navtalk.Alex.png'
+const staticImageSrc = 'https://api.navtalk.ai/uploadFiles/navtalk.Zoe.png'
 const bgImageSrc = 'https://gd-hbimg.huaban.com/67869c1b642e1accb9378fb4af28a6f5729bd35530722-xfzjYw_fw1200'
 
 if (typeof window !== 'undefined') {

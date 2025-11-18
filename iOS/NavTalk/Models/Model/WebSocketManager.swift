@@ -4,34 +4,34 @@ import AVFoundation
 import Starscream
 
 class WebSocketManager: NSObject, WebSocketDelegate{
-    
+
     var superVC: RealTimeTalkVC!
-    
+
     enum websocketStatus: Int{
         case NotConnected = 0
         case Connectting = 1
         case Connected = 2
         case UpdatedSession = 3
     }
-    
+
     //MARK: 1.init
     static let shared = WebSocketManager()
     private override init(){
         super.init()
     }
-    
+
     //MARK: 2.Connect NavTalk WebSocket
     var socket_status: websocketStatus = .NotConnected
     var socket: WebSocket!
-    
+
     let baseUrl = "transfer.navtalk.ai"
     let license = "Your Api Key"
-   
-    // Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, ...
+
+    // Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, ...
     let characterName = "navtalk.Leo"
     // alloy/shimmer/ballad/coral/echo/ash/sage/verse
     let voice_type = "verse"
-    
+
     func connectWebSocketOfNavTalk(){
         if socket_status == .NotConnected{
             //(1).Get Full URL
@@ -50,10 +50,10 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         }else if socket_status == .Connectting{
             MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebSocket is currently connecting, please try again later.", subTitle: "", view: getCurrentVc().view)
         }
-        
-        
+
+
     }
-    
+
     //MARK: 3.Disconnect NavTalk WebSocket
     func disconnectWebSocketOfNavTalk(){
         if socket_status == .Connected{
@@ -116,7 +116,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
                 NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
         }
     }
-    
+
     //MARK: 5.Set this chat configuration parameters
     func settingThisTalkConfiguration(){
         var sessionConfig = [String: Any]()
@@ -156,7 +156,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             }
         }
     }
-    
+
     //MARK: 6.Handle Recieved Message
     var audio_String = ""
     var audio_String_count = 0
@@ -173,7 +173,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             print("Conver Fail: \(error.localizedDescription)")
         }
         if let type = message_dict["type"] as? String, type == "response.audio.delta"{
-            
+
         }else{
             print("Handle Recieved Message:\(message_dict)")
         }
@@ -182,7 +182,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             settingThisTalkConfiguration()
             return
         }
-        
+
         //(3).if feedback: session.updated, this chat has updated success.
         if let type = message_dict["type"] as? String, type == "session.updated"{
             print("===========================\nConfigure session Success")
@@ -231,7 +231,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         if let type = message_dict["type"] as? String, type == "response.function_call_arguments.done"{
             handleFunctionCall(message: message_dict)
         }
-        
+
     }
     //MARK: 7.Send History
     func sendHistoryToCurrentChat(){
@@ -266,7 +266,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             }
         }
     }
-    
+
     //MARK: 8.Handle Function Call
     func handleFunctionCall(message: [String: Any]){
         print("Handle Function Call:\(message)")

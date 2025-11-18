@@ -59,7 +59,7 @@ class RealtimeActivity : AppCompatActivity() {
     private val baseUrl = "transfer.navtalk.ai"
     private var license = "your_license"
 
-    // Currently supported characters include: navtalk.Alex, navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
+    // Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
     // Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
     private val characterName = "your_character"
     // WebRTC
