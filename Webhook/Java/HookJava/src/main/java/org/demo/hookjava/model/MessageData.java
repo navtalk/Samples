@@ -1,6 +1,6 @@
-package org.demo.hookjava.demos.web;
+package org.demo.hookjava.model;
 
-public class WebhookPayload {
+public class MessageData {
     private String event;       // session.created、conversation.output、session.closed
     private String sessionId;
     private String role;        // ai、user、system
