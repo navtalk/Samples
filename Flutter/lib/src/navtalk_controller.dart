@@ -45,6 +45,8 @@ class NavTalkController extends ChangeNotifier {
   final int sampleRate = 24000;
   final String _historyKey = 'realtimeChatHistory';
   final String _licenseKey = 'navtalkLicense';
+  String? _proxySessionId;
+  String? _targetSessionId;
   String _localSessionId = const Uuid().v4();
   bool _isDisposed = false;
   bool _isRecorderInitialized = false;
@@ -118,10 +120,13 @@ class NavTalkController extends ChangeNotifier {
     }
 
     try {
-      await Future.wait(<Future<void>>[
-        _openRealtimeSocket(),
-        _openWebrtcSocket(),
-      ]);
+      // First connect main WebSocket, WebRTC signaling will be established after receiving session.session_id
+      _proxySessionId = null;
+      if (_webrtcSocket != null) {
+        await _webrtcSocket!.close(1000, 'bye');
+        _webrtcSocket = null;
+      }
+      await _openRealtimeSocket();
     } catch (error) {
       _setError('Failed to start NavTalk session: $error');
       await disconnect();
@@ -152,6 +157,8 @@ class NavTalkController extends ChangeNotifier {
     remoteRenderer.srcObject = null;
     _assistantBuffer = StringBuffer();
     _assistantIndex = null;
+    _proxySessionId = null;
+    _targetSessionId = null;
     if (!_isDisposed) {
       _updateStatus(NavTalkStatus.notConnected);
     }
@@ -211,37 +218,53 @@ class NavTalkController extends ChangeNotifier {
     );
   }
 
-  Future<void> _openWebrtcSocket() async {
+  Future<void> _setupSignalingSocketIfReady() async {
+    if (_proxySessionId == null || _webrtcSocket != null) {
+      return;
+    }
+
+    // Close existing socket if any
+    if (_webrtcSocket != null) {
+      await _webrtcSocket!.close(1000, 'bye');
+      _webrtcSocket = null;
+    }
+
+    _targetSessionId = 'target-$_proxySessionId';
     final uri = Uri.parse(
-      'wss://$baseUrl/api/webrtc?userId=${Uri.encodeComponent(_license)}',
+      'wss://$baseUrl/api/webrtc?userId=${Uri.encodeComponent(_proxySessionId!)}',
     );
-    final WebSocket socket = await WebSocket.connect(uri.toString());
-    socket.pingInterval = const Duration(seconds: 20);
-    _localSessionId = const Uuid().v4();
-    final Map<String, dynamic> createMessage = <String, dynamic>{
-      'type': 'create',
-      'targetSessionId': _localSessionId,
-    };
-    socket.add(jsonEncode(createMessage));
-    _webrtcSocket = socket;
-    _webrtcSub = socket.listen(
-      (dynamic event) {
-        if (event is String) {
-          _handleWebrtcMessage(event);
-        }
-      },
-      onError: (Object error) {
-        _setError('WebRTC signaling error: $error');
-        unawaited(disconnect());
-      },
-      onDone: () {
-        if (_status != NavTalkStatus.notConnected) {
-          _setError('WebRTC signaling closed unexpectedly.');
+    
+    try {
+      final WebSocket socket = await WebSocket.connect(uri.toString());
+      socket.pingInterval = const Duration(seconds: 20);
+      _localSessionId = _targetSessionId!;
+      final Map<String, dynamic> createMessage = <String, dynamic>{
+        'type': 'create',
+        'targetSessionId': _localSessionId,
+      };
+      socket.add(jsonEncode(createMessage));
+      _webrtcSocket = socket;
+      _webrtcSub = socket.listen(
+        (dynamic event) {
+          if (event is String) {
+            _handleWebrtcMessage(event);
+          }
+        },
+        onError: (Object error) {
+          _setError('WebRTC signaling error: $error');
           unawaited(disconnect());
-        }
-      },
-      cancelOnError: true,
-    );
+        },
+        onDone: () {
+          if (_status != NavTalkStatus.notConnected) {
+            _setError('WebRTC signaling closed unexpectedly.');
+            unawaited(disconnect());
+          }
+        },
+        cancelOnError: true,
+      );
+    } catch (error) {
+      _setError('Failed to setup WebRTC signaling socket: $error');
+    }
   }
 
   void _handleRealtimeMessage(String payload) {
@@ -262,6 +285,18 @@ class NavTalkController extends ChangeNotifier {
         unawaited(_startAudioCapture());
         if (_status != NavTalkStatus.connected) {
           _updateStatus(NavTalkStatus.connected);
+        }
+        break;
+      case 'session.session_id':
+        final String? sessionId = data['sessionId'] as String? ?? data['session_id'] as String?;
+        if (sessionId != null && sessionId.isNotEmpty && sessionId != _proxySessionId) {
+          debugPrint('Received proxy session_id: $sessionId');
+          _proxySessionId = sessionId;
+          if (_webrtcSocket != null) {
+            await _webrtcSocket!.close(1000, 'bye');
+            _webrtcSocket = null;
+          }
+          unawaited(_setupSignalingSocketIfReady());
         }
         break;
       case 'session.backend.error':
@@ -503,9 +538,10 @@ class NavTalkController extends ChangeNotifier {
       return;
     }
     await _peerConnection?.setLocalDescription(answer);
+    final String? currentTargetSessionId = _targetSessionId ?? _localSessionId;
     final Map<String, dynamic> message = <String, dynamic>{
       'type': 'answer',
-      'targetSessionId': _localSessionId,
+      'targetSessionId': currentTargetSessionId,
       'sdp': <String, dynamic>{
         'type': answer.type,
         'sdp': answer.sdp,
@@ -559,9 +595,10 @@ class NavTalkController extends ChangeNotifier {
       if (candidate.candidate == null || candidate.candidate!.isEmpty) {
         return;
       }
+      final String? currentTargetSessionId = _targetSessionId ?? _localSessionId;
       final Map<String, dynamic> message = <String, dynamic>{
         'type': 'iceCandidate',
-        'targetSessionId': _localSessionId,
+        'targetSessionId': currentTargetSessionId,
         'candidate': <String, dynamic>{
           'candidate': candidate.candidate,
           'sdpMid': candidate.sdpMid,
