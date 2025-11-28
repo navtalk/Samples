@@ -13,7 +13,8 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     private var RTC_URL = "stun:stun.l.google.com:19302"
     private var peerConnection: RTCPeerConnection?
     private var peerConnectionFactory: RTCPeerConnectionFactory?
-    private var targetSessionId = "123"
+    var proxySessionId: String?
+    private var targetSessionId: String?
     
     enum webRTCSocketStatus: Int{
         case NotConnected = 0
@@ -48,8 +49,32 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     }
     //MARK: 2.1.WebSocket Data Chanel：
     func gotoConnectSingalSocket(){
-        let encodedLicense = WebSocketManager.shared.license.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "wss://\(WebSocketManager.shared.baseUrl)/api/webrtc?userId=\(encodedLicense)") else { return }
+        // Don't connect immediately, wait for session.session_id event
+        // The connection will be established in setupSignalingSocketIfReady()
+        print("WebRTC signaling socket will be established after receiving session.session_id")
+    }
+    
+    //MARK: 2.1.1.Setup Signaling Socket If Ready
+    func setupSignalingSocketIfReady(){
+        guard let sessionId = proxySessionId, webRTC_socket_status == .NotConnected else {
+            print("Cannot setup signaling socket: proxySessionId is nil or already connected")
+            return
+        }
+        
+        // Close existing socket if any
+        if webSocket != nil {
+            webSocket.disconnect()
+            webSocket = nil
+        }
+        
+        targetSessionId = "target-\(sessionId)"
+        let encodedSessionId = sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        guard let url = URL(string: "wss://\(WebSocketManager.shared.baseUrl)/api/webrtc?userId=\(encodedSessionId)") else {
+            print("Failed to create WebRTC signaling URL")
+            return
+        }
+        
+        print("Starting WebRTC signaling connection for session: \(sessionId)")
         let request = URLRequest(url: url)
         webSocket = WebSocket(request: request)
         webSocket.delegate = self
@@ -103,9 +128,13 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     }
     //MARK: 2.3.Send Start Command
     func gotoSendStartCommand(){
+        guard let currentTargetSessionId = targetSessionId else {
+            print("Cannot send start command: targetSessionId is nil")
+            return
+        }
         var sessionConfig = [String: Any]()
         sessionConfig["type"] = "create"
-        sessionConfig["targetSessionId"] = targetSessionId
+        sessionConfig["targetSessionId"] = currentTargetSessionId
         print("===========================\nSend Start Command:\(sessionConfig)")
         if let jsonData = try? JSONSerialization.data(withJSONObject: sessionConfig),
            let jsonString = String(data: jsonData, encoding: .utf8){
@@ -240,6 +269,8 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         }else if webRTC_socket_status == .Connectting{
             webSocket.disconnect()
         }
+        proxySessionId = nil
+        targetSessionId = nil
     }
     
     //MARK: 3.PeerConnectionDelegate
@@ -356,9 +387,13 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     }
     //MARK: 3.4.Local ICE Candidate
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
+        guard let currentTargetSessionId = targetSessionId else {
+            print("Cannot send ICE candidate: targetSessionId is nil")
+            return
+        }
         let message: [String: Any] = [
             "type": "iceCandidate",
-            "targetSessionId": targetSessionId,
+            "targetSessionId": currentTargetSessionId,
             "candidate": [
                 "candidate": candidate.sdp,
                 "sdpMLineIndex": candidate.sdpMLineIndex,

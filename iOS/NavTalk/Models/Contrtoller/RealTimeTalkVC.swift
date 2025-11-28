@@ -168,9 +168,9 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             //Refresh UI
             talk_status = .connecting
             refreshNavTalkStatusUI()
-            //Connect RTC-WebSocket
+            //Connect main WebSocket first (WebRTC signaling will be established after receiving session.session_id)
             isJudgeNotificationOfStatuse = true
-            WebRTCManager.shared.connectWebRTCOfNavTalk()
+            WebSocketManager.shared.connectWebSocketOfNavTalk()
         }
     }
     @objc func clickStopTapView(){
@@ -242,7 +242,8 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.stopAllTask()
             }else if WebRTCManager.shared.webRTC_socket_status == .Connected{
                 print("RTC-WebSocket status is changed，current is--Connected")
-                WebSocketManager.shared.connectWebSocketOfNavTalk()
+                // WebRTC signaling socket is connected, send start command
+                WebRTCManager.shared.gotoSendStartCommand()
             }
         }
     }
