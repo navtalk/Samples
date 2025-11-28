@@ -70,6 +70,8 @@ class RealtimeActivity : AppCompatActivity() {
     // WebSocket
     private var realtimeSocket: WebSocket? = null
     private var resultSocket: WebSocket? = null
+    private var proxySessionId: String? = null
+    private var targetSessionId: String? = null
 
     // Audio
     private var audioRecord: AudioRecord? = null
@@ -169,9 +171,13 @@ class RealtimeActivity : AppCompatActivity() {
         binding.llRealtime.tag = true
         binding.llRealtime.setBackgroundResource(R.drawable.circular_button_call_end_bg)
         binding.tvRealtime.text ="Hung Up"
-        // Open WebSockets
+        // First connect main WebSocket, WebRTC signaling will be established after receiving session.session_id
+        proxySessionId = null
+        if (resultSocket != null) {
+            resultSocket?.close(1000, "bye")
+            resultSocket = null
+        }
         openRealtimeSocket()
-        openResultWebrtcSocket()
     }
 
     @SuppressLint("SetTextI18n")
@@ -187,6 +193,9 @@ class RealtimeActivity : AppCompatActivity() {
 
         peerConnectionA?.close()
         peerConnectionA = null
+
+        proxySessionId = null
+        targetSessionId = null
 
         binding.staticImage.visibility = View.VISIBLE
     }
@@ -211,13 +220,26 @@ class RealtimeActivity : AppCompatActivity() {
         })
     }
 
-    private fun openResultWebrtcSocket() {
-        val url = "wss://$baseUrl/api/webrtc?userId=${license.urlEncode()}"
+    private fun setupSignalingSocketIfReady() {
+        if (proxySessionId == null || resultSocket != null) {
+            return
+        }
+
+        // Close existing socket if any
+        if (resultSocket != null) {
+            resultSocket?.close(1000, "bye")
+            resultSocket = null
+        }
+
+        targetSessionId = "target-$proxySessionId"
+        val url = "wss://$baseUrl/api/webrtc?userId=${proxySessionId?.urlEncode()}"
         val req = Request.Builder().url(url).build()
+        
+        Log.i("RT", "Starting WebRTC signaling connection for session: $proxySessionId")
+        
         resultSocket = webSocketClient.newWebSocket(req, object : WebSocketListener() {
             override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.i("RT", "webrtc WS open")
-                val targetSessionId = "123"
                 val createMsg = JSONObject()
                     .put("type", "create")
                     .put("targetSessionId", targetSessionId)
@@ -266,6 +288,19 @@ class RealtimeActivity : AppCompatActivity() {
         when (data.optString("type")) {
             "session.created" -> sendSessionUpdate()
             "session.updated" -> startAudioCapture()
+            "session.session_id" -> {
+                val sessionId = data.optString("sessionId").takeIf { it.isNotEmpty() }
+                    ?: data.optString("session_id").takeIf { it.isNotEmpty() }
+                if (sessionId != null && sessionId != proxySessionId) {
+                    Log.i("RT", "Received proxy session_id: $sessionId")
+                    proxySessionId = sessionId
+                    if (resultSocket != null) {
+                        resultSocket?.close(1000, "bye")
+                        resultSocket = null
+                    }
+                    setupSignalingSocketIfReady()
+                }
+            }
             "session.backend.error" -> {
                 showErrorMessageAndDisConnect(data.optString("message").toString())
             }
@@ -509,7 +544,8 @@ class RealtimeActivity : AppCompatActivity() {
                         if (sdp == null) return
                         peerConnectionA?.setLocalDescription(object : SdpObserverAdapter() {
                             override fun onSetSuccess() {
-                                val targetId = msg.optString("targetSessionId")
+                                val targetId = msg.optString("targetSessionId").takeIf { it.isNotEmpty() }
+                                    ?: targetSessionId
                                 val answerMsg = JSONObject().apply {
                                     put("type", "answer")
                                     put("targetSessionId", targetId)
@@ -552,9 +588,10 @@ class RealtimeActivity : AppCompatActivity() {
         peerConnectionA = peerConnectionFactory.createPeerConnection(rtcConfig, object : PeerConnection.Observer {
             override fun onIceCandidate(candidate: IceCandidate?) {
                 candidate ?: return
+                val currentTargetSessionId = targetSessionId ?: return
                 val msg = JSONObject().apply {
                     put("type", "iceCandidate")
-                    put("targetSessionId", "123")
+                    put("targetSessionId", currentTargetSessionId)
                     put("candidate", JSONObject().apply {
                         put("candidate", candidate.sdp)
                         put("sdpMid", candidate.sdpMid)
