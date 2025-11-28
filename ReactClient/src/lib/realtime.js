@@ -19,6 +19,8 @@ let baseUrl = "transfer.navtalk.ai";
 
 let peerConnectionA = null;
 let resultSocket = null;
+let proxySessionId = null;
+let targetSessionId = null;
 let pc = null;
 let currentTracks = [];
 let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -139,6 +141,15 @@ export async function initDigtalHumanRealtimeButton() {
         remoteVideo.removeAttribute('src');
         remoteVideo.load();
       }
+
+      if (resultSocket) {
+        console.log('Closing resultSocket');
+        resultSocket.close();
+        resultSocket = null;
+      }
+      proxySessionId = null;
+      targetSessionId = null;
+
       await new Promise(resolve => setTimeout(resolve, 100));
     } catch (err) {
       console.error('Resource cleanup error:', err);
@@ -146,10 +157,17 @@ export async function initDigtalHumanRealtimeButton() {
   }
 
   async function startWebSocket() {
-    const websocketUrl = "wss://" + baseUrl + "/api/realtime-api";
-    const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
-    socket = new WebSocket(websocketUrlWithParams);
-    socket.binaryType = 'arraybuffer';
+    try {
+      proxySessionId = null;
+      if (resultSocket) {
+        console.log('Closing previous WebRTC result socket before reconnecting');
+        resultSocket.close();
+        resultSocket = null;
+      }
+      const websocketUrl = "wss://" + baseUrl + "/api/realtime-api";
+      const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
+      socket = new WebSocket(websocketUrlWithParams);
+      socket.binaryType = 'arraybuffer';
 
     socket.onmessage = (event) => {
       if (typeof event.data === 'string') {
@@ -184,34 +202,68 @@ export async function initDigtalHumanRealtimeButton() {
       stopRecording();
       responseSpans = new Map();
     };
+    } catch (error) {
+      console.error('Error starting WebSocket connection:', error);
+      alert('WebSocket connection failed: ' + error.message);
+    }
+  }
 
-    let remoteVideoA = document.getElementById('character-avatar-video');
-    let targetSessionId = LICENSE;
-    resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);
+  const remoteVideoA = document.getElementById('character-avatar-video');
+
+  function setupSignalingSocketIfReady() {
+    if (!proxySessionId || resultSocket) {
+      return;
+    }
+
+    targetSessionId = `target-${proxySessionId}`;
+    const queryString = new URLSearchParams({ userId: proxySessionId }).toString();
+    const signalingUrl = `wss://${baseUrl}/api/webrtc?${queryString}`;
+
+    console.log("Start connecting " + (new Date()).toLocaleTimeString());
+    console.log("Opening WebRTC result socket:", signalingUrl);
+    resultSocket = new WebSocket(signalingUrl);
 
     resultSocket.onopen = () => {
+      console.log("WebSocketResult connection established.");
+      console.log("Connection successful " + (new Date()).toLocaleTimeString());
       const message = { type: 'create', targetSessionId: targetSessionId };
       resultSocket.send(JSON.stringify(message));
     };
 
     resultSocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'offer') {
-        handleOffer(message);
-      } else if (message.type === 'answer') {
-        handleAnswer(message);
-      } else if (message.type === 'iceCandidate') {
-        handleIceCandidate(message);
+      try {
+        const message = JSON.parse(event.data);
+        console.log("Received message:", message);
+        if (message.type === 'offer') {
+          handleOffer(message);
+        } else if (message.type === 'answer') {
+          handleAnswer(message);
+        } else if (message.type === 'iceCandidate') {
+          handleIceCandidate(message);
+        }
+      } catch (err) {
+        console.error("Failed to parse result socket message:", err);
       }
     };
 
-    resultSocket.onerror = () => {
+    resultSocket.onerror = (error) => {
       cleanupResources();
+      console.error("WebSocket error:", error);
     };
 
-    resultSocket.onclose = () => {};
+    resultSocket.onclose = (event) => {
+      console.log("WebSocket connection closed:");
+      console.log("  code:", event.code);
+      console.log("  reason:", event.reason);
+      console.log("  wasClean:", event.wasClean);
+      const readyState = resultSocket ? resultSocket.readyState : 'closed';
+      console.log("  readyState:", readyState);
+      resultSocket = null;
+      targetSessionId = null;
+    };
+  }
 
-    async function handleOffer(message) {
+  async function handleOffer(message) {
       const targetId = message.targetSessionId;
       console.log('Handling offer for targetSessionId:', targetId);
       const offer = new RTCSessionDescription(message.sdp);
@@ -276,31 +328,40 @@ export async function initDigtalHumanRealtimeButton() {
         if (event.candidate) {
           const message = {
             type: 'iceCandidate',
-            targetSessionId: targetId,
+            targetSessionId: targetSessionId,
             candidate: event.candidate
           };
           resultSocket.send(JSON.stringify(message));
         }
       };
-    }
+  }
 
-    const events_maps = new Map();
+  const events_maps = new Map();
 
-    function handleAnswer(message) {
-      const targetSessionId = message.targetSessionId;
-      const map_item = events_maps.get(targetSessionId);
-      if (!map_item) return;
-      pc = map_item.peerConnection;
-      const answer = new RTCSessionDescription(message.sdp);
-      if (pc.signalingState === 'stable') {
-        pc.restartIce();
-        recreateOffer(pc, targetSessionId, map_item.socket);
-      } else if (pc.signalingState === 'have-local-offer') {
-        pc.setRemoteDescription(answer).catch(err => console.error('Failed to handle Answer:', err));
+  function handleAnswer(message) {
+    const targetSessionId = message.targetSessionId;
+    const events_maps_local = window.NavTalkEventsMaps || events_maps;
+    const map_item = events_maps_local.get(targetSessionId);
+    if (!map_item) {
+      console.warn('handleAnswer: map_item not found for', targetSessionId);
+      if (peerConnectionA) {
+        const answer = new RTCSessionDescription(message.sdp);
+        peerConnectionA.setRemoteDescription(answer)
+          .catch(err => console.error('Failed to handle Answer:', err));
       }
+      return;
     }
+    pc = map_item.peerConnection;
+    const answer = new RTCSessionDescription(message.sdp);
+    if (pc.signalingState === 'stable') {
+      pc.restartIce();
+      recreateOffer(pc, targetSessionId, map_item.socket);
+    } else if (pc.signalingState === 'have-local-offer') {
+      pc.setRemoteDescription(answer).catch(err => console.error('Failed to handle Answer:', err));
+    }
+  }
 
-    async function recreateOffer(pc, targetSessionId, socket) {
+  async function recreateOffer(pc, targetSessionId, socket) {
       try {
         const offer = await pc.createOffer({
           offerToReceiveAudio: true,
@@ -313,13 +374,13 @@ export async function initDigtalHumanRealtimeButton() {
       }
     }
 
-    function handleIceCandidate(message) {
-      console.log('Handling ICE candidate:', message.candidate);
-      const candidate = new RTCIceCandidate(message.candidate);
-      peerConnectionA.addIceCandidate(candidate)
-        .then(() => console.log('ICE candidate added successfully'))
-        .catch(err => console.error('Error adding ICE candidate:', err));
-    }
+  function handleIceCandidate(message) {
+    console.log('Handling ICE candidate:', message.candidate);
+    const candidate = new RTCIceCandidate(message.candidate);
+    peerConnectionA.addIceCandidate(candidate)
+      .then(() => console.log('ICE candidate added successfully'))
+      .catch(err => console.error('Error adding ICE candidate:', err));
+  }
 
     function showErrorTip(message) {
       const realtimeButton = document.getElementById('btnRealtime');
@@ -376,6 +437,19 @@ export async function initDigtalHumanRealtimeButton() {
         case "session.updated":
           startRecording();
           break;
+        case "session.session_id": {
+          const sessionId = data.sessionId ?? data.session_id;
+          if (sessionId && sessionId !== proxySessionId) {
+            console.log("Received proxy session_id:", sessionId);
+            proxySessionId = sessionId;
+            if (resultSocket) {
+              resultSocket.close();
+              resultSocket = null;
+            }
+            setupSignalingSocketIfReady();
+          }
+          break;
+        }
         case "input_audio_buffer.speech_started":
           stopCurrentAudioPlayback();
           audioQueue = [];
@@ -623,7 +697,6 @@ export async function initDigtalHumanRealtimeButton() {
       audioQueue = [];
       isPlaying = false;
     });
-  }
 
   return () => {
     cleanupCallbacks.reverse().forEach(cb => {
