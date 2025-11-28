@@ -19,6 +19,8 @@ let baseUrl = "transfer.navtalk.ai"
 // Global variable for connection state
 let peerConnectionA = null;
 let resultSocket = null;
+let proxySessionId = null;
+let targetSessionId = null;
 // Global state management
 let pc = null;
 let currentTracks = [];
@@ -154,6 +156,14 @@ async function initDigtalHumanRealtimeButton() {
                 remoteVideo.load();
             }
 
+            if (resultSocket) {
+                console.log('Closing resultSocket');
+                resultSocket.close();
+                resultSocket = null;
+            }
+            proxySessionId = null;
+            targetSessionId = null;
+
             await new Promise(resolve => setTimeout(resolve, 100));
             console.log('Cleanup complete');
         } catch (err) {
@@ -162,13 +172,20 @@ async function initDigtalHumanRealtimeButton() {
     }
 
     async function startWebSocket() {
-        websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
-        // Retrieve license information from Chrome storage
-        const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
+        try {
+            proxySessionId = null;
+            if (resultSocket) {
+                console.log('Closing previous WebRTC result socket before reconnecting');
+                resultSocket.close();
+                resultSocket = null;
+            }
+            websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
+            // Retrieve license information from Chrome storage
+            const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
 
-        // Initialize the WebSocket connection
-        socket = new WebSocket(websocketUrlWithParams);
-        socket.binaryType = 'arraybuffer';
+            // Initialize the WebSocket connection
+            socket = new WebSocket(websocketUrlWithParams);
+            socket.binaryType = 'arraybuffer';
 
         // Listen for WebSocket messages
         socket.onmessage = (event) => {
@@ -218,179 +235,201 @@ async function initDigtalHumanRealtimeButton() {
             responseSpans = new Map();
 
         };
+        } catch (error) {
+            console.error('Error starting WebSocket connection:', error);
+            alert('WebSocket connection failed: ' + error.message);
+        }
+    }
 
+    const remoteVideoA = document.getElementById('character-avatar-video');
 
-        // WebSocket for receiving video results
-        let remoteVideoA = document.getElementById('character-avatar-video');
+    function setupSignalingSocketIfReady() {
+        if (!proxySessionId || resultSocket) {
+            return;
+        }
 
-        let targetSessionId = LICENSE;
-        console.log("Start connecting " + (new Date()).toLocaleTimeString())
-        resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
+        targetSessionId = `target-${proxySessionId}`;
+        const queryString = new URLSearchParams({ userId: proxySessionId }).toString();
+        const signalingUrl = `wss://${baseUrl}/api/webrtc?${queryString}`;
 
-        let localStream;
+        console.log("Start connecting " + (new Date()).toLocaleTimeString());
+        console.log("Opening WebRTC result socket:", signalingUrl);
+        resultSocket = new WebSocket(signalingUrl);
 
         resultSocket.onopen = () => {
             console.log("WebSocketResult connection established.");
-            console.log("Connection successful " + (new Date()).toLocaleTimeString())
+            console.log("Connection successful " + (new Date()).toLocaleTimeString());
             const message = { type: 'create', targetSessionId: targetSessionId };
             resultSocket.send(JSON.stringify(message));
         };
 
         resultSocket.onmessage = (event) => {
-            console.log("Received message:", event.data);
-            const message = JSON.parse(event.data);
-            console.log("Received message:", message.type);
-            console.log("Received message:", message);
-            if (message.type === 'offer') {
-                handleOffer(message);
-            } else if (message.type === 'answer') {
-                handleAnswer(message);
-            } else if (message.type === 'iceCandidate') {
-                handleIceCandidate(message);
+            try {
+                const message = JSON.parse(event.data);
+                console.log("Received message:", message);
+                if (message.type === 'offer') {
+                    handleOffer(message);
+                } else if (message.type === 'answer') {
+                    handleAnswer(message);
+                } else if (message.type === 'iceCandidate') {
+                    handleIceCandidate(message);
+                }
+            } catch (err) {
+                console.error("Failed to parse result socket message:", err);
             }
         };
 
         resultSocket.onerror = (error) => {
-            // Clean up old connection
             cleanupResources();
             console.error("WebSocket error:", error);
         };
 
         resultSocket.onclose = (event) => {
             console.log("WebSocket connection closed:");
-            console.log("  code:", event);
             console.log("  code:", event.code);
             console.log("  reason:", event.reason);
             console.log("  wasClean:", event.wasClean);
-            console.log("  readyState:", resultSocket.readyState);
+            const readyState = resultSocket ? resultSocket.readyState : 'closed';
+            console.log("  readyState:", readyState);
+            resultSocket = null;
+            targetSessionId = null;
+        };
+    }
+
+    async function handleOffer(message) {
+        console.log("Handling offer for targetSessionId:", message.targetSessionId);
+        const targetId = message.targetSessionId;
+        const offer = new RTCSessionDescription(message.sdp);
+        console.log("Created offer SDP:", offer);
+        try {
+            const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
+            const res = await fetch(endpoint, { method: 'POST' })
+            if (res.ok) {
+                const data = await res.json()
+                const servers = data?.data?.iceServers ?? data?.iceServers
+                if (Array.isArray(servers) && servers.length > 0) {
+                    configuration = { iceServers: servers }
+                }
+            }
+        } catch (e) {
+            // keep default configuration
+        }
+        peerConnectionA = new RTCPeerConnection(configuration);
+        console.log("Created peer connection:", peerConnectionA);
+
+        peerConnectionA.setRemoteDescription(offer)
+            .then(() => peerConnectionA.createAnswer())
+            .then(answer => peerConnectionA.setLocalDescription(answer))
+            .then(() => {
+                const responseMessage = {
+                    type: 'answer',
+                    targetSessionId: targetId,
+                    sdp: peerConnectionA.localDescription
+                };
+                resultSocket.send(JSON.stringify(responseMessage));
+            })
+            .catch(err => console.error('Error handling offer:', err));
+
+        // Add ICE state monitoring
+        peerConnectionA.oniceconnectionstatechange = () => {
+            console.log('ICE connection state:', peerConnectionA.iceConnectionState);
+            if (peerConnectionA.iceConnectionState === 'connected') {
+                console.log('WebRTC connection fully established!');
+            } else if (peerConnectionA.iceConnectionState === 'failed') {
+                console.log('ICE connection failed, attempting reconnection...');
+                // You can add reconnection logic here
+            }
         };
 
-        async function handleOffer(message) {
-            console.log("Handling offer for targetSessionId:", message.targetSessionId);
-            const targetId = message.targetSessionId;
-            const offer = new RTCSessionDescription(message.sdp);
-            console.log("Created offer SDP:", offer);
-            try {
-                const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
-                const res = await fetch(endpoint, { method: 'POST' })
-                if (res.ok) {
-                    const data = await res.json()
-                    const servers = data?.data?.iceServers ?? data?.iceServers
-                    if (Array.isArray(servers) && servers.length > 0) {
-                        configuration = { iceServers: servers }
+        peerConnectionA.ontrack = (event) => {
+            console.log("Received remote track:", event);
+            console.log("Streams:", event.streams);
+            if (remoteVideoA) {
+                remoteVideoA.srcObject = event.streams[0]; // Show remote video
+                console.log("Set video source object:", remoteVideoA.srcObject);
+                setTimeout(() => {
+                    try {
+                        remoteVideoA.play();
+                        console.log("Video play started successfully");
+                    } catch (e) {
+                        console.error("Video play failed:", e);
                     }
-                }
-            } catch (e) {
-                // keep default configuration
+                }, 1000);
+            } else {
+                console.error("Remote video element not found");
             }
-            peerConnectionA = new RTCPeerConnection(configuration);
-            console.log("Created peer connection:", peerConnectionA);
+        };
 
-            peerConnectionA.setRemoteDescription(offer)
-                .then(() => peerConnectionA.createAnswer())
-                .then(answer => peerConnectionA.setLocalDescription(answer))
-                .then(() => {
-                    const responseMessage = {
-                        type: 'answer',
-                        targetSessionId: targetId,
-                        sdp: peerConnectionA.localDescription
-                    };
-                    resultSocket.send(JSON.stringify(responseMessage));
-                })
-                .catch(err => console.error('Error handling offer:', err));
+        // Logs when handling ICE Candidate
+        peerConnectionA.onicecandidate = (event) => {
+            console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
+            if (event.candidate) {
+                const message = {
+                    type: 'iceCandidate',
+                    targetSessionId: targetSessionId,
+                    candidate: event.candidate
+                };
+                resultSocket.send(JSON.stringify(message));
+            }
+        };
+    }
 
-            // Add ICE state monitoring
-            peerConnectionA.oniceconnectionstatechange = () => {
-                console.log('ICE connection state:', peerConnectionA.iceConnectionState);
-                if (peerConnectionA.iceConnectionState === 'connected') {
-                    console.log('WebRTC connection fully established!');
-                } else if (peerConnectionA.iceConnectionState === 'failed') {
-                    console.log('ICE connection failed, attempting reconnection...');
-                    // You can add reconnection logic here
-                }
-            };
-
-            peerConnectionA.ontrack = (event) => {
-                console.log("Received remote track:", event);
-                console.log("Streams:", event.streams);
-                if (remoteVideoA) {
-                    remoteVideoA.srcObject = event.streams[0]; // Show remote video
-                    console.log("Set video source object:", remoteVideoA.srcObject);
-                    setTimeout(() => {
-                        try {
-                            remoteVideoA.play();
-                            console.log("Video play started successfully");
-                        } catch (e) {
-                            console.error("Video play failed:", e);
-                        }
-                    }, 1000);
-                } else {
-                    console.error("Remote video element not found");
-                }
-            };
-
-            // Logs when handling ICE Candidate
-            peerConnectionA.onicecandidate = (event) => {
-                console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
-                if (event.candidate) {
-                    const message = {
-                        type: 'iceCandidate',
-                        targetSessionId: targetId,
-                        candidate: event.candidate
-                    };
-                    resultSocket.send(JSON.stringify(message));
-                }
-            };
-        }
-
-        // Function to handle Answer messages
-        function handleAnswer(message) {
-            const targetSessionId = message.targetSessionId;
-            const map_item = events_maps.get(targetSessionId);
-            if (!map_item) return;
-
-            pc = map_item.peerConnection;
-            const answer = new RTCSessionDescription(message.sdp);
-
-            if (pc.signalingState === 'stable') {
-                console.warn('Triggering renegotiation: State is stable');
-                pc.restartIce(); // Force refresh ICE candidates
-                recreateOffer(pc, targetSessionId, map_item.socket); // Call renegotiation function
-            } else if (pc.signalingState === 'have-local-offer') {
-                pc.setRemoteDescription(answer)
+    // Function to handle Answer messages
+    function handleAnswer(message) {
+        const targetSessionId = message.targetSessionId;
+        const events_maps = window.NavTalkEventsMaps || new Map();
+        const map_item = events_maps.get(targetSessionId);
+        if (!map_item) {
+            console.warn('handleAnswer: map_item not found for', targetSessionId);
+            if (peerConnectionA) {
+                const answer = new RTCSessionDescription(message.sdp);
+                peerConnectionA.setRemoteDescription(answer)
                     .catch(err => console.error('Failed to handle Answer:', err));
             }
+            return;
         }
 
-        // Function to recreate Offer
-        async function recreateOffer(pc, targetSessionId, socket) {
-            try {
-                // Create a new Offer
-                const offer = await pc.createOffer({
-                    offerToReceiveAudio: true,
-                    offerToReceiveVideo: true
-                });
-                await pc.setLocalDescription(offer);
+        pc = map_item.peerConnection;
+        const answer = new RTCSessionDescription(message.sdp);
 
-                // Send the new Offer to the peer
-                socket.send(JSON.stringify({
-                    type: 'offer',
-                    targetSessionId: targetSessionId,
-                    sdp: pc.localDescription
-                }));
-            } catch (err) {
-                console.error('Failed to recreate Offer:', err);
-            }
+        if (pc.signalingState === 'stable') {
+            console.warn('Triggering renegotiation: State is stable');
+            pc.restartIce(); // Force refresh ICE candidates
+            recreateOffer(pc, targetSessionId, map_item.socket); // Call renegotiation function
+        } else if (pc.signalingState === 'have-local-offer') {
+            pc.setRemoteDescription(answer)
+                .catch(err => console.error('Failed to handle Answer:', err));
         }
+    }
 
-        function handleIceCandidate(message) {
-            console.log('Handling ICE candidate:', message.candidate);
-            const candidate = new RTCIceCandidate(message.candidate);
-            console.log('Created ICE candidate:', candidate);
-            peerConnectionA.addIceCandidate(candidate)
-                .then(() => console.log('ICE candidate added successfully'))
-                .catch(err => console.error('Error adding ICE candidate:', err));
+    // Function to recreate Offer
+    async function recreateOffer(pc, targetSessionId, socket) {
+        try {
+            // Create a new Offer
+            const offer = await pc.createOffer({
+                offerToReceiveAudio: true,
+                offerToReceiveVideo: true
+            });
+            await pc.setLocalDescription(offer);
+
+            // Send the new Offer to the peer
+            socket.send(JSON.stringify({
+                type: 'offer',
+                targetSessionId: targetSessionId,
+                sdp: pc.localDescription
+            }));
+        } catch (err) {
+            console.error('Failed to recreate Offer:', err);
         }
+    }
+
+    function handleIceCandidate(message) {
+        console.log('Handling ICE candidate:', message.candidate);
+        const candidate = new RTCIceCandidate(message.candidate);
+        console.log('Created ICE candidate:', candidate);
+        peerConnectionA.addIceCandidate(candidate)
+            .then(() => console.log('ICE candidate added successfully'))
+            .catch(err => console.error('Error adding ICE candidate:', err));
     }
 
 
@@ -516,6 +555,21 @@ async function initDigtalHumanRealtimeButton() {
                 console.log("Session updated. Ready to receive audio.");
                 startRecording();
                 break;
+
+            // Session ID received, setup WebRTC signaling
+            case "session.session_id": {
+                const sessionId = data.sessionId ?? data.session_id;
+                if (sessionId && sessionId !== proxySessionId) {
+                    console.log("Received proxy session_id:", sessionId);
+                    proxySessionId = sessionId;
+                    if (resultSocket) {
+                        resultSocket.close();
+                        resultSocket = null;
+                    }
+                    setupSignalingSocketIfReady();
+                }
+                break;
+            }
 
             // User starts speaking
             case "input_audio_buffer.speech_started":
