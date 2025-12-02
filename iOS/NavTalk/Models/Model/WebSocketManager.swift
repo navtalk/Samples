@@ -191,6 +191,23 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
             return
         }
+        
+        //(3.5).if feedback: session.session_id, setup WebRTC signaling connection
+        if let type = message_dict["type"] as? String, type == "session.session_id"{
+            print("===========================\nReceived session.session_id")
+            let sessionId = message_dict["sessionId"] as? String ?? message_dict["session_id"] as? String
+            if let sessionId = sessionId, sessionId != WebRTCManager.shared.proxySessionId {
+                print("Received proxy session_id: \(sessionId)")
+                WebRTCManager.shared.proxySessionId = sessionId
+                // Close existing WebRTC socket if any
+                if WebRTCManager.shared.webRTC_socket_status == .Connected || WebRTCManager.shared.webRTC_socket_status == .Connectting {
+                    WebRTCManager.shared.disconnectRTCWebSocketOfNavTalk()
+                }
+                // Setup WebRTC signaling connection
+                WebRTCManager.shared.setupSignalingSocketIfReady()
+            }
+            return
+        }
         //(4).input_audio_buffer.speech_started:
         //When OpenAI detects someone speaking, it returns the following message.
         if let type = message_dict["type"] as? String, type == "input_audio_buffer.speech_started"{

@@ -327,6 +327,8 @@
     // Global variable for connection state
     let peerConnectionA = null;
     let resultSocket = null;
+    let proxySessionId = null;
+    let targetSessionId = null;
     // Global state management
     let pc = null;
     let currentTracks = [];
@@ -708,6 +710,14 @@
                     remoteVideo.load();
                 }
 
+                if (resultSocket) {
+                    console.log('Closing resultSocket');
+                    resultSocket.close();
+                    resultSocket = null;
+                }
+                proxySessionId = null;
+                targetSessionId = null;
+
                 await new Promise(resolve => setTimeout(resolve, 100));
                 console.log('Cleanup complete');
             } catch (err) {
@@ -717,6 +727,12 @@
 
         async function startWebSocket() {
             try {
+                proxySessionId = null;
+                if (resultSocket) {
+                    console.log('Closing previous WebRTC result socket before reconnecting');
+                    resultSocket.close();
+                    resultSocket = null;
+                }
                 console.log('=== Starting WebSocket connection ===');
                 let websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
                 console.log('WebSocket URL:', websocketUrl);
@@ -784,54 +800,76 @@
                 responseSpans = new Map();
 
             };
+            } catch (error) {
+                console.error('Error starting WebSocket connection:', error);
+                alert('WebSocket connection failed: ' + error.message);
+                // Restore connection state and styles
+                const btn = document.getElementById('btnRealtime');
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                    btn.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
+                }
+                window.NavTalkConnectionActive = false;
+            }
+        }
 
+        const remoteVideoA = document.getElementById('character-avatar-video');
 
-            // WebSocket for receiving video results
-            let remoteVideoA = document.getElementById('character-avatar-video');
+        function setupSignalingSocketIfReady() {
+            if (!proxySessionId || resultSocket) {
+                return;
+            }
 
-            let targetSessionId = API_KEY;
-            console.log("Start connecting " + (new Date()).toLocaleTimeString())
-            resultSocket = new WebSocket('wss://'+webrtcUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
+            targetSessionId = `target-${proxySessionId}`;
+            const queryString = new URLSearchParams({ userId: proxySessionId }).toString();
+            const signalingUrl = `wss://${webrtcUrl}/api/webrtc?${queryString}`;
 
-            let localStream;
+            console.log("Start connecting " + (new Date()).toLocaleTimeString());
+            console.log("Opening WebRTC result socket:", signalingUrl);
+            resultSocket = new WebSocket(signalingUrl);
 
             resultSocket.onopen = () => {
                 console.log("WebSocketResult connection established.");
-                console.log("Connection successful " + (new Date()).toLocaleTimeString())
+                console.log("Connection successful " + (new Date()).toLocaleTimeString());
                 const message = { type: 'create', targetSessionId: targetSessionId };
                 resultSocket.send(JSON.stringify(message));
             };
 
             resultSocket.onmessage = (event) => {
-                console.log("Received message:", event.data);
-                const message = JSON.parse(event.data);
-                console.log("Received message:", message.type);
-                console.log("Received message:", message);
-                if (message.type === 'offer') {
-                    handleOffer(message);
-                } else if (message.type === 'answer') {
-                    handleAnswer(message);
-                } else if (message.type === 'iceCandidate') {
-                    handleIceCandidate(message);
+                try {
+                    const message = JSON.parse(event.data);
+                    console.log("Received message:", message);
+                    if (message.type === 'offer') {
+                        handleOffer(message);
+                    } else if (message.type === 'answer') {
+                        handleAnswer(message);
+                    } else if (message.type === 'iceCandidate') {
+                        handleIceCandidate(message);
+                    }
+                } catch (err) {
+                    console.error("Failed to parse result socket message:", err);
                 }
             };
 
             resultSocket.onerror = (error) => {
-                // Clean up old connection
                 cleanupResources();
                 console.error("WebSocket error:", error);
             };
 
             resultSocket.onclose = (event) => {
                 console.log("WebSocket connection closed:");
-                console.log("  code:", event);
                 console.log("  code:", event.code);
                 console.log("  reason:", event.reason);
                 console.log("  wasClean:", event.wasClean);
-                console.log("  readyState:", resultSocket.readyState);
+                const readyState = resultSocket ? resultSocket.readyState : 'closed';
+                console.log("  readyState:", readyState);
+                resultSocket = null;
+                targetSessionId = null;
             };
+        }
 
-            async function handleOffer(message) {
+        async function handleOffer(message) {
                 // Fetch ICE servers configuration
                 try {
                     const res = await fetch('https://' + webrtcUrl + '/api/webrtc/generate-ice-servers', { method: 'POST' });
@@ -933,7 +971,7 @@
                     if (event.candidate) {
                         const message = {
                             type: 'iceCandidate',
-                            targetSessionId: targetId,
+                            targetSessionId: targetSessionId,
                             candidate: event.candidate
                         };
                         resultSocket.send(JSON.stringify(message));
@@ -941,8 +979,8 @@
                 };
             }
 
-            // Function to handle Answer messages
-            function handleAnswer(message) {
+        // Function to handle Answer messages
+        function handleAnswer(message) {
                 const targetSessionId = message.targetSessionId;
                 // events_maps may be undefined, check if it exists
                 const events_maps = window.NavTalkEventsMaps || new Map();
@@ -973,8 +1011,8 @@
                 }
             }
 
-            // Function to recreate Offer
-            async function recreateOffer(pc, targetSessionId, socket) {
+        // Function to recreate Offer
+        async function recreateOffer(pc, targetSessionId, socket) {
                 try {
                     // Create a new Offer
                     const offer = await pc.createOffer({
@@ -994,28 +1032,13 @@
                 }
             }
 
-            function handleIceCandidate(message) {
-                console.log('Handling ICE candidate:', message.candidate);
-                const candidate = new RTCIceCandidate(message.candidate);
-                console.log('Created ICE candidate:', candidate);
-                peerConnectionA.addIceCandidate(candidate)
-                    .then(() => console.log('ICE candidate added successfully'))
-                    .catch(err => console.error('Error adding ICE candidate:', err));
-            }
-            
-            console.log('WebSocket connection startup process completed');
-            } catch (error) {
-                console.error('Error starting WebSocket connection:', error);
-                alert('WebSocket connection failed: ' + error.message);
-                // Restore connection state and styles
-                const btn = document.getElementById('btnRealtime');
-                if (btn) {
-                    btn.classList.remove('active');
-                    btn.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
-                    btn.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
-                }
-                window.NavTalkConnectionActive = false;
-            }
+        function handleIceCandidate(message) {
+            console.log('Handling ICE candidate:', message.candidate);
+            const candidate = new RTCIceCandidate(message.candidate);
+            console.log('Created ICE candidate:', candidate);
+            peerConnectionA.addIceCandidate(candidate)
+                .then(() => console.log('ICE candidate added successfully'))
+                .catch(err => console.error('Error adding ICE candidate:', err));
         }
 
 
@@ -1141,6 +1164,21 @@
                     console.log("Session updated. Ready to receive audio.");
                     startRecording();
                     break;
+
+                // Session ID received, setup WebRTC signaling
+                case "session.session_id": {
+                    const sessionId = data.sessionId ?? data.session_id;
+                    if (sessionId && sessionId !== proxySessionId) {
+                        console.log("Received proxy session_id:", sessionId);
+                        proxySessionId = sessionId;
+                        if (resultSocket) {
+                            resultSocket.close();
+                            resultSocket = null;
+                        }
+                        setupSignalingSocketIfReady();
+                    }
+                    break;
+                }
 
                 // User starts speaking
                 case "input_audio_buffer.speech_started":

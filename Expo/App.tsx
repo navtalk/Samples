@@ -18,12 +18,22 @@ import { StatusBar as ExpoStatusBar } from 'expo-status-bar';
 import MaskedView from '@react-native-masked-view/masked-view';
 import NetInfo from '@react-native-community/netinfo';
 import { MaterialIcons } from '@expo/vector-icons';
+import NavTalkService from './src/navtalkService';
 
 const { height } = Dimensions.get('window');
 
 const CHARACTER_NAME = 'navtalk.Leo';
 const REMOTE_BACKGROUND = `https://api.navtalk.ai/uploadFiles/${CHARACTER_NAME}.png`;
 const FALLBACK_BACKGROUND_COLORS = ['#1a1a1a', '#050505'];
+
+// NavTalk configuration - update these with your actual values
+const NAVTALK_CONFIG = {
+  license: 'your_license', // Replace with your actual license key
+  characterName: CHARACTER_NAME,
+  baseUrl: 'transfer.navtalk.ai',
+  voiceType: 'verse',
+  instructions: 'You are a helpful assistant.',
+};
 
 const CONNECTING_DELAY_MS = 1600;
 const MESSAGE_INTERVAL_MS = 2400;
@@ -95,6 +105,7 @@ export default function App() {
   const [backgroundUri, setBackgroundUri] = useState<string | null>(REMOTE_BACKGROUND);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
   const listRef = useRef<FlatList<Message>>(null);
+  const navtalkServiceRef = useRef<NavTalkService | null>(null);
 
   const messageAreaHeight = useMemo(() => Math.min(height * 0.55, 450), []);
   const gradientColors = useMemo(() => ['rgba(0,0,0,0.88)', 'rgba(0,0,0,0)'], []);
@@ -135,16 +146,6 @@ export default function App() {
     return () => clearTimers();
   }, [clearTimers]);
 
-  useEffect(() => {
-    if (messages.length === 0) {
-      return;
-    }
-
-    requestAnimationFrame(() => {
-      listRef.current?.scrollToEnd({ animated: true });
-    });
-  }, [messages]);
-
   const scheduleConversation = useCallback(() => {
     SAMPLE_CONVERSATION.forEach((message, index) => {
       const timer = setTimeout(() => {
@@ -161,7 +162,45 @@ export default function App() {
     });
   }, []);
 
-  const handleStartCall = useCallback(() => {
+  // Initialize NavTalk service
+  useEffect(() => {
+    const service = new NavTalkService(NAVTALK_CONFIG);
+    navtalkServiceRef.current = service;
+
+    // Listen to status changes
+    const unsubscribeStatus = service.onStatusChange((newStatus) => {
+      setStatus(newStatus);
+      if (newStatus === 'connected') {
+        scheduleConversation();
+      }
+    });
+
+    // Listen to messages
+    const unsubscribeMessages = service.onMessage((message) => {
+      // Handle real-time messages from NavTalk
+      // You can process conversation.item.input_audio_transcription.completed,
+      // response.audio_transcript.delta, etc. here
+      console.log('NavTalk message:', message);
+    });
+
+    return () => {
+      unsubscribeStatus();
+      unsubscribeMessages();
+      service.disconnect();
+    };
+  }, [scheduleConversation]);
+
+  useEffect(() => {
+    if (messages.length === 0) {
+      return;
+    }
+
+    requestAnimationFrame(() => {
+      listRef.current?.scrollToEnd({ animated: true });
+    });
+  }, [messages]);
+
+  const handleStartCall = useCallback(async () => {
     if (status !== 'notConnected') {
       return;
     }
@@ -170,15 +209,18 @@ export default function App() {
     setMessages([]);
     setStatus('connecting');
 
-    const connectingTimer = setTimeout(() => {
-      setStatus('connected');
-      scheduleConversation();
-    }, CONNECTING_DELAY_MS);
+    try {
+      // Connect to NavTalk service (main WebSocket will be established first,
+      // WebRTC signaling will be established after receiving session.session_id)
+      await navtalkServiceRef.current?.connect();
+    } catch (error) {
+      console.error('Failed to connect to NavTalk:', error);
+      setStatus('notConnected');
+    }
+  }, [clearTimers, status]);
 
-    timers.current.push(connectingTimer);
-  }, [clearTimers, scheduleConversation, status]);
-
-  const handleHangUp = useCallback(() => {
+  const handleHangUp = useCallback(async () => {
+    await navtalkServiceRef.current?.disconnect();
     setStatus('notConnected');
     setMessages([]);
     clearTimers();
