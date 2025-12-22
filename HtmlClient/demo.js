@@ -1,8 +1,52 @@
+// Message type constants
+const NavTalkMessageType = Object.freeze({
+    CONNECTED_SUCCESS: "conversation.connected.success",
+    CONNECTED_FAIL: "conversation.connected.fail",
+    CONNECTED_CLOSE: "conversation.connected.close",
+    INSUFFICIENT_BALANCE: "conversation.connected.insufficient_balance",
+    WEB_RTC_OFFER: "webrtc.signaling.offer",
+    WEB_RTC_ANSWER: "webrtc.signaling.answer",
+    WEB_RTC_ICE_CANDIDATE: "webrtc.signaling.iceCandidate",
+
+    REALTIME_SESSION_CREATED: "realtime.session.created",
+    REALTIME_SESSION_UPDATED: "realtime.session.updated",
+
+    REALTIME_SPEECH_STARTED: "realtime.input_audio_buffer.speech_started",
+    REALTIME_SPEECH_STOPPED: "realtime.input_audio_buffer.speech_stopped",
+
+    REALTIME_CONVERSATION_ITEM_COMPLETED:
+        "realtime.conversation.item.input_audio_transcription.completed",
+
+    REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA:
+        "realtime.response.audio_transcript.delta",
+
+    REALTIME_RESPONSE_AUDIO_DELTA: "realtime.response.audio.delta",
+
+    REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE:
+        "realtime.response.audio_transcript.done",
+
+    REALTIME_RESPONSE_AUDIO_DONE: "realtime.response.audio.done",
+
+    REALTIME_RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE:
+        "realtime.response.function_call_arguments.done",
+
+    REALTIME_INPUT_AUDIO_BUFFER_APPEND: "realtime.input_audio_buffer.append",
+
+    REALTIME_INPUT_TEXT: "realtime.input_text",
+
+    REALTIME_INPUT_IMAGE: "realtime.input_image",
+
+    UNKNOWN_TYPE: "unknow"
+});
+
 // ❗You need to manually modify the following variables.
 // ✒️ api key
 const LICENSE = "sk_navtalk_your_key"
 
-// ✒️ // ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
+// ✒️ model. Currently supported models include: gpt-realtime, gpt-realtime-mini
+const MODEL = "gpt-realtime"
+
+// ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const CHARACTER_NAME = "navtalk.Zoe"
 
@@ -13,16 +57,12 @@ const VOICE = "cedar"
 // ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
 const PROMPT = "You are a helpful assistant."
 
-// web server url
-let baseUrl = "transfer.navtalk.ai"
+let baseUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat"
+
+let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
 // Global variable for connection state
 let peerConnectionA = null;
-let resultSocket = null;
-// Global state management
-let pc = null;
-let currentTracks = [];
-let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
 
 // Digital human agent, real-time voice conversation button
 async function initDigtalHumanRealtimeButton() {
@@ -38,23 +78,20 @@ async function initDigtalHumanRealtimeButton() {
 
     realtimeChatHistory = JSON.parse(realtimeChatHistory);
 
-    // Render chat history
-    // renderRealtimeChatHistory();
     const realtimeButton = document.getElementById('btnRealtime');
-    const conversationBg = document.querySelector('.conversation-bg'); // Select the entire div containing the background image
+    const conversationBg = document.querySelector('.conversation-bg');
 
     let socket;
     let audioContext;
     let audioProcessor;
     let audioStream;
-    let currentAudioSource = null; // Currently playing audio source
-
-    let audioQueue = []; // Used to store audio chunks
-    // Use a Map to store the span element corresponding to each response_id
+    let currentAudioSource = null;
+    let isPlaying = false;
+    let audioQueue = [];
     let responseSpans = new Map();
-
-    // Define a buffer object to accumulate incomplete Markdown content
     let markdownBuffer = new Map();
+    let pendingUserMessageSpan = null;
+    let playVideo = false;
 
     realtimeButton.addEventListener('click', async function () {
         const staticImage = document.getElementById('character-static-image');
@@ -76,8 +113,8 @@ async function initDigtalHumanRealtimeButton() {
             // Pause video playback
             videoElement.pause();
 
-            audioQueue = []; // Clear audio queue
-            isPlaying = false; // Mark not playing
+            audioQueue = [];
+            isPlaying = false;
 
             // Optional: hide chat content
             document.querySelectorAll('.character-chat-item').forEach(item => {
@@ -97,18 +134,13 @@ async function initDigtalHumanRealtimeButton() {
             staticImage.style.display = 'none';
             videoElement.style.display = 'block';
 
-            // Start video playback (make sure video source is set)
+            // Start video playback
             videoElement.play().catch(e => console.error("Video playback failed:", e));
 
             // Show chat content
             document.querySelectorAll('.character-chat-item').forEach(item => {
                 item.style.display = 'block';
             });
-
-            // Original GIF animation logic (commented)
-            // if (conversationAnimation) {
-            //     conversationAnimation.src = MyExtension.Utils.getChromeRuntimeURL('images/img-real-time.gif');
-            // }
         }
     });
 
@@ -117,34 +149,13 @@ async function initDigtalHumanRealtimeButton() {
         try {
             console.log('Starting cleanup');
 
-            if (pc) {
-                console.log('Closing PeerConnection');
-                pc.removeEventListener('icecandidate', on_icecandidate);
-                pc.removeEventListener('connectionstatechange', on_connectionstatechange);
-                pc.removeEventListener('iceconnectionstatechange', iceconnectionstatechange);
-                pc.removeEventListener('signalingstatechange', signalingstatechange);
-
-                if (pc.connectionState !== 'closed') {
-                    await pc.close();
-                    console.log('PeerConnection closed');
-                }
-                pc = null;
-            }
-
             if (peerConnectionA) {
                 console.log('Closing peerConnectionA');
                 peerConnectionA.onicecandidate = null;
                 peerConnectionA.close();
-                peerConnectionA = null;  // Ensure it's completely reset
+                peerConnectionA = null;
             }
 
-            currentTracks.forEach(track => {
-                if (track.stop) track.stop();
-                if (track.dispatchEvent) {
-                    track.dispatchEvent(new Event('ended'));
-                }
-            });
-            currentTracks = [];
             console.log('Tracks cleaned up');
 
             const remoteVideo = document.getElementById('character-avatar-video');
@@ -162,9 +173,8 @@ async function initDigtalHumanRealtimeButton() {
     }
 
     async function startWebSocket() {
-        websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
         // Retrieve license information from Chrome storage
-        const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
+        const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&name=${CHARACTER_NAME}&model=${MODEL}`;
 
         // Initialize the WebSocket connection
         socket = new WebSocket(websocketUrlWithParams);
@@ -174,17 +184,11 @@ async function initDigtalHumanRealtimeButton() {
         socket.onmessage = (event) => {
             if (typeof event.data === 'string') {
                 try {
-                    // Parse and handle non-binary messages
                     const data = JSON.parse(event.data);
-                    // console.log("data:"+JSON.stringify(data))
                     handleReceivedMessage(data);
                 } catch (e) {
                     console.error("Failed to parse JSON message:", e);
                 }
-            } else if (event.data instanceof ArrayBuffer) {
-                // Handle binary messages
-                const arrayBuffer = event.data;
-                handleReceivedBinaryMessage(arrayBuffer);
             } else {
                 console.warn("Unknown WebSocket message type");
             }
@@ -197,203 +201,119 @@ async function initDigtalHumanRealtimeButton() {
 
         // Handle WebSocket errors
         socket.onerror = function (error) {
-            console.error("WebSocket error: ", error);
-        };
-
-        // Triggered when the WebSocket connection is closed
-        socket.onclose = async function (event) {
-            // Show an error message if points are insufficient
-            if (event.reason === 'Insufficient points') {
-                showErrorTip("You need more points to complete this action.");
-            }
-            console.log("WebSocket connection closed", event.code, event.reason);
-            // Clean up old connection
-            await cleanupResources();
-
-            stopRecording();
-
-            // Update the points information
-
-            // Clear the span record elements
-            responseSpans = new Map();
-
-        };
-
-
-        // WebSocket for receiving video results
-        let remoteVideoA = document.getElementById('character-avatar-video');
-
-        let targetSessionId = LICENSE;
-        console.log("Start connecting " + (new Date()).toLocaleTimeString())
-        resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
-
-        let localStream;
-
-        resultSocket.onopen = () => {
-            console.log("WebSocketResult connection established.");
-            console.log("Connection successful " + (new Date()).toLocaleTimeString())
-            const message = { type: 'create', targetSessionId: targetSessionId };
-            resultSocket.send(JSON.stringify(message));
-        };
-
-        resultSocket.onmessage = (event) => {
-            console.log("Received message:", event.data);
-            const message = JSON.parse(event.data);
-            console.log("Received message:", message.type);
-            console.log("Received message:", message);
-            if (message.type === 'offer') {
-                handleOffer(message);
-            } else if (message.type === 'answer') {
-                handleAnswer(message);
-            } else if (message.type === 'iceCandidate') {
-                handleIceCandidate(message);
-            }
-        };
-
-        resultSocket.onerror = (error) => {
-            // Clean up old connection
             cleanupResources();
             console.error("WebSocket error:", error);
         };
 
-        resultSocket.onclose = (event) => {
+        // Triggered when the WebSocket connection is closed
+        socket.onclose = async function (event) {
+            if (event.reason === 'Insufficient points') {
+                showErrorTip("You need more points to complete this action.");
+            }
+            console.log("WebSocket connection closed", event.code, event.reason);
+            await cleanupResources();
+
+            stopRecording();
+
+            responseSpans = new Map();
+
             console.log("WebSocket connection closed:");
             console.log("  code:", event);
             console.log("  code:", event.code);
             console.log("  reason:", event.reason);
             console.log("  wasClean:", event.wasClean);
-            console.log("  readyState:", resultSocket.readyState);
+            console.log("  readyState:", socket.readyState);
         };
-
-        async function handleOffer(message) {
-            console.log("Handling offer for targetSessionId:", message.targetSessionId);
-            const targetId = message.targetSessionId;
-            const offer = new RTCSessionDescription(message.sdp);
-            console.log("Created offer SDP:", offer);
-            try {
-                const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
-                const res = await fetch(endpoint, { method: 'POST' })
-                if (res.ok) {
-                    const data = await res.json()
-                    const servers = data?.data?.iceServers ?? data?.iceServers
-                    if (Array.isArray(servers) && servers.length > 0) {
-                        configuration = { iceServers: servers }
-                    }
-                }
-            } catch (e) {
-                // keep default configuration
-            }
-            peerConnectionA = new RTCPeerConnection(configuration);
-            console.log("Created peer connection:", peerConnectionA);
-
-            peerConnectionA.setRemoteDescription(offer)
-                .then(() => peerConnectionA.createAnswer())
-                .then(answer => peerConnectionA.setLocalDescription(answer))
-                .then(() => {
-                    const responseMessage = {
-                        type: 'answer',
-                        targetSessionId: targetId,
-                        sdp: peerConnectionA.localDescription
-                    };
-                    resultSocket.send(JSON.stringify(responseMessage));
-                })
-                .catch(err => console.error('Error handling offer:', err));
-
-            // Add ICE state monitoring
-            peerConnectionA.oniceconnectionstatechange = () => {
-                console.log('ICE connection state:', peerConnectionA.iceConnectionState);
-                if (peerConnectionA.iceConnectionState === 'connected') {
-                    console.log('WebRTC connection fully established!');
-                } else if (peerConnectionA.iceConnectionState === 'failed') {
-                    console.log('ICE connection failed, attempting reconnection...');
-                    // You can add reconnection logic here
-                }
-            };
-
-            peerConnectionA.ontrack = (event) => {
-                console.log("Received remote track:", event);
-                console.log("Streams:", event.streams);
-                if (remoteVideoA) {
-                    remoteVideoA.srcObject = event.streams[0]; // Show remote video
-                    console.log("Set video source object:", remoteVideoA.srcObject);
-                    setTimeout(() => {
-                        try {
-                            remoteVideoA.play();
-                            console.log("Video play started successfully");
-                        } catch (e) {
-                            console.error("Video play failed:", e);
-                        }
-                    }, 1000);
-                } else {
-                    console.error("Remote video element not found");
-                }
-            };
-
-            // Logs when handling ICE Candidate
-            peerConnectionA.onicecandidate = (event) => {
-                console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
-                if (event.candidate) {
-                    const message = {
-                        type: 'iceCandidate',
-                        targetSessionId: targetId,
-                        candidate: event.candidate
-                    };
-                    resultSocket.send(JSON.stringify(message));
-                }
-            };
-        }
-
-        // Function to handle Answer messages
-        function handleAnswer(message) {
-            const targetSessionId = message.targetSessionId;
-            const map_item = events_maps.get(targetSessionId);
-            if (!map_item) return;
-
-            pc = map_item.peerConnection;
-            const answer = new RTCSessionDescription(message.sdp);
-
-            if (pc.signalingState === 'stable') {
-                console.warn('Triggering renegotiation: State is stable');
-                pc.restartIce(); // Force refresh ICE candidates
-                recreateOffer(pc, targetSessionId, map_item.socket); // Call renegotiation function
-            } else if (pc.signalingState === 'have-local-offer') {
-                pc.setRemoteDescription(answer)
-                    .catch(err => console.error('Failed to handle Answer:', err));
-            }
-        }
-
-        // Function to recreate Offer
-        async function recreateOffer(pc, targetSessionId, socket) {
-            try {
-                // Create a new Offer
-                const offer = await pc.createOffer({
-                    offerToReceiveAudio: true,
-                    offerToReceiveVideo: true
-                });
-                await pc.setLocalDescription(offer);
-
-                // Send the new Offer to the peer
-                socket.send(JSON.stringify({
-                    type: 'offer',
-                    targetSessionId: targetSessionId,
-                    sdp: pc.localDescription
-                }));
-            } catch (err) {
-                console.error('Failed to recreate Offer:', err);
-            }
-        }
-
-        function handleIceCandidate(message) {
-            console.log('Handling ICE candidate:', message.candidate);
-            const candidate = new RTCIceCandidate(message.candidate);
-            console.log('Created ICE candidate:', candidate);
-            peerConnectionA.addIceCandidate(candidate)
-                .then(() => console.log('ICE candidate added successfully'))
-                .catch(err => console.error('Error adding ICE candidate:', err));
-        }
     }
 
+    function sendOfferMessage(sdp) {
+        const message = {
+            type: NavTalkMessageType.WEB_RTC_OFFER,
+            data: { sdp: sdp }
+        };
+        socket.send(JSON.stringify(message));
+    }
 
+    function sendAnswerMessage(sdp) {
+        const message = {
+            type: NavTalkMessageType.WEB_RTC_ANSWER,
+            data: { sdp: sdp }
+        };
+        socket.send(JSON.stringify(message));
+    }
+
+    function sendIceMessage(candidate) {
+        const message = {
+            type: NavTalkMessageType.WEB_RTC_ICE_CANDIDATE,
+            data: { candidate: candidate }
+        };
+        socket.send(JSON.stringify(message));
+    }
+
+    async function handleOffer(message) {
+        const offer = new RTCSessionDescription(message.sdp);
+        peerConnectionA = new RTCPeerConnection(configuration);
+
+        peerConnectionA.setRemoteDescription(offer)
+            .then(() => peerConnectionA.createAnswer())
+            .then(answer => peerConnectionA.setLocalDescription(answer))
+            .then(() => {
+                sendAnswerMessage(peerConnectionA.localDescription)
+            })
+            .catch(err => console.error('Error handling offer:', err));
+
+        // Add ICE state monitoring
+        peerConnectionA.oniceconnectionstatechange = () => {
+            console.log('ICE connection state:', peerConnectionA.iceConnectionState);
+            if (peerConnectionA.iceConnectionState === 'connected') {
+                console.log('WebRTC connection fully established!');
+            } else if (peerConnectionA.iceConnectionState === 'failed') {
+                console.log('ICE connection failed, attempting reconnection...');
+            } else if (peerConnectionA.iceConnectionState === 'disconnected') {
+                console.log('ICE connection disconnected, attempting reconnection...');
+            }
+        };
+
+        // Add ICE connection state monitoring
+        peerConnectionA.onnegotiationneeded = async () => {
+            console.log("onnegotiationneeded")
+            const offer = await peerConnectionA.createOffer();
+            await peerConnectionA.setLocalDescription(offer);
+            sendOfferMessage(offer);
+        };
+
+        peerConnectionA.ontrack = (event) => {
+            console.log("ontrack")
+            console.log(event)
+            let remoteVideoA = document.getElementById('character-avatar-video');
+            remoteVideoA.srcObject = event.streams[0];
+            setTimeout(() => {
+                remoteVideoA.play()
+            }, 1000)
+        };
+
+        // Logs when handling ICE Candidate
+        peerConnectionA.onicecandidate = (event) => {
+            console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
+            if (event.candidate) {
+                sendIceMessage(event.candidate);
+            }
+        };
+    }
+
+    // Function to handle Answer messages
+    function handleAnswer(message) {
+        const answer = new RTCSessionDescription(message.sdp);
+        peerConnectionA.setRemoteDescription(answer)
+            .catch(err => console.error('Failed to handle Answer:', err));
+    }
+
+    function handleIceCandidate(message) {
+        const candidate = new RTCIceCandidate(message.candidate);
+        console.log(candidate)
+        peerConnectionA.addIceCandidate(candidate)
+            .catch(err => console.error('Error adding ICE candidate:', err));
+    }
 
     function showErrorTip(message) {
         const realtimeButton = document.getElementById('btnRealtime');
@@ -401,18 +321,20 @@ async function initDigtalHumanRealtimeButton() {
             realtimeButton.click();
         }
         const errorTip = document.getElementById("errorTipRealtime");
-        errorTip.textContent = message;
-        errorTip.style.display = "block";
-        errorTip.style.opacity = "1";
-        errorTip.style.visibility = "visible";
-        // Automatically hide error message after 3 seconds
-        setTimeout(() => {
-            errorTip.style.opacity = "0";
-            errorTip.style.visibility = "hidden";
+        if (errorTip) {
+            errorTip.textContent = message;
+            errorTip.style.display = "block";
+            errorTip.style.opacity = "1";
+            errorTip.style.visibility = "visible";
+            // Automatically hide error message after 3 seconds
             setTimeout(() => {
-                errorTip.style.display = "none";
-            }, 500);
-        }, 3000);
+                errorTip.style.opacity = "0";
+                errorTip.style.visibility = "hidden";
+                setTimeout(() => {
+                    errorTip.style.display = "none";
+                }, 500);
+            }, 3000);
+        }
     }
 
     async function sendSessionUpdate() {
@@ -420,7 +342,6 @@ async function initDigtalHumanRealtimeButton() {
         const conversationHistory = history ? JSON.parse(history) : [];
 
         let userLanguage = await getFromChromeStorage("userLanguage");
-
         let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
         let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
         realtimeChatHistory = JSON.parse(realtimeChatHistory);
@@ -444,24 +365,7 @@ async function initDigtalHumanRealtimeButton() {
                 output_audio_format: "pcm16",
                 input_audio_transcription: {
                     model: "whisper-1"
-                },
-                tools: [
-                    {
-                        type: "function",
-                        name: "function_call_judge",
-                        description: "Are there any function calls or tasks beyond your capability...",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                userInput: {
-                                    type: "string",
-                                    description: "the user input"
-                                }
-                            },
-                            required: ["userInput"]
-                        }
-                    }
-                ]
+                }
             }
         };
 
@@ -503,56 +407,110 @@ async function initDigtalHumanRealtimeButton() {
         let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
         let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
         realtimeChatHistory = JSON.parse(realtimeChatHistory);
+        let nav_data = data.data;
 
         switch (data.type) {
+            // ======================== connection start===================
+            case NavTalkMessageType.CONNECTED_FAIL:
+            case NavTalkMessageType.CONNECTED_CLOSE:
+                const errorMessage = data.message || "Unknown error";
+                console.log(`Connection error: ${errorMessage}`);
+                break;
+
+            case NavTalkMessageType.CONNECTED_SUCCESS:
+                if (data.data && data.data.iceServers) {
+                    configuration.iceServers = data.data.iceServers
+                    console.log("NavTalkMessageType.CONNECTED_SUCCESS")
+                    console.log(configuration.iceServers)
+                }
+                console.log("conversation.connected.success");
+                console.log(configuration);
+                break;
+
             // Session created, send configuration
-            case "session.created":
+            case NavTalkMessageType.REALTIME_SESSION_CREATED:
                 console.log("Session created, sending session update.");
                 await sendSessionUpdate();
                 break;
 
             // Session established after configuration
-            case "session.updated":
+            case NavTalkMessageType.REALTIME_SESSION_UPDATED:
                 console.log("Session updated. Ready to receive audio.");
                 startRecording();
                 break;
 
+            case NavTalkMessageType.INSUFFICIENT_BALANCE:
+                console.log("INSUFFICIENT_BALANCE");
+                break;
+            // ======================== connection end===================
+            // ======================== signaling exchange start===================
+            case NavTalkMessageType.WEB_RTC_OFFER: {
+                handleOffer(data.data);
+                break;
+            }
+            case NavTalkMessageType.WEB_RTC_ANSWER: {
+                handleAnswer(data.data);
+                break;
+            }
+            case NavTalkMessageType.WEB_RTC_ICE_CANDIDATE: {
+                handleIceCandidate(data.data);
+                break;
+            }
+            // ======================== signaling exchange end===================
+            // ======================== Message start===================
             // User starts speaking
-            case "input_audio_buffer.speech_started":
+            case NavTalkMessageType.REALTIME_SPEECH_STARTED:
                 console.log("Speech started detected by server.");
                 stopCurrentAudioPlayback();
                 audioQueue = [];
                 isPlaying = false;
                 playVideo = false;
+                pendingUserMessageSpan = null;
                 break;
 
             // User stops speaking
-            case "input_audio_buffer.speech_stopped":
+            case NavTalkMessageType.REALTIME_SPEECH_STOPPED:
                 console.log("Speech stopped detected by server.");
+                pendingUserMessageSpan = createTypingPlaceholder();
                 break;
 
             // Full transcription of user speech
-            case "conversation.item.input_audio_transcription.completed":
-                console.log("Received transcription: " + data.transcript);
-                const userMessageContainer = document.createElement('div');
-                userMessageContainer.classList.add('character-chat-item', 'item-user');
+            case NavTalkMessageType.REALTIME_CONVERSATION_ITEM_COMPLETED:
+                console.log("Received transcription: " + nav_data.content);
+                if (nav_data && nav_data.content && nav_data.content.trim()) {
+                    if (pendingUserMessageSpan) {
+                        pendingUserMessageSpan.innerHTML = '';
+                        pendingUserMessageSpan.classList.remove('typing-indicator');
+                        pendingUserMessageSpan.textContent = nav_data.content;
+                        pendingUserMessageSpan = null;
+                    } else {
+                        const userMessageContainer = document.createElement('div');
+                        userMessageContainer.classList.add('character-chat-item', 'item-user');
 
-                const userMessage = document.createElement('span');
-                userMessage.textContent = data.transcript;
-                userMessageContainer.appendChild(userMessage);
+                        const userMessage = document.createElement('span');
+                        userMessage.textContent = nav_data.content;
+                        userMessageContainer.appendChild(userMessage);
 
-                const chatContent = document.querySelector('.ah-character-chat');
-                chatContent.appendChild(userMessageContainer);
-                chatContent.scrollTop = chatContent.scrollHeight;
-
-                await appendRealtimeChatHistory("user", data.transcript);
+                        const chatContent = document.querySelector('.ah-character-chat');
+                        if (chatContent) {
+                            chatContent.appendChild(userMessageContainer);
+                            chatContent.scrollTop = chatContent.scrollHeight;
+                        }
+                    }
+                    await appendRealtimeChatHistory("user", nav_data.content);
+                } else if (pendingUserMessageSpan) {
+                    if (pendingUserMessageSpan.parentElement && pendingUserMessageSpan.parentElement.parentElement) {
+                        pendingUserMessageSpan.parentElement.parentElement.remove();
+                    }
+                    pendingUserMessageSpan = null;
+                }
                 break;
 
             // Response text stream
-            case "response.audio_transcript.delta":
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA:
                 playVideo = true;
-                const transcript = data.delta;
-                const responseId = data.response_id;
+                const transcript = nav_data.content;
+                const responseId = nav_data.id;
 
                 if (!markdownBuffer.has(responseId)) {
                     markdownBuffer.set(responseId, "");
@@ -572,132 +530,49 @@ async function initDigtalHumanRealtimeButton() {
                     aiMessageContainer.appendChild(aiMessageSpan);
 
                     const chatContainer = document.querySelector('.ah-character-chat');
-                    chatContainer.appendChild(aiMessageContainer);
-
-                    responseSpans.set(responseId, aiMessageSpan);
+                    if (chatContainer) {
+                        chatContainer.appendChild(aiMessageContainer);
+                        responseSpans.set(responseId, aiMessageSpan);
+                    }
                 }
 
                 const fullContent = markdownBuffer.get(responseId);
-                const parsedContent = marked.parse(fullContent);
-                aiMessageSpan.innerHTML = parsedContent;
-                Prism.highlightAllUnder(aiMessageSpan);
+                const parsedContent = fullContent;
 
-                const chatContainer = document.querySelector('.ah-character-chat');
-                chatContainer.scrollTop = chatContainer.scrollHeight;
+                if (aiMessageSpan) {
+                    aiMessageSpan.innerHTML = parsedContent;
+                    const chatContainer = document.querySelector('.ah-character-chat');
+                    if (chatContainer) {
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+                    }
+                }
                 break;
 
             // Response audio stream
-            case "response.audio.delta":
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DELTA:
                 if (data.delta) {
                     // Handle audio delta
                 }
                 break;
 
             // Full assistant transcription
-            case "response.audio_transcript.done":
-                console.log("Received transcription: " + data.transcript);
-                await appendRealtimeChatHistory("assistant", data.transcript);
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE:
+                console.log("Received transcription: " + nav_data.content);
+                await appendRealtimeChatHistory("assistant", nav_data.content);
                 break;
 
             // Response completed
-            case "response.audio.done":
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DONE:
                 console.log("Audio response complete.");
                 isPlaying = false;
                 playVideo = false;
                 break;
 
-            // Function call response
-            case "response.function_call_arguments.done":
-                console.log("data：" + data)
-                handleFunctionCall(data);
-                break;
-
-            case "session.gpu_full":
-                this.$message.error("The gpu resources are full. Please try again later!")
-                break;
-
-            case "session.insufficient_balance":
-                this.$message.error("Insufficient balance, service has stopped, please recharge!")
-                break;
+            // ======================== Message end===================
 
             default:
                 console.warn("Unhandled event type: " + data.type);
         }
-    }
-
-    function handleFunctionCall(eventJson) {
-        try {
-            const arguments = eventJson.arguments;
-            const functionCallArgs = JSON.parse(arguments);
-            const userInput = functionCallArgs.userInput;
-            const callId = eventJson.call_id;
-
-            if (userInput) {
-                // Call handleWithMemAgent to process user input
-                handleWithMemAgent(userInput)
-                    .then(result => {
-                        // Print the response from backend
-                        console.log("Result from backend: " + result);
-                        // Send the result back to the caller
-                        sendFunctionCallResult(result, callId);
-                    })
-                    .catch(error => {
-                        console.error("Error calling MemAgent:", error);
-                    });
-            } else {
-                console.log("City not provided for get_weather function.");
-            }
-        } catch (error) {
-            console.error("Error parsing function call arguments: ", error);
-        }
-    }
-
-    function handleWithMemAgent(userInput) {
-        return new Promise(async (resolve, reject) => {
-            let chatId = await getFromChromeStorage("chatId");
-            // Send request to Java backend API
-            fetch('https://'+baseUrl + '/api/realtime_function_call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userInput: userInput,  // Pass user input to backend
-                    license: LICENSE,
-                    chatId: chatId
-                }),
-            })
-                .then(response => response.text())  // Parse response content
-                .then(result => {
-                    // Handle the returned result
-                    resolve(result);  // Return result to caller
-                })
-                .catch(error => {
-                    console.error("Error during function call:", error);
-                    reject(error);  // Handle error
-                });
-        });
-    }
-
-    function sendFunctionCallResult(result, callId) {
-        const resultJson = {
-            type: "conversation.item.create",
-            item: {
-                type: "function_call_output",
-                output: result,
-                call_id: callId
-            }
-        };
-
-        socket.send(JSON.stringify(resultJson));
-        console.log("Sent function call result: ", resultJson);
-
-        // Actively request a response.create to get the result
-        const rpJson = {
-            type: "response.create"
-        };
-        socket.send(JSON.stringify(rpJson));
-        console.log("Response sent: ", rpJson);
     }
 
     function stopCurrentAudioPlayback() {
@@ -708,13 +583,20 @@ async function initDigtalHumanRealtimeButton() {
         }
     }
 
+    function sendAudioMessage(chunk) {
+        if (!chunk || !socket || socket.readyState !== WebSocket.OPEN) {
+            console.warn("WebSocket not open or empty input.");
+            return;
+        }
+        socket.send(JSON.stringify({ type: NavTalkMessageType.REALTIME_INPUT_AUDIO_BUFFER_APPEND, data: { audio: chunk } }));
+    }
+
     function startRecording() {
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
                 audioStream = stream;
                 const source = audioContext.createMediaStreamSource(stream);
-                // Increase buffer size to 8192
                 audioProcessor = audioContext.createScriptProcessor(8192, 1, 1);
 
                 audioProcessor.onaudioprocess = (event) => {
@@ -723,11 +605,10 @@ async function initDigtalHumanRealtimeButton() {
                         const pcmData = floatTo16BitPCM(inputBuffer);
                         const base64PCM = base64EncodeAudio(new Uint8Array(pcmData));
 
-                        // Increase audio chunk size to 4096
                         const chunkSize = 4096;
                         for (let i = 0; i < base64PCM.length; i += chunkSize) {
                             const chunk = base64PCM.slice(i, i + chunkSize);
-                            socket.send(JSON.stringify({ type: "input_audio_buffer.append", audio: chunk }));
+                            sendAudioMessage(chunk);
                         }
                     }
                 };
@@ -754,7 +635,7 @@ async function initDigtalHumanRealtimeButton() {
 
     function base64EncodeAudio(uint8Array) {
         let binary = '';
-        const chunkSize = 0x8000; // Keep 32KB chunk size
+        const chunkSize = 0x8000;
         for (let i = 0; i < uint8Array.length; i += chunkSize) {
             const chunk = uint8Array.subarray(i, i + chunkSize);
             binary += String.fromCharCode.apply(null, chunk);
@@ -762,7 +643,31 @@ async function initDigtalHumanRealtimeButton() {
         return btoa(binary);
     }
 
+    // Create animated user message placeholder
+    function createTypingPlaceholder() {
+        const userMessageContainer = document.createElement('div');
+        userMessageContainer.classList.add('character-chat-item', 'item-user');
 
+        const userMessage = document.createElement('span');
+        userMessage.classList.add('typing-indicator');
+
+        // Create three bouncing dots
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('span');
+            dot.classList.add('typing-dot');
+            userMessage.appendChild(dot);
+        }
+
+        userMessageContainer.appendChild(userMessage);
+
+        const chatContent = document.querySelector('.ah-character-chat');
+        if (chatContent) {
+            chatContent.appendChild(userMessageContainer);
+            chatContent.scrollTop = chatContent.scrollHeight;
+        }
+
+        return userMessage;
+    }
 
     function stopRecording() {
         if (audioProcessor) {
@@ -776,13 +681,12 @@ async function initDigtalHumanRealtimeButton() {
         }
     }
 
-
     // Play the next audio segment and synchronize lip movement
     function playNextAudio() {
         if (audioQueue.length > 0) {
             isPlaying = true;
-            const audioData = audioQueue.shift(); // Get one audio segment from the queue
-            playPCM(audioData, playNextAudio); // Play the audio
+            const audioData = audioQueue.shift();
+            playPCM(audioData, playNextAudio);
         } else {
             isPlaying = false;
         }
@@ -794,13 +698,13 @@ async function initDigtalHumanRealtimeButton() {
             const source = audioContext.createBufferSource();
             source.buffer = audioBuffer;
             source.connect(audioContext.destination);
-            source.onended = callback; // Call callback after audio playback ends
+            source.onended = callback;
             source.start(0);
             currentAudioSource = source;
             console.log("Audio played successfully.");
         }, function (error) {
             console.error("Error decoding audio data", error);
-            callback(); // Continue to play the next audio if decoding fails
+            callback();
         });
     }
 
@@ -810,22 +714,22 @@ async function initDigtalHumanRealtimeButton() {
 
         // RIFF header
         writeString(view, 0, 'RIFF');
-        view.setUint32(4, 36 + pcmBuffer.byteLength, true); // Chunk size
+        view.setUint32(4, 36 + pcmBuffer.byteLength, true);
         writeString(view, 8, 'WAVE');
 
         // fmt subchunk
         writeString(view, 12, 'fmt ');
-        view.setUint32(16, 16, true); // Subchunk1 size (16 for PCM)
-        view.setUint16(20, 1, true);  // Audio format (1 for PCM)
-        view.setUint16(22, 1, true);  // Number of channels (1 for mono)
-        view.setUint32(24, sampleRate, true); // Sample rate
-        view.setUint32(28, sampleRate * 2, true); // Byte rate (Sample Rate * Block Align)
-        view.setUint16(32, 2, true);  // Block align (Channels * Bits per sample / 8)
-        view.setUint16(34, 16, true); // Bits per sample
+        view.setUint32(16, 16, true);
+        view.setUint16(20, 1, true);
+        view.setUint16(22, 1, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * 2, true);
+        view.setUint16(32, 2, true);
+        view.setUint16(34, 16, true);
 
         // data subchunk
         writeString(view, 36, 'data');
-        view.setUint32(40, pcmBuffer.byteLength, true); // Subchunk2 size
+        view.setUint32(40, pcmBuffer.byteLength, true);
 
         function writeString(view, offset, string) {
             for (let i = 0; i < string.length; i++) {
@@ -843,8 +747,6 @@ async function initDigtalHumanRealtimeButton() {
         return tmp.buffer;
     }
 
-
-
     async function appendRealtimeChatHistory(role, content) {
         let history = localStorage.getItem("realtimeChatHistory");
         let realtimeChatHistory = history ? JSON.parse(history) : [];
@@ -857,41 +759,87 @@ async function initDigtalHumanRealtimeButton() {
 }
 
 async function initDigtalHumanHistoryData(){
+    let realtimeChatHistory = [];
 
-  let realtimeChatHistory = [];
+    const historyStr = localStorage.getItem("realtimeChatHistory");
+    realtimeChatHistory = historyStr ? JSON.parse(historyStr) : [];
 
-  const historyStr = localStorage.getItem("realtimeChatHistory");
-  realtimeChatHistory = historyStr ? JSON.parse(historyStr) : [];
-
-  // Render the historical conversation when the page loads
-  if (realtimeChatHistory && realtimeChatHistory.length > 0) {
-    realtimeChatHistory.forEach(item => {
-      appendContentToList(item.role, item.content);
-    })
-    document.querySelector('.scroller').scrollTop = document.querySelector('.scroller').scrollHeight;
-  }
+    // Render the historical conversation when the page loads
+    if (realtimeChatHistory && realtimeChatHistory.length > 0) {
+        realtimeChatHistory.forEach(item => {
+            appendContentToList(item.role, item.content);
+        })
+        const scroller = document.querySelector('.scroller');
+        if (scroller) {
+            scroller.scrollTop = scroller.scrollHeight;
+        }
+    }
 }
 
 function appendContentToList(role, context) {
-  const container = document.createElement('div');
-  container.classList.add('item', role === 'user' ? 'item-right' : 'item-left');
+    const container = document.createElement('div');
+    container.classList.add('item', role === 'user' ? 'item-right' : 'item-left');
 
-  const contentDiv = document.createElement('div');
-  contentDiv.classList.add('item-content');
-  const contentSpan = document.createElement('span');
-  contentSpan.textContent = context; // Display transcribed user input text
-  contentDiv.appendChild(contentSpan);
-  container.appendChild(contentDiv);
+    const contentDiv = document.createElement('div');
+    contentDiv.classList.add('item-content');
+    const contentSpan = document.createElement('span');
+    contentSpan.textContent = context;
+    contentDiv.appendChild(contentSpan);
+    container.appendChild(contentDiv);
 
-  // Add the user message to the chat box
-  const chatContent = document.querySelector('.scroller');
-  chatContent.appendChild(container);
-  return contentSpan;
+    // Add the user message to the chat box
+    const chatContent = document.querySelector('.scroller');
+    if (chatContent) {
+        chatContent.appendChild(container);
+    }
+    return contentSpan;
 }
 
+// Typing animation styles
+const style = document.createElement('style');
+style.textContent = `
+    .typing-indicator {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 2px 0;
+    }
+
+    .typing-dot {
+        width: 8px;
+        height: 8px;
+        background: currentColor;
+        border-radius: 50%;
+        animation: typingAnimation 1.4s ease-in-out infinite;
+        opacity: 0.6;
+    }
+
+    .typing-dot:nth-child(1) {
+        animation-delay: 0s;
+    }
+
+    .typing-dot:nth-child(2) {
+        animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+        animation-delay: 0.4s;
+    }
+
+    @keyframes typingAnimation {
+        0%,
+        60%,
+        100% {
+            transform: translateY(0);
+            opacity: 0.6;
+        }
+        30% {
+            transform: translateY(-8px);
+            opacity: 1;
+        }
+    }
+`;
+document.head.appendChild(style);
 
 initDigtalHumanHistoryData();
-
 initDigtalHumanRealtimeButton();
-
-

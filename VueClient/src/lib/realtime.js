@@ -1,27 +1,67 @@
 // Ported from HtmlClient/demo.js to an ES module for Vue usage
 
- // ❗You need to manually modify the following variables.
+// Message type constants
+const NavTalkMessageType = Object.freeze({
+  CONNECTED_SUCCESS: "conversation.connected.success",
+  CONNECTED_FAIL: "conversation.connected.fail",
+  CONNECTED_CLOSE: "conversation.connected.close",
+  INSUFFICIENT_BALANCE: "conversation.connected.insufficient_balance",
+  WEB_RTC_OFFER: "webrtc.signaling.offer",
+  WEB_RTC_ANSWER: "webrtc.signaling.answer",
+  WEB_RTC_ICE_CANDIDATE: "webrtc.signaling.iceCandidate",
+
+  REALTIME_SESSION_CREATED: "realtime.session.created",
+  REALTIME_SESSION_UPDATED: "realtime.session.updated",
+
+  REALTIME_SPEECH_STARTED: "realtime.input_audio_buffer.speech_started",
+  REALTIME_SPEECH_STOPPED: "realtime.input_audio_buffer.speech_stopped",
+
+  REALTIME_CONVERSATION_ITEM_COMPLETED:
+      "realtime.conversation.item.input_audio_transcription.completed",
+
+  REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA:
+      "realtime.response.audio_transcript.delta",
+
+  REALTIME_RESPONSE_AUDIO_DELTA: "realtime.response.audio.delta",
+
+  REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE:
+      "realtime.response.audio_transcript.done",
+
+  REALTIME_RESPONSE_AUDIO_DONE: "realtime.response.audio.done",
+
+  REALTIME_RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE:
+      "realtime.response.function_call_arguments.done",
+
+  REALTIME_INPUT_AUDIO_BUFFER_APPEND: "realtime.input_audio_buffer.append",
+
+  REALTIME_INPUT_TEXT: "realtime.input_text",
+
+  REALTIME_INPUT_IMAGE: "realtime.input_image",
+
+  UNKNOWN_TYPE: "unknow"
+});
+
+// ❗You need to manually modify the following variables.
 // ✒️ api key
 const LICENSE = "sk_navtalk_your_key";
+
+// ✒️ model. Currently supported models include: gpt-realtime, gpt-realtime-mini
+const MODEL = "gpt-realtime";
 
 // ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const CHARACTER_NAME = "navtalk.Zoe";
 
 // ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
-    // You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
+// You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const VOICE = "cedar";
 
 // ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
 const PROMPT = "You are a helpful assistant.";
 
-let baseUrl = "transfer.navtalk.ai";
-
-let peerConnectionA = null;
-let resultSocket = null;
-let pc = null;
-let currentTracks = [];
+let baseUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat";
 let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+let peerConnectionA = null;
 
 export async function initDigtalHumanRealtimeButton() {
   let realtimeChatHistory = await getFromStorage("realtimeChatHistory");
@@ -52,6 +92,8 @@ export async function initDigtalHumanRealtimeButton() {
   let isPlaying = false;
   let responseSpans = new Map();
   let markdownBuffer = new Map();
+  let pendingUserMessageSpan = null;
+  let playVideo = false;
 
   function stopRecording() {
     if (audioProcessor) audioProcessor.disconnect();
@@ -96,28 +138,12 @@ export async function initDigtalHumanRealtimeButton() {
 
   async function cleanupResources() {
     try {
-      if (pc) {
-        pc.removeEventListener('icecandidate', on_icecandidate);
-        pc.removeEventListener('connectionstatechange', on_connectionstatechange);
-        pc.removeEventListener('iceconnectionstatechange', iceconnectionstatechange);
-        pc.removeEventListener('signalingstatechange', signalingstatechange);
-        if (pc.connectionState !== 'closed') {
-          await pc.close();
-        }
-        pc = null;
-      }
       if (peerConnectionA) {
         peerConnectionA.onicecandidate = null;
         peerConnectionA.close();
         peerConnectionA = null;
       }
-      currentTracks.forEach(track => {
-        if (track.stop) track.stop();
-        if (track.dispatchEvent) {
-          track.dispatchEvent(new Event('ended'));
-        }
-      });
-      currentTracks = [];
+
       const remoteVideo = document.getElementById('character-avatar-video');
       if (remoteVideo) {
         remoteVideo.srcObject = null;
@@ -131,8 +157,7 @@ export async function initDigtalHumanRealtimeButton() {
   }
 
   async function startWebSocket() {
-    const websocketUrl = "wss://" + baseUrl + "/api/realtime-api";
-    const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
+    const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&name=${CHARACTER_NAME}&model=${MODEL}`;
     socket = new WebSocket(websocketUrlWithParams);
     socket.binaryType = 'arraybuffer';
 
@@ -144,9 +169,6 @@ export async function initDigtalHumanRealtimeButton() {
         } catch (e) {
           console.error("Failed to parse JSON message:", e);
         }
-      } else if (event.data instanceof ArrayBuffer) {
-        const arrayBuffer = event.data;
-        handleReceivedBinaryMessage(arrayBuffer);
       } else {
         console.warn("Unknown WebSocket message type");
       }
@@ -157,7 +179,8 @@ export async function initDigtalHumanRealtimeButton() {
     };
 
     socket.onerror = function (error) {
-      console.error("WebSocket error: ", error);
+      cleanupResources();
+      console.error("WebSocket error:", error);
     };
 
     socket.onclose = async function (event) {
@@ -169,311 +192,366 @@ export async function initDigtalHumanRealtimeButton() {
       stopRecording();
       responseSpans = new Map();
     };
+  }
 
-    let remoteVideoA = document.getElementById('character-avatar-video');
-    let targetSessionId = LICENSE;
-    resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);
-
-    resultSocket.onopen = () => {
-      const message = { type: 'create', targetSessionId: targetSessionId };
-      resultSocket.send(JSON.stringify(message));
+  function sendOfferMessage(sdp) {
+    const message = {
+      type: NavTalkMessageType.WEB_RTC_OFFER,
+      data: { sdp: sdp }
     };
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
+    }
+  }
 
-    resultSocket.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      if (message.type === 'offer') {
-        handleOffer(message);
-      } else if (message.type === 'answer') {
-        handleAnswer(message);
-      } else if (message.type === 'iceCandidate') {
-        handleIceCandidate(message);
-      }
+  function sendAnswerMessage(sdp) {
+    const message = {
+      type: NavTalkMessageType.WEB_RTC_ANSWER,
+      data: { sdp: sdp }
     };
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
+    }
+  }
 
-    resultSocket.onerror = () => {
-      cleanupResources();
+  function sendIceMessage(candidate) {
+    const message = {
+      type: NavTalkMessageType.WEB_RTC_ICE_CANDIDATE,
+      data: { candidate: candidate }
     };
+    if (socket && socket.readyState === WebSocket.OPEN) {
+      socket.send(JSON.stringify(message));
+    }
+  }
 
-    resultSocket.onclose = () => {};
+  async function handleOffer(message) {
+    const offer = new RTCSessionDescription(message.sdp);
+    peerConnectionA = new RTCPeerConnection(configuration);
 
-    async function handleOffer(message) {
-      const targetId = message.targetSessionId;
-      console.log('Handling offer for targetSessionId:', targetId);
-      const offer = new RTCSessionDescription(message.sdp);
-      console.log('Created offer SDP:', offer);
-      try {
-        const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
-        const res = await fetch(endpoint, { method: 'POST' })
-        if (res.ok) {
-          const data = await res.json()
-          const servers = data?.data?.iceServers ?? data?.iceServers
-          if (Array.isArray(servers) && servers.length > 0) {
-            configuration = { iceServers: servers }
-          }
-        }
-      } catch (e) {
-        // keep default configuration
-      }
-      peerConnectionA = new RTCPeerConnection(configuration);
-      console.log('Created peer connection:', peerConnectionA);
-      peerConnectionA.setRemoteDescription(offer)
+    peerConnectionA.setRemoteDescription(offer)
         .then(() => peerConnectionA.createAnswer())
         .then(answer => peerConnectionA.setLocalDescription(answer))
         .then(() => {
-          const responseMessage = {
-            type: 'answer',
-            targetSessionId: targetId,
-            sdp: peerConnectionA.localDescription
-          };
-          resultSocket.send(JSON.stringify(responseMessage));
+          sendAnswerMessage(peerConnectionA.localDescription)
         })
         .catch(err => console.error('Error handling offer:', err));
 
-      peerConnectionA.oniceconnectionstatechange = () => {
-        console.log('ICE connection state changed:', peerConnectionA.iceConnectionState);
-        if (peerConnectionA.iceConnectionState === 'connected' || peerConnectionA.iceConnectionState === 'completed') {
-          console.log('WebRTC connection established successfully');
-        } else if (peerConnectionA.iceConnectionState === 'failed') {
-          console.error('WebRTC connection failed');
-        }
-      };
-
-      peerConnectionA.ontrack = (event) => {
-        console.log('Received remote track:', event);
-        console.log('Streams:', event.streams);
-        if (remoteVideoA) {
-          remoteVideoA.srcObject = event.streams[0];
-          console.log('Set video source object:', remoteVideoA.srcObject);
-          setTimeout(() => {
-            try {
-              remoteVideoA.play();
-              console.log('Video play started successfully');
-            } catch (e) {
-              console.error('Video play failed:', e);
-            }
-          }, 1000);
-        } else {
-          console.error('Remote video element not found');
-        }
-      };
-
-      peerConnectionA.onicecandidate = (event) => {
-        if (event.candidate) {
-          const message = {
-            type: 'iceCandidate',
-            targetSessionId: targetId,
-            candidate: event.candidate
-          };
-          resultSocket.send(JSON.stringify(message));
-        }
-      };
-    }
-
-    const events_maps = new Map();
-
-    function handleAnswer(message) {
-      const targetSessionId = message.targetSessionId;
-      const map_item = events_maps.get(targetSessionId);
-      if (!map_item) return;
-      pc = map_item.peerConnection;
-      const answer = new RTCSessionDescription(message.sdp);
-      if (pc.signalingState === 'stable') {
-        pc.restartIce();
-        recreateOffer(pc, targetSessionId, map_item.socket);
-      } else if (pc.signalingState === 'have-local-offer') {
-        pc.setRemoteDescription(answer).catch(err => console.error('Failed to handle Answer:', err));
+    peerConnectionA.oniceconnectionstatechange = () => {
+      console.log('ICE connection state:', peerConnectionA.iceConnectionState);
+      if (peerConnectionA.iceConnectionState === 'connected') {
+        console.log('WebRTC connection fully established!');
+      } else if (peerConnectionA.iceConnectionState === 'failed') {
+        console.log('ICE connection failed, attempting reconnection...');
+      } else if (peerConnectionA.iceConnectionState === 'disconnected') {
+        console.log('ICE connection disconnected, attempting reconnection...');
       }
-    }
+    };
 
-    async function recreateOffer(pc, targetSessionId, socket) {
-      try {
-        const offer = await pc.createOffer({
-          offerToReceiveAudio: true,
-          offerToReceiveVideo: true
-        });
-        await pc.setLocalDescription(offer);
-        socket.send(JSON.stringify({ type: 'offer', targetSessionId: targetSessionId, sdp: pc.localDescription }));
-      } catch (err) {
-        console.error('Failed to recreate Offer:', err);
+    peerConnectionA.onnegotiationneeded = async () => {
+      console.log("onnegotiationneeded")
+      const offer = await peerConnectionA.createOffer();
+      await peerConnectionA.setLocalDescription(offer);
+      sendOfferMessage(offer);
+    };
+
+    peerConnectionA.ontrack = (event) => {
+      console.log("ontrack")
+      console.log(event)
+      let remoteVideoA = document.getElementById('character-avatar-video');
+      if (remoteVideoA) {
+        remoteVideoA.srcObject = event.streams[0];
+        setTimeout(() => {
+          try {
+            remoteVideoA.play();
+            console.log('Video play started successfully');
+          } catch (e) {
+            console.error('Video play failed:', e);
+          }
+        }, 1000);
       }
-    }
+    };
 
-    function handleIceCandidate(message) {
-      console.log('Handling ICE candidate:', message.candidate);
-      const candidate = new RTCIceCandidate(message.candidate);
+    peerConnectionA.onicecandidate = (event) => {
+      console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
+      if (event.candidate) {
+        sendIceMessage(event.candidate);
+      }
+    };
+  }
+
+  function handleAnswer(message) {
+    const answer = new RTCSessionDescription(message.sdp);
+    if (peerConnectionA) {
+      peerConnectionA.setRemoteDescription(answer)
+          .catch(err => console.error('Failed to handle Answer:', err));
+    }
+  }
+
+  function handleIceCandidate(message) {
+    const candidate = new RTCIceCandidate(message.candidate);
+    console.log(candidate)
+    if (peerConnectionA) {
       peerConnectionA.addIceCandidate(candidate)
-        .then(() => console.log('ICE candidate added successfully'))
-        .catch(err => console.error('Error adding ICE candidate:', err));
+          .catch(err => console.error('Error adding ICE candidate:', err));
     }
+  }
 
-    function showErrorTip(message) {
-      const realtimeButton = document.getElementById('btnRealtime');
-      if (realtimeButton && realtimeButton.classList.contains('active')) {
-        realtimeButton.click();
+  function showErrorTip(message) {
+    const realtimeButton = document.getElementById('btnRealtime');
+    if (realtimeButton && realtimeButton.classList.contains('active')) {
+      realtimeButton.click();
+    }
+    console.error(message);
+  }
+
+  async function sendSessionUpdate() {
+    const history = localStorage.getItem("realtimeChatHistory");
+    const conversationHistory = history ? JSON.parse(history) : [];
+
+    // Session configuration
+    let sessionConfig = {
+      type: "session.update",
+      session: {
+        instructions: PROMPT,
+        turn_detection: {
+          type: "server_vad",
+          threshold: 0.5,
+          prefix_padding_ms: 300,
+          silence_duration_ms: 500
+        },
+        voice: VOICE,
+        temperature: 1,
+        max_response_output_tokens: 4096,
+        modalities: ["text", "audio"],
+        input_audio_format: "pcm16",
+        output_audio_format: "pcm16",
+        input_audio_transcription: {
+          model: "whisper-1"
+        }
       }
-      console.error(message);
+    };
+
+    try {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        socket.send(JSON.stringify(sessionConfig));
+      }
+    } catch (e) {
+      console.error("Error sending session update:", e);
     }
 
-    async function sendSessionUpdate() {
-      const history = localStorage.getItem("realtimeChatHistory");
-      const conversationHistory = history ? JSON.parse(history) : [];
-      let userLanguage = await getFromStorage("userLanguage");
-      let activeCharacterLogId = await getFromStorage("digitalHumanLogId");
-      let realtimeChatHistory = await getFromStorage("realtimeChatHistory");
-      try { realtimeChatHistory = JSON.parse(realtimeChatHistory); } catch { realtimeChatHistory = []; }
-
-      let sessionConfig = {
-        type: "session.update",
-        session: {
-          instructions: PROMPT,
-          turn_detection: { type: "server_vad", threshold: 0.5, prefix_padding_ms: 300, silence_duration_ms: 500 },
-          voice: VOICE,
-          temperature: 1,
-          max_response_output_tokens: 4096,
-          modalities: ["text", "audio"],
-          input_audio_format: "pcm16",
-          output_audio_format: "pcm16",
-          input_audio_transcription: { model: "whisper-1" },
-          tools: [
-            { type: "function", name: "function_call_judge", description: "judge function calls", parameters: { type: "object", properties: { userInput: { type: "string" } }, required: ["userInput"] } }
+    // Send each item in history
+    conversationHistory.forEach((msg) => {
+      const messageConfig = {
+        type: "conversation.item.create",
+        item: {
+          type: "message",
+          role: msg.role,
+          content: [
+            {
+              type: msg.role === "user" ? "input_text" : "text",
+              text: msg.content
+            }
           ]
         }
       };
 
-      try { socket.send(JSON.stringify(sessionConfig)); } catch (e) { console.error("Error sending session update:", e); }
+      try {
+        if (msg.role === "user" && socket && socket.readyState === WebSocket.OPEN) {
+          console.log("Sending message:", JSON.stringify(messageConfig));
+          socket.send(JSON.stringify(messageConfig));
+        }
+      } catch (e) {
+        console.error("Error sending message:", e);
+      }
+    });
+  }
 
-      conversationHistory.forEach((msg) => {
-        const messageConfig = {
-          type: "conversation.item.create",
-          item: { type: "message", role: msg.role, content: [ { type: msg.role === "user" ? "input_text" : "text", text: msg.content } ] }
-        };
-        try {
-          if (msg.role === "user") socket.send(JSON.stringify(messageConfig));
-        } catch (e) { console.error("Error sending message:", e); }
-      });
-    }
+  async function handleReceivedMessage(data) {
+    let nav_data = data.data;
 
-    async function handleReceivedMessage(data) {
-      switch (data.type) {
-        case "session.created":
-          await sendSessionUpdate();
-          break;
-        case "session.updated":
-          startRecording();
-          break;
-        case "input_audio_buffer.speech_started":
-          stopCurrentAudioPlayback();
-          audioQueue = [];
-          isPlaying = false;
-          playVideo = false;
-          break;
-        case "conversation.item.input_audio_transcription.completed": {
-          const userMessageContainer = document.createElement('div');
-          userMessageContainer.classList.add('character-chat-item', 'item-user');
-          const userMessage = document.createElement('span');
-          userMessage.textContent = data.transcript;
-          userMessageContainer.appendChild(userMessage);
-          const chatContent = document.querySelector('.ah-character-chat');
-          if (chatContent) {
-            chatContent.appendChild(userMessageContainer);
-            chatContent.scrollTop = chatContent.scrollHeight;
+    switch (data.type) {
+        // ======================== connection start===================
+      case NavTalkMessageType.CONNECTED_FAIL:
+      case NavTalkMessageType.CONNECTED_CLOSE:
+        const errorMessage = data.message || "Unknown error";
+        console.log(`Connection error: ${errorMessage}`);
+        break;
+
+      case NavTalkMessageType.CONNECTED_SUCCESS:
+        if (data.data && data.data.iceServers) {
+          configuration.iceServers = data.data.iceServers
+          console.log("NavTalkMessageType.CONNECTED_SUCCESS")
+          console.log(configuration.iceServers)
+        }
+        console.log("conversation.connected.success");
+        console.log(configuration);
+        break;
+
+        // Session created, send configuration
+      case NavTalkMessageType.REALTIME_SESSION_CREATED:
+        console.log("Session created, sending session update.");
+        await sendSessionUpdate();
+        break;
+
+        // Session established after configuration
+      case NavTalkMessageType.REALTIME_SESSION_UPDATED:
+        console.log("Session updated. Ready to receive audio.");
+        startRecording();
+        break;
+
+      case NavTalkMessageType.INSUFFICIENT_BALANCE:
+        console.log("INSUFFICIENT_BALANCE");
+        break;
+        // ======================== connection end===================
+        // ======================== signaling exchange start===================
+      case NavTalkMessageType.WEB_RTC_OFFER: {
+        handleOffer(data.data);
+        break;
+      }
+      case NavTalkMessageType.WEB_RTC_ANSWER: {
+        handleAnswer(data.data);
+        break;
+      }
+      case NavTalkMessageType.WEB_RTC_ICE_CANDIDATE: {
+        handleIceCandidate(data.data);
+        break;
+      }
+        // ======================== signaling exchange end===================
+        // ======================== Message start===================
+        // User starts speaking
+      case NavTalkMessageType.REALTIME_SPEECH_STARTED:
+        console.log("Speech started detected by server.");
+        stopCurrentAudioPlayback();
+        audioQueue = [];
+        isPlaying = false;
+        playVideo = false;
+        pendingUserMessageSpan = null;
+        break;
+
+        // User stops speaking
+      case NavTalkMessageType.REALTIME_SPEECH_STOPPED:
+        console.log("Speech stopped detected by server.");
+        pendingUserMessageSpan = createTypingPlaceholder();
+        break;
+
+        // Full transcription of user speech
+      case NavTalkMessageType.REALTIME_CONVERSATION_ITEM_COMPLETED:
+        console.log("Received transcription: " + nav_data.content);
+        if (nav_data && nav_data.content && nav_data.content.trim()) {
+          if (pendingUserMessageSpan) {
+            pendingUserMessageSpan.innerHTML = '';
+            pendingUserMessageSpan.classList.remove('typing-indicator');
+            pendingUserMessageSpan.textContent = nav_data.content;
+            pendingUserMessageSpan = null;
+          } else {
+            const userMessageContainer = document.createElement('div');
+            userMessageContainer.classList.add('character-chat-item', 'item-user');
+
+            const userMessage = document.createElement('span');
+            userMessage.textContent = nav_data.content;
+            userMessageContainer.appendChild(userMessage);
+
+            const chatContent = document.querySelector('.ah-character-chat');
+            if (chatContent) {
+              chatContent.appendChild(userMessageContainer);
+              chatContent.scrollTop = chatContent.scrollHeight;
+            }
           }
-          await appendRealtimeChatHistory("user", data.transcript);
-          break; }
-        case "response.audio_transcript.delta": {
-          playVideo = true;
-          const transcript = data.delta;
-          const responseId = data.response_id;
-          if (!markdownBuffer.has(responseId)) markdownBuffer.set(responseId, "");
-          const existingBuffer = markdownBuffer.get(responseId);
-          markdownBuffer.set(responseId, existingBuffer + transcript);
-          let aiMessageSpan = responseSpans.get(responseId);
-          if (!aiMessageSpan) {
-            const aiMessageContainer = document.createElement('div');
-            aiMessageContainer.classList.add('character-chat-item', 'item-character');
-            aiMessageSpan = document.createElement('span');
-            aiMessageSpan.classList.add('markdown-content');
-            aiMessageContainer.appendChild(aiMessageSpan);
-            const chatContainer = document.querySelector('.ah-character-chat');
-            if (chatContainer) chatContainer.appendChild(aiMessageContainer);
+          await appendRealtimeChatHistory("user", nav_data.content);
+        } else if (pendingUserMessageSpan) {
+          if (pendingUserMessageSpan.parentElement && pendingUserMessageSpan.parentElement.parentElement) {
+            pendingUserMessageSpan.parentElement.parentElement.remove();
+          }
+          pendingUserMessageSpan = null;
+        }
+        break;
+
+        // Response text stream
+      case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA:
+        playVideo = true;
+        const transcript = nav_data.content;
+        const responseId = nav_data.id;
+
+        if (!markdownBuffer.has(responseId)) {
+          markdownBuffer.set(responseId, "");
+        }
+
+        const existingBuffer = markdownBuffer.get(responseId);
+        markdownBuffer.set(responseId, existingBuffer + transcript);
+
+        let aiMessageSpan = responseSpans.get(responseId);
+
+        if (!aiMessageSpan) {
+          const aiMessageContainer = document.createElement('div');
+          aiMessageContainer.classList.add('character-chat-item', 'item-character');
+
+          aiMessageSpan = document.createElement('span');
+          aiMessageSpan.classList.add('markdown-content');
+          aiMessageContainer.appendChild(aiMessageSpan);
+
+          const chatContainer = document.querySelector('.ah-character-chat');
+          if (chatContainer) {
+            chatContainer.appendChild(aiMessageContainer);
             responseSpans.set(responseId, aiMessageSpan);
           }
-          const fullContent = markdownBuffer.get(responseId);
-          const parsedContent = (window.marked ? window.marked : { parse: (t)=>t }).parse(fullContent);
-          aiMessageSpan.innerHTML = parsedContent;
-          if (window.Prism && window.Prism.highlightAllUnder) {
-            window.Prism.highlightAllUnder(aiMessageSpan);
-          }
-          const chatContainer = document.querySelector('.ah-character-chat');
-          if (chatContainer) chatContainer.scrollTop = chatContainer.scrollHeight;
-          break; }
-        case "response.audio_transcript.done":
-          await appendRealtimeChatHistory("assistant", data.transcript);
-          break;
-        case "response.audio.done":
-          isPlaying = false;
-          playVideo = false;
-          break;
-        case "response.function_call_arguments.done":
-          handleFunctionCall(data);
-          break;
-        case "session.gpu_full":
-          console.error("The gpu resources are full. Please try again later!");
-          break;
-        case "session.insufficient_balance":
-          console.error("Insufficient balance, service has stopped, please recharge!");
-          break;
-        default:
-          break;
-      }
-    }
-
-    function handleFunctionCall(eventJson) {
-      try {
-        const args = eventJson.arguments;
-        const functionCallArgs = JSON.parse(args);
-        const userInput = functionCallArgs.userInput;
-        const callId = eventJson.call_id;
-        if (userInput) {
-          handleWithMemAgent(userInput)
-            .then(result => { sendFunctionCallResult(result, callId); })
-            .catch(error => { console.error("Error calling MemAgent:", error); });
         }
-      } catch (error) {
-        console.error("Error parsing function call arguments: ", error);
-      }
-    }
 
-    function handleWithMemAgent(userInput) {
-      return new Promise(async (resolve, reject) => {
-        let chatId = await getFromStorage("chatId");
-        fetch('https://' + baseUrl + '/api/realtime_function_call', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ userInput, license: LICENSE, chatId })
-        })
-          .then(response => response.text())
-          .then(result => resolve(result))
-          .catch(error => reject(error));
-      });
-    }
+        const fullContent = markdownBuffer.get(responseId);
+        const parsedContent = fullContent;
 
-    function sendFunctionCallResult(result, callId) {
-      const resultJson = { type: "conversation.item.create", item: { type: "function_call_output", output: result, call_id: callId } };
-      socket.send(JSON.stringify(resultJson));
-      const rpJson = { type: "response.create" };
-      socket.send(JSON.stringify(rpJson));
-    }
+        if (aiMessageSpan) {
+          aiMessageSpan.innerHTML = parsedContent;
+          const chatContainer = document.querySelector('.ah-character-chat');
+          if (chatContainer) {
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+          }
+        }
+        break;
 
-    function stopCurrentAudioPlayback() {
-      if (currentAudioSource) {
-        currentAudioSource.stop();
-        currentAudioSource = null;
-      }
-    }
+        // Response audio stream
+      case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DELTA:
+        if (data.delta) {
+          // Handle audio delta
+        }
+        break;
 
-    function startRecording() {
-      navigator.mediaDevices.getUserMedia({ audio: true })
+        // Full assistant transcription
+      case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE:
+        console.log("Received transcription: " + nav_data.content);
+        await appendRealtimeChatHistory("assistant", nav_data.content);
+        break;
+
+        // Response completed
+      case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DONE:
+        console.log("Audio response complete.");
+        isPlaying = false;
+        playVideo = false;
+        break;
+
+        // ======================== Message end===================
+
+      default:
+        console.warn("Unhandled event type: " + data.type);
+    }
+  }
+
+  function stopCurrentAudioPlayback() {
+    if (currentAudioSource) {
+      currentAudioSource.stop();
+      currentAudioSource = null;
+    }
+  }
+
+  function sendAudioMessage(chunk) {
+    if (!chunk || !socket || socket.readyState !== WebSocket.OPEN) {
+      console.warn("WebSocket not open or empty input.");
+      return;
+    }
+    socket.send(JSON.stringify({ type: NavTalkMessageType.REALTIME_INPUT_AUDIO_BUFFER_APPEND, data: { audio: chunk } }));
+  }
+
+  function startRecording() {
+    navigator.mediaDevices.getUserMedia({ audio: true })
         .then(stream => {
           audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
           audioStream = stream;
@@ -487,7 +565,7 @@ export async function initDigtalHumanRealtimeButton() {
               const chunkSize = 4096;
               for (let i = 0; i < base64PCM.length; i += chunkSize) {
                 const chunk = base64PCM.slice(i, i + chunkSize);
-                socket.send(JSON.stringify({ type: "input_audio_buffer.append", audio: chunk }));
+                sendAudioMessage(chunk);
               }
             }
           };
@@ -495,89 +573,113 @@ export async function initDigtalHumanRealtimeButton() {
           audioProcessor.connect(audioContext.destination);
         })
         .catch(error => { console.error("Unable to access microphone: ", error); });
+  }
+
+  function floatTo16BitPCM(float32Array) {
+    const buffer = new ArrayBuffer(float32Array.length * 2);
+    const view = new DataView(buffer);
+    let offset = 0;
+    for (let i = 0; i < float32Array.length; i++, offset += 2) {
+      let s = Math.max(-1, Math.min(1, float32Array[i]));
+      view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    }
+    return buffer;
+  }
+
+  function base64EncodeAudio(uint8Array) {
+    let binary = '';
+    const chunkSize = 0x8000;
+    for (let i = 0; i < uint8Array.length; i += chunkSize) {
+      const chunk = uint8Array.subarray(i, i + chunkSize);
+      binary += String.fromCharCode.apply(null, chunk);
+    }
+    return btoa(binary);
+  }
+
+  // Create animated user message placeholder
+  function createTypingPlaceholder() {
+    const userMessageContainer = document.createElement('div');
+    userMessageContainer.classList.add('character-chat-item', 'item-user');
+
+    const userMessage = document.createElement('span');
+    userMessage.classList.add('typing-indicator');
+
+    // Create three bouncing dots
+    for (let i = 0; i < 3; i++) {
+      const dot = document.createElement('span');
+      dot.classList.add('typing-dot');
+      userMessage.appendChild(dot);
     }
 
-    function floatTo16BitPCM(float32Array) {
-      const buffer = new ArrayBuffer(float32Array.length * 2);
-      const view = new DataView(buffer);
-      let offset = 0;
-      for (let i = 0; i < float32Array.length; i++, offset += 2) {
-        let s = Math.max(-1, Math.min(1, float32Array[i]));
-        view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+    userMessageContainer.appendChild(userMessage);
+
+    const chatContent = document.querySelector('.ah-character-chat');
+    if (chatContent) {
+      chatContent.appendChild(userMessageContainer);
+      chatContent.scrollTop = chatContent.scrollHeight;
+    }
+
+    return userMessage;
+  }
+
+  function playNextAudio() {
+    if (audioQueue.length > 0) {
+      isPlaying = true;
+      const audioData = audioQueue.shift();
+      playPCM(audioData, playNextAudio);
+    } else {
+      isPlaying = false;
+    }
+  }
+
+  function playPCM(pcmBuffer, callback) {
+    const wavBuffer = createWavBuffer(pcmBuffer, 24000);
+    audioContext.decodeAudioData(wavBuffer, function (audioBuffer) {
+      const source = audioContext.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.destination);
+      source.onended = callback;
+      source.start(0);
+      currentAudioSource = source;
+    }, function () { callback(); });
+  }
+
+  function createWavBuffer(pcmBuffer, sampleRate) {
+    const wavHeader = new ArrayBuffer(44);
+    const view = new DataView(wavHeader);
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + pcmBuffer.byteLength, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * 2, true);
+    view.setUint16(32, 2, true);
+    view.setUint16(34, 16, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, pcmBuffer.byteLength, true);
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
       }
-      return buffer;
     }
+    return concatenateBuffers(wavHeader, pcmBuffer);
+  }
 
-    function base64EncodeAudio(uint8Array) {
-      let binary = '';
-      const chunkSize = 0x8000;
-      for (let i = 0; i < uint8Array.length; i += chunkSize) {
-        const chunk = uint8Array.subarray(i, i + chunkSize);
-        binary += String.fromCharCode.apply(null, chunk);
-      }
-      return btoa(binary);
-    }
+  function concatenateBuffers(buffer1, buffer2) {
+    const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+    tmp.set(new Uint8Array(buffer1), 0);
+    tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+    return tmp.buffer;
+  }
 
-
-    function playNextAudio() {
-      if (audioQueue.length > 0) {
-        isPlaying = true;
-        const audioData = audioQueue.shift();
-        playPCM(audioData, playNextAudio);
-      } else {
-        isPlaying = false;
-      }
-    }
-
-    function playPCM(pcmBuffer, callback) {
-      const wavBuffer = createWavBuffer(pcmBuffer, 24000);
-      audioContext.decodeAudioData(wavBuffer, function (audioBuffer) {
-        const source = audioContext.createBufferSource();
-        source.buffer = audioBuffer;
-        source.connect(audioContext.destination);
-        source.onended = callback;
-        source.start(0);
-        currentAudioSource = source;
-      }, function () { callback(); });
-    }
-
-    function createWavBuffer(pcmBuffer, sampleRate) {
-      const wavHeader = new ArrayBuffer(44);
-      const view = new DataView(wavHeader);
-      writeString(view, 0, 'RIFF');
-      view.setUint32(4, 36 + pcmBuffer.byteLength, true);
-      writeString(view, 8, 'WAVE');
-      writeString(view, 12, 'fmt ');
-      view.setUint32(16, 16, true);
-      view.setUint16(20, 1, true);
-      view.setUint16(22, 1, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * 2, true);
-      view.setUint16(32, 2, true);
-      view.setUint16(34, 16, true);
-      writeString(view, 36, 'data');
-      view.setUint32(40, pcmBuffer.byteLength, true);
-      function writeString(view, offset, string) {
-        for (let i = 0; i < string.length; i++) {
-          view.setUint8(offset + i, string.charCodeAt(i));
-        }
-      }
-      return concatenateBuffers(wavHeader, pcmBuffer);
-    }
-
-    function concatenateBuffers(buffer1, buffer2) {
-      const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
-      tmp.set(new Uint8Array(buffer1), 0);
-      tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
-      return tmp.buffer;
-    }
-
-    async function appendRealtimeChatHistory(role, content) {
-      let history = localStorage.getItem("realtimeChatHistory");
-      let realtimeChatHistory = history ? JSON.parse(history) : [];
-      realtimeChatHistory.push({ role, content });
-      localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
-    }
+  async function appendRealtimeChatHistory(role, content) {
+    let history = localStorage.getItem("realtimeChatHistory");
+    let realtimeChatHistory = history ? JSON.parse(history) : [];
+    realtimeChatHistory.push({ role, content });
+    localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
   }
 }
 
@@ -608,4 +710,50 @@ export function appendContentToList(role, context) {
   return contentSpan;
 }
 
+// Add typing animation styles
+if (typeof window !== 'undefined') {
+  const style = document.createElement('style');
+  style.textContent = `
+    .typing-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+    }
 
+    .typing-dot {
+      width: 8px;
+      height: 8px;
+      background: currentColor;
+      border-radius: 50%;
+      animation: typingAnimation 1.4s ease-in-out infinite;
+      opacity: 0.6;
+    }
+
+    .typing-dot:nth-child(1) {
+      animation-delay: 0s;
+    }
+
+    .typing-dot:nth-child(2) {
+      animation-delay: 0.2s;
+    }
+
+    .typing-dot:nth-child(3) {
+      animation-delay: 0.4s;
+    }
+
+    @keyframes typingAnimation {
+      0%,
+      60%,
+      100% {
+        transform: translateY(0);
+        opacity: 0.6;
+      }
+      30% {
+        transform: translateY(-8px);
+        opacity: 1;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+}
