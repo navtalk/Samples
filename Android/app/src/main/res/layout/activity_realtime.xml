@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RealtimeActivity">
+    <org.webrtc.SurfaceViewRenderer
+        android:id="@+id/remote_renderer"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        app:layout_constraintRight_toRightOf="parent"
+        />
+        <!-- Static Image (e.g., character image) -->
+<!--    <ImageView-->
+<!--        android:visibility="gone"-->
+<!--        android:id="@+id/staticImage"-->
+<!--        android:layout_width="100dp"-->
+<!--        android:layout_height="100dp"-->
+<!--        android:layout_marginTop="56dp"-->
+<!--        android:layout_marginStart="56dp"-->
+<!--        android:layout_marginEnd="20dp"-->
+<!--        android:layout_marginBottom="20dp"-->
+<!--        app:layout_constraintEnd_toEndOf="parent"-->
+<!--        app:layout_constraintStart_toStartOf="parent"-->
+<!--        app:layout_constraintTop_toTopOf="parent"/>-->
+            <ImageView
+            android:id="@+id/staticImage"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:src="@drawable/ic_alex"
+            android:scaleType="centerCrop"
+            android:contentDescription="@string/static_image"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+
+
+    <androidx.appcompat.widget.AppCompatEditText
+        android:visibility="gone"
+        android:text=""
+        android:hint="@string/key_message"
+        android:textColor="@color/black"
+        android:background="@drawable/bg_input_field"
+        android:id="@+id/et_key"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintLeft_toLeftOf="parent"
+        android:layout_margin="20dp"
+        android:textSize="14sp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        />
+
+
+    <!-- Chat List -->
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/chatList"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:layout_marginTop="280dp"
+            android:layout_marginBottom="110dp"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/staticImage"
+            android:clipToPadding="false"
+            android:scrollbars="vertical" />
+
+        <!-- Button to toggle Real-time interaction -->
+        <LinearLayout
+            android:id="@+id/llRealtime"
+            android:layout_width="160dp"
+            android:layout_height="50dp"
+            android:background="@drawable/circular_button_call_bg"
+            android:orientation="horizontal"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:layout_marginBottom="32dp"
+            android:gravity="center"
+            android:paddingStart="34dp"
+            android:paddingEnd="34dp"
+            android:elevation="4dp"
+            >
+
+            <ImageView
+                android:id="@+id/btnRealtime"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:src="@drawable/ic_call"
+                android:contentDescription="@string/realtime_button"
+                 />
+
+            <androidx.appcompat.widget.AppCompatTextView
+                android:id="@+id/tvRealtime"
+                android:layout_marginStart="6dp"
+                android:layout_gravity="center"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Call"
+                android:textSize="15sp"
+                android:textColor="@color/white"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintLeft_toLeftOf="parent"
+                />
+
+        </LinearLayout>
+        <!-- Chat Input (optional, add if you want to handle text input) -->
+        <androidx.appcompat.widget.AppCompatEditText
+            android:visibility="gone"
+            android:id="@+id/chatInput"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="16dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginEnd="20dp"
+            android:hint="@string/type_message"
+            android:textSize="14sp"
+            android:padding="10dp"
+            android:background="@drawable/bg_input_field"
+            app:layout_constraintBottom_toTopOf="@id/llRealtime"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>

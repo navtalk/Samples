@@ -1,13 +1,21 @@
 // Ported from HtmlClient/demo.js to an ES module for Vue usage
 
-// Configuration variables (consider moving to environment variables)
+ // ❗You need to manually modify the following variables.
+// ✒️ api key
 const LICENSE = "sk_navtalk_your_key";
-const CHARACTER_NAME = "man2";
+
+// ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
+// You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
+const CHARACTER_NAME = "navtalk.Zoe";
+
+// ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
+    // You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const VOICE = "cedar";
+
+// ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
 const PROMPT = "You are a helpful assistant.";
 
 let baseUrl = "transfer.navtalk.ai";
-let webrtcUrl = "transfer.navtalk.ai";
 
 let peerConnectionA = null;
 let resultSocket = null;
@@ -40,15 +48,16 @@ export async function initDigtalHumanRealtimeButton() {
   let audioStream;
   let currentAudioSource = null;
 
-  let activeCharacterLogId = await getFromStorage("digitalHumanLogId");
-  let loading = document.querySelector('.ah-chat-loading');
-  let aiMessageElement;
-  let accumulatedTranscript = '';
   let audioQueue = [];
   let isPlaying = false;
   let responseSpans = new Map();
-  let playVideo = false;
   let markdownBuffer = new Map();
+
+  function stopRecording() {
+    if (audioProcessor) audioProcessor.disconnect();
+    if (audioStream) audioStream.getTracks().forEach(track => track.stop());
+    if (socket) socket.close();
+  }
 
   if (realtimeButton) {
     realtimeButton.addEventListener('click', async function () {
@@ -162,8 +171,8 @@ export async function initDigtalHumanRealtimeButton() {
     };
 
     let remoteVideoA = document.getElementById('character-avatar-video');
-    let targetSessionId = "123";
-    resultSocket = new WebSocket('wss://' + webrtcUrl + '/api/webrtc?userId=' + targetSessionId);
+    let targetSessionId = LICENSE;
+    resultSocket = new WebSocket('wss://'+baseUrl+'/api/webrtc?userId=' + targetSessionId);
 
     resultSocket.onopen = () => {
       const message = { type: 'create', targetSessionId: targetSessionId };
@@ -187,10 +196,26 @@ export async function initDigtalHumanRealtimeButton() {
 
     resultSocket.onclose = () => {};
 
-    function handleOffer(message) {
+    async function handleOffer(message) {
       const targetId = message.targetSessionId;
+      console.log('Handling offer for targetSessionId:', targetId);
       const offer = new RTCSessionDescription(message.sdp);
+      console.log('Created offer SDP:', offer);
+      try {
+        const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
+        const res = await fetch(endpoint, { method: 'POST' })
+        if (res.ok) {
+          const data = await res.json()
+          const servers = data?.data?.iceServers ?? data?.iceServers
+          if (Array.isArray(servers) && servers.length > 0) {
+            configuration = { iceServers: servers }
+          }
+        }
+      } catch (e) {
+        // keep default configuration
+      }
       peerConnectionA = new RTCPeerConnection(configuration);
+      console.log('Created peer connection:', peerConnectionA);
       peerConnectionA.setRemoteDescription(offer)
         .then(() => peerConnectionA.createAnswer())
         .then(answer => peerConnectionA.setLocalDescription(answer))
@@ -204,12 +229,31 @@ export async function initDigtalHumanRealtimeButton() {
         })
         .catch(err => console.error('Error handling offer:', err));
 
-      peerConnectionA.oniceconnectionstatechange = () => {};
+      peerConnectionA.oniceconnectionstatechange = () => {
+        console.log('ICE connection state changed:', peerConnectionA.iceConnectionState);
+        if (peerConnectionA.iceConnectionState === 'connected' || peerConnectionA.iceConnectionState === 'completed') {
+          console.log('WebRTC connection established successfully');
+        } else if (peerConnectionA.iceConnectionState === 'failed') {
+          console.error('WebRTC connection failed');
+        }
+      };
 
       peerConnectionA.ontrack = (event) => {
+        console.log('Received remote track:', event);
+        console.log('Streams:', event.streams);
         if (remoteVideoA) {
           remoteVideoA.srcObject = event.streams[0];
-          setTimeout(() => { try { remoteVideoA.play(); } catch {} }, 1000);
+          console.log('Set video source object:', remoteVideoA.srcObject);
+          setTimeout(() => {
+            try {
+              remoteVideoA.play();
+              console.log('Video play started successfully');
+            } catch (e) {
+              console.error('Video play failed:', e);
+            }
+          }, 1000);
+        } else {
+          console.error('Remote video element not found');
         }
       };
 
@@ -217,7 +261,7 @@ export async function initDigtalHumanRealtimeButton() {
         if (event.candidate) {
           const message = {
             type: 'iceCandidate',
-            targetSessionId: targetSessionId,
+            targetSessionId: targetId,
             candidate: event.candidate
           };
           resultSocket.send(JSON.stringify(message));
@@ -255,8 +299,11 @@ export async function initDigtalHumanRealtimeButton() {
     }
 
     function handleIceCandidate(message) {
+      console.log('Handling ICE candidate:', message.candidate);
       const candidate = new RTCIceCandidate(message.candidate);
-      peerConnectionA.addIceCandidate(candidate).catch(err => console.error('Error adding ICE candidate:', err));
+      peerConnectionA.addIceCandidate(candidate)
+        .then(() => console.log('ICE candidate added successfully'))
+        .catch(err => console.error('Error adding ICE candidate:', err));
     }
 
     function showErrorTip(message) {
@@ -471,11 +518,6 @@ export async function initDigtalHumanRealtimeButton() {
       return btoa(binary);
     }
 
-    function stopRecording() {
-      if (audioProcessor) audioProcessor.disconnect();
-      if (audioStream) audioStream.getTracks().forEach(track => track.stop());
-      if (socket) socket.close();
-    }
 
     function playNextAudio() {
       if (audioQueue.length > 0) {

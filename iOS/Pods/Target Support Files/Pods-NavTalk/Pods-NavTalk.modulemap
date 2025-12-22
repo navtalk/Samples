@@ -1,0 +1,6 @@
+framework module Pods_NavTalk {
+  umbrella header "Pods-NavTalk-umbrella.h"
+
+  export *
+  module * { export * }
+}

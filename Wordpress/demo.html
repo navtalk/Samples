@@ -1,0 +1,1976 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- =========================================== -->
+    <!-- ⚙️ CONFIGURATION - Modify these values -->
+    <!-- =========================================== -->
+    <script>
+        // NavTalk Digital Human Configuration
+        // Modify these values according to your needs
+        
+        window.NavTalkConfig = window.NavTalkConfig || {};
+        
+        // ✒️ API Key - Your NavTalk API key
+        window.NavTalkConfig.API_KEY = window.NavTalkConfig.API_KEY || "sk_navtalk_9p9flyCQXGKXuu1iPZXaBYsQhQRq0ZDm";
+        
+        // ✒️ Character Name 
+        // Check available characters at: https://console.navtalk.ai/login#/playground/realtime_digital_human
+        window.NavTalkConfig.CHARACTER_NAME = window.NavTalkConfig.CHARACTER_NAME || "navtalk.Leo";
+        
+        // ✒️ Voice - Currently supported: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
+        // Check available voices at: https://console.navtalk.ai/login#/playground/realtime_digital_human
+        window.NavTalkConfig.VOICE = window.NavTalkConfig.VOICE || "cedar";
+        
+        // ✒️ Prompt - Define the assistant's behavior, knowledge, and conversation style
+        window.NavTalkConfig.PROMPT = window.NavTalkConfig.PROMPT || "You are a helpful assistant.";
+        
+        // ✒️ Web Server URLs
+        window.NavTalkConfig.baseUrl = window.NavTalkConfig.baseUrl || "transfer.navtalk.ai";
+        window.NavTalkConfig.webrtcUrl = window.NavTalkConfig.webrtcUrl || "transfer.navtalk.ai";
+    </script>
+
+</head>
+
+<body>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<div class="real-time-container">
+    <div class="ah-agent-header">
+        <div class="ah-btn-group"></div>
+    </div>
+
+    <!-- character container -->
+    <div class="ah-character-box">
+        <div class="ah-character-avatar" style="position: relative; overflow: hidden; width: 400px; height: 400px;">
+            <!-- Static image displayed by default -->
+            <img id="character-static-image" src="https://api.navtalk.ai/uploadFiles/navtalk.Leo.png"
+                 style="position: absolute; top: 0; left: 0; width: 400px; height: 400px; object-fit: cover;">
+
+            <!-- Video playback element (initially hidden) -->
+            <video id="character-avatar-video"
+                   style="position: absolute; top: 0; left: 0; width: 400px; height: 400px; object-fit: cover; display: none;"></video>
+            
+            <!-- Loading overlay - Transition animation during connection -->
+            <div id="connection-loading-overlay" class="connection-loading-overlay" style="display: none;">
+                <div class="loading-spinner">
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                    <div class="spinner-ring"></div>
+                </div>
+                <div class="loading-pulse"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="ah-character-bg">
+        <img style="width: 100%;height: 100%;object-fit: cover;"
+             src="https://gd-hbimg.huaban.com/67869c1b642e1accb9378fb4af28a6f5729bd35530722-xfzjYw_fw1200" alt="">
+    </div>
+
+    <!-- Call button -->
+    <button class="ah-btn ah-btn-icon btn-character-call" id="btnRealtime">
+        <svg class="ah-icon" width="22" height="22" viewBox="0 0 22 22" fill="#fff"
+             xmlns="http://www.w3.org/2000/svg">
+            <path
+                    d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
+        </svg>
+    </button>
+
+    <!-- Chat content - Commented out, no need to display text -->
+    <!--
+    <div class="ah-character-chat" :hidden="false">
+
+        <div class="scroller"></div>
+
+        <div class="character-chat-item item-user" style="display: none;">
+
+        </div>
+        <div class="character-chat-item item-character" style="display: none;">
+
+        </div>
+
+    </div>
+    -->
+</div>
+</body>
+
+
+<!-- Dynamically load marked and prism libraries, ensure execution after loading -->
+<script>
+// Helper function to ensure marked and prism libraries are loaded
+(function() {
+    function loadScript(src, id) {
+        return new Promise((resolve, reject) => {
+            // Check if script is already loaded
+            if (document.getElementById(id)) {
+                resolve();
+                return;
+            }
+            // Check if global object already exists
+            if (src.includes('marked') && typeof marked !== 'undefined') {
+                resolve();
+                return;
+            }
+            if (src.includes('prism') && typeof Prism !== 'undefined') {
+                resolve();
+                return;
+            }
+            
+            const script = document.createElement('script');
+            script.id = id;
+            script.src = src;
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+    
+    // Load required libraries
+    Promise.all([
+        loadScript('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 'marked-js'),
+        loadScript('https://cdn.jsdelivr.net/npm/prismjs@1.26.0/prism.js', 'prism-js')
+    ]).then(() => {
+        console.log('marked and prism libraries loaded successfully');
+        // Set a flag indicating libraries are loaded
+        window.NavTalkLibrariesLoaded = true;
+    }).catch(err => {
+        console.error('Library loading failed:', err);
+    });
+})();
+</script>
+
+<script>
+// Use IIFE wrapper to avoid global variable conflicts and duplicate declaration errors
+(function() {
+    'use strict';
+    
+    // Filter out SCC Library warnings (WordPress/Elementor third-party library warnings)
+    const originalWarn = console.warn;
+    const originalError = console.error;
+    console.warn = function(...args) {
+        const message = args.join(' ');
+        // Filter out SCC Library related warnings
+        if (message.includes('SCC Library has already been loaded') || 
+            message.includes('already been loaded on page')) {
+            return; // Silently ignore
+        }
+        originalWarn.apply(console, args);
+    };
+    
+    // Check if already initialized to avoid duplicate execution
+    if (window.NavTalkDigitalHumanInitialized) {
+        console.warn('NavTalk digital human code already initialized, skipping duplicate execution');
+        // However, even if skipping initialization, ensure button events are bound
+        // Use event delegation to ensure button always responds to clicks
+        setupGlobalButtonHandler();
+        return;
+    }
+    window.NavTalkDigitalHumanInitialized = true;
+    
+    // Global button event handler - Use event delegation so it works even if button is recreated
+    // Optimized specifically for Elementor Popup scenarios
+    function setupGlobalButtonHandler() {
+        // Check if global handler has already been set up
+        if (window.NavTalkButtonHandlerSetup) {
+            return;
+        }
+        window.NavTalkButtonHandlerSetup = true;
+        
+        // Use event delegation to listen for click events on document
+        // In Elementor Popup, need to listen on the correct document
+        const targetDocument = document;
+        
+        function handleClick(e) {
+            const target = e.target;
+            // Check if button or button inner element was clicked
+            const btn = target.closest('#btnRealtime');
+            if (btn) {
+                console.log('=== Global event delegation captured button click ===', new Date().toLocaleTimeString());
+                console.log('Button document:', btn.ownerDocument === document ? 'Main document' : 'iframe document');
+                e.preventDefault();
+                e.stopPropagation();
+                // Trigger button click handling
+                if (window.NavTalkHandleButtonClick) {
+                    window.NavTalkHandleButtonClick(e);
+                } else {
+                    console.warn('NavTalkHandleButtonClick function does not exist, trying direct trigger');
+                    // If handler function doesn't exist, try direct trigger
+                    const clickEvent = new MouseEvent('click', {
+                        bubbles: true,
+                        cancelable: true,
+                        view: window
+                    });
+                    btn.dispatchEvent(clickEvent);
+                }
+            }
+        }
+        
+        // Listen in capture phase to ensure priority handling
+        targetDocument.addEventListener('click', handleClick, true);
+        
+        // Also listen in bubble phase as backup
+        targetDocument.addEventListener('click', handleClick, false);
+        
+        console.log('Global button event delegation set up (Elementor Popup optimized version)');
+    }
+    
+    // Set up global button handler immediately
+    setupGlobalButtonHandler();
+    
+    // For Elementor Popup: When popup opens, ensure button is bound
+    // Listen for Elementor popup open event
+    if (typeof jQuery !== 'undefined') {
+        jQuery(document).on('elementor/popup/show', function(e, id) {
+            console.log('=== Elementor Popup opened ===', id, new Date().toLocaleTimeString());
+            // After popup opens, delay button initialization (ensure DOM is fully loaded)
+            // Use multiple delay times to ensure button can be captured
+            [100, 300, 500, 1000].forEach(function(delay) {
+                setTimeout(function() {
+                    const btn = document.getElementById('btnRealtime');
+                    if (btn) {
+                        console.log('Button found after popup opened (delay ' + delay + 'ms), ensuring event binding');
+                        // Reinitialize regardless of whether already bound (popup may recreate DOM)
+                        if (window.NavTalkInitButton) {
+                            console.log('Calling window.NavTalkInitButton() to reinitialize button');
+                            window.NavTalkInitButton();
+                        } else {
+                            console.warn('window.NavTalkInitButton does not exist, trying direct initialization');
+                            // If global function doesn't exist, try calling local initialization function
+                            if (typeof initDigtalHumanRealtimeButton === 'function') {
+                                initDigtalHumanRealtimeButton();
+                            }
+                        }
+                    } else {
+                        console.log('Button #btnRealtime still not found after ' + delay + 'ms delay');
+                    }
+                }, delay);
+            });
+        });
+        
+        // Also listen for popup content load completion event
+        jQuery(document).on('elementor/popup/hide', function(e, id) {
+            console.log('Elementor Popup closed:', id);
+        });
+    }
+    
+    // Also listen with MutationObserver, automatically initialize button when popup DOM is added
+    if (typeof MutationObserver !== 'undefined') {
+        const observer = new MutationObserver(function(mutations) {
+            mutations.forEach(function(mutation) {
+                mutation.addedNodes.forEach(function(node) {
+                    if (node.nodeType === 1) { // Element node
+                        // Check if button was added
+                        const btn = node.id === 'btnRealtime' ? node : 
+                                    (node.querySelector ? node.querySelector('#btnRealtime') : null);
+                        if (btn && !btn.hasAttribute('data-navtalk-bound')) {
+                            console.log('MutationObserver detected newly added button, preparing initialization');
+                            setTimeout(function() {
+                                if (window.NavTalkInitButton) {
+                                    window.NavTalkInitButton();
+                                }
+                            }, 200);
+                        }
+                    }
+                });
+            });
+        });
+        
+        // Start observing document changes
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+        
+        console.log('MutationObserver set up, monitoring DOM changes');
+    }
+    
+    // Also listen for DOMContentLoaded and window.load to ensure initialization after popup content loads
+    function ensureButtonInitialized() {
+        const btn = document.getElementById('btnRealtime');
+        if (btn && !btn.hasAttribute('data-navtalk-bound')) {
+            console.log('Detected unbound button, attempting initialization...');
+            // Delay initialization to ensure all code is loaded
+            setTimeout(function() {
+                if (window.NavTalkInitButton) {
+                    window.NavTalkInitButton();
+                } else if (typeof initDigtalHumanRealtimeButton === 'function') {
+                    initDigtalHumanRealtimeButton();
+                }
+            }, 500);
+        }
+    }
+    
+    // Check button at multiple times
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', ensureButtonInitialized);
+    } else {
+        ensureButtonInitialized();
+    }
+    window.addEventListener('load', ensureButtonInitialized);
+    
+    // Periodically check button (for dynamically loaded popups)
+    setInterval(ensureButtonInitialized, 2000);
+    
+    // Get configuration from window.NavTalkConfig (set in <head>)
+    let API_KEY = window.NavTalkConfig?.API_KEY || "sk_navtalk_9p9flyCQXGKXuu1iPZXaBYsQhQRq0ZDm";
+    let CHARACTER_NAME = window.NavTalkConfig?.CHARACTER_NAME || "navtalk.Leo";
+    let VOICE = window.NavTalkConfig?.VOICE || "cedar";
+    let PROMPT = window.NavTalkConfig?.PROMPT || "You are a helpful assistant.";
+    let baseUrl = window.NavTalkConfig?.baseUrl || "transfer.navtalk.ai";
+    let webrtcUrl = window.NavTalkConfig?.webrtcUrl || "transfer.navtalk.ai";
+    
+    // Global variable for connection state
+    let peerConnectionA = null;
+    let resultSocket = null;
+    // Global state management
+    let pc = null;
+    let currentTracks = [];
+    let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
+
+    // Digital human agent, real-time voice conversation button
+    // Expose initialization function to global scope for popup opening
+    async function initDigtalHumanRealtimeButton() {
+        console.log('=== initDigtalHumanRealtimeButton execution started ===', new Date().toLocaleTimeString());
+        let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
+
+        async function getFromChromeStorage(key) {
+            return new Promise((resolve, reject) => {
+                // Use localStorage in normal web pages
+                const value = localStorage.getItem(key);
+                resolve(value !== null ? value : null);
+            });
+        }
+
+        realtimeChatHistory = JSON.parse(realtimeChatHistory);
+
+        // Render chat history
+        // renderRealtimeChatHistory();
+        let realtimeButton = document.getElementById('btnRealtime');
+        
+        // If button doesn't exist, wait for DOM to load before searching again
+        if (!realtimeButton) {
+            console.warn('Button btnRealtime not found, waiting for DOM to load...');
+            // Wait for DOM to load
+            if (document.readyState === 'loading') {
+                await new Promise(resolve => {
+                    document.addEventListener('DOMContentLoaded', resolve);
+                });
+            }
+            // Search for button again
+            realtimeButton = document.getElementById('btnRealtime');
+        }
+        
+        // If still not found, try delayed search (for Elementor Popup scenarios)
+        if (!realtimeButton) {
+            console.warn('Button still not found, trying delayed search... (may be in Elementor Popup)');
+            // In Elementor Popup, may need longer wait time
+            for (let i = 0; i < 10; i++) {
+                await new Promise(resolve => setTimeout(resolve, 200));
+                realtimeButton = document.getElementById('btnRealtime');
+                if (realtimeButton) {
+                    console.log('Button found after ' + (i + 1) * 200 + 'ms delay');
+                    break;
+                }
+            }
+        }
+        
+        if (!realtimeButton) {
+            console.error('Error: Call button #btnRealtime not found, please ensure button is correctly added to page!');
+            console.error('Current document:', document.location.href);
+            console.error('Buttons in current document:', document.querySelectorAll('button[id*="btn"], button[id*="Realtime"], button[class*="call"]'));
+            return; // Exit function if button doesn't exist
+        }
+        
+        console.log('Call button found, preparing to bind event listeners', {
+            buttonId: realtimeButton.id,
+            buttonClass: realtimeButton.className,
+            buttonParent: realtimeButton.parentElement ? realtimeButton.parentElement.tagName : 'none',
+            inPopup: realtimeButton.closest('.elementor-popup') !== null
+        });
+        
+        // For Elementor Popup: Allow re-binding even if button is already bound
+        // Because DOM may be recreated when popup closes and reopens
+        if (realtimeButton.hasAttribute('data-navtalk-bound')) {
+            console.warn('Button events already bound, but continuing to bind (Elementor Popup scenario)');
+            // Don't clear old event listeners, just add new ones
+            // realtimeButton.removeAttribute('data-navtalk-bound');
+        }
+        realtimeButton.setAttribute('data-navtalk-bound', 'true');
+        
+        const conversationBg = document.querySelector('.conversation-bg'); // Select the entire div containing the background image
+
+        let socket;
+        let audioContext;
+        let audioProcessor;
+        let audioStream;
+        let currentAudioSource = null; // Currently playing audio source
+
+        // Get the stored digitalHumanLogId of the currently active character
+        let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
+        // const activeCharacter = realtimeChatHistory.find(character => character.digitalHumanLogId == activeCharacterLogId);
+
+        // Loading animation
+        let loading = document.querySelector('.ah-chat-loading');
+        let aiMessageElement;
+        // Define a variable to store accumulated transcript content
+        let accumulatedTranscript = '';
+
+        let audioQueue = []; // Used to store audio chunks
+        let isPlaying = false; // Flag to indicate whether audio is currently playing
+        // Use a Map to store the span element corresponding to each response_id
+        let responseSpans = new Map();
+
+        let playVideo = false;
+        // Define a buffer object to accumulate incomplete Markdown content
+        let markdownBuffer = new Map();
+
+        // Bind click event - Use named function for easier debugging
+        // Expose handler function to global scope so event delegation can also call it
+        async function handleButtonClick(e) {
+            if (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+            console.log('=== Call button clicked! ===', new Date().toLocaleTimeString());
+            console.log('Button element:', realtimeButton);
+            console.log('Button active state:', realtimeButton.classList.contains('active'));
+            
+            // Ensure getting the latest button element (may be recreated)
+            let btn = document.getElementById('btnRealtime');
+            if (!btn) {
+                console.error('Button element does not exist!');
+                return;
+            }
+            // If button element changed, update reference
+            if (btn !== realtimeButton) {
+                console.warn('Button element updated, using new button element');
+                realtimeButton = btn;
+            }
+            
+            const staticImage = document.getElementById('character-static-image');
+            const videoElement = document.getElementById('character-avatar-video');
+
+            if (realtimeButton.classList.contains('active')) {
+                // Stop state
+                realtimeButton.classList.remove('active');
+                // Restore default style (purple gradient background)
+                realtimeButton.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                realtimeButton.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
+                // Hide loading animation
+                const loadingOverlay = document.getElementById('connection-loading-overlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+                stopRecording();
+
+                if (conversationBg) {
+                    conversationBg.style.display = 'none';
+                }
+
+                // Show static image and hide video
+                staticImage.style.display = 'block';
+                videoElement.style.display = 'none';
+
+                // Pause video playback
+                videoElement.pause();
+
+                audioQueue = []; // Clear audio queue
+                isPlaying = false; // Mark not playing
+
+
+            } else {
+                // Start state
+                console.log('Starting call...');
+                try {
+                    realtimeButton.classList.add('active');
+                    // Ensure active state style takes effect (red gradient background)
+                    realtimeButton.style.setProperty('background', 'linear-gradient(135deg, #ff5e62 0%, #ff9966 100%)', 'important');
+                    realtimeButton.style.setProperty('box-shadow', '0 10px 20px rgba(255, 94, 98, 0.4)', 'important');
+                    console.log('Button state updated to active (red cancel style)');
+                    
+                    // Check necessary elements
+                    if (!staticImage) {
+                        console.error('Error: Static image element not found');
+                    }
+                    if (!videoElement) {
+                        console.error('Error: Video element not found');
+                    }
+                    
+                    // Show loading animation (semi-transparent modal overlay on static image)
+                    const loadingOverlay = document.getElementById('connection-loading-overlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'flex';
+                        console.log('Display connection loading animation (semi-transparent modal overlay on photo)');
+                    }
+                    
+                    // Keep static image visible, don't hide (still show photo during loading)
+                    // Static image will be hidden after video connection succeeds
+                    
+                    // Start WebSocket connection
+                    console.log('Preparing to start WebSocket connection...');
+                    console.log('Configuration:', {
+                        API_KEY: API_KEY ? 'Set' : 'Not set',
+                        CHARACTER_NAME: CHARACTER_NAME,
+                        baseUrl: baseUrl
+                    });
+                    
+                    startWebSocket();
+
+                    if (conversationBg) {
+                        conversationBg.style.display = 'block';
+                    }
+
+                    // Don't hide static image yet, wait for video connection to succeed
+                    // Video element stays hidden, show after video stream is ready
+                    if (videoElement) {
+                        videoElement.style.display = 'none'; // Keep hidden until video stream is ready
+                        // Start video playback (make sure video source is set)
+                        // Pause first then play to avoid AbortError
+                        videoElement.pause();
+                        videoElement.currentTime = 0;
+                    }
+
+                    // Chat content removed, no need to display
+                    
+                    console.log('Call startup process completed');
+                } catch (error) {
+                    console.error('Error starting call:', error);
+                    // Restore button state and style
+                    realtimeButton.classList.remove('active');
+                    realtimeButton.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                    realtimeButton.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
+                    // Hide loading animation
+                    const loadingOverlay = document.getElementById('connection-loading-overlay');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                    alert('Failed to start call, please check console error messages');
+                }
+
+                // Original GIF animation logic (commented)
+                // if (conversationAnimation) {
+                //     conversationAnimation.src = MyExtension.Utils.getChromeRuntimeURL('images/img-real-time.gif');
+                // }
+            }
+        }
+        
+        // Ensure container has position: relative so it can serve as positioning context for button
+        const container = realtimeButton.closest('.real-time-container');
+        if (container) {
+            const containerStyle = window.getComputedStyle(container);
+            if (containerStyle.position === 'static') {
+                container.style.setProperty('position', 'relative', 'important');
+                console.log('Ensured .real-time-container has position: relative');
+            }
+        }
+        
+        realtimeButton.style.setProperty('pointer-events', 'auto', 'important');
+        realtimeButton.style.setProperty('cursor', 'pointer', 'important');
+        realtimeButton.style.setProperty('z-index', '1000', 'important');
+        // Use absolute positioning relative to .real-time-container
+        realtimeButton.style.setProperty('position', 'absolute', 'important');
+        realtimeButton.style.setProperty('bottom', '30px', 'important');
+        realtimeButton.style.setProperty('right', '30px', 'important');
+        realtimeButton.style.setProperty('top', 'auto', 'important');
+        realtimeButton.style.setProperty('left', 'auto', 'important');
+        realtimeButton.style.setProperty('display', 'flex', 'important');
+        realtimeButton.style.setProperty('visibility', 'visible', 'important');
+        realtimeButton.style.setProperty('opacity', '1', 'important');
+        // Ensure default background color (purple gradient) - Call state
+        realtimeButton.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+        realtimeButton.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
+        
+        // Periodically check and fix button styles (prevent being overridden by other code)
+        setInterval(function() {
+            const btn = document.getElementById('btnRealtime');
+            if (btn) {
+                const style = window.getComputedStyle(btn);
+                // Check if button positioning is overridden (should be absolute, not fixed)
+                if (style.position === 'fixed') {
+                    console.warn('Detected button positioning overridden to fixed, fixing to absolute...');
+                    // Ensure container has position: relative
+                    const container = btn.closest('.real-time-container');
+                    if (container) {
+                        const containerStyle = window.getComputedStyle(container);
+                        if (containerStyle.position === 'static') {
+                            container.style.setProperty('position', 'relative', 'important');
+                        }
+                    }
+                    // Fix button positioning
+                    btn.style.setProperty('position', 'absolute', 'important');
+                    btn.style.setProperty('bottom', '30px', 'important');
+                    btn.style.setProperty('right', '30px', 'important');
+                    btn.style.setProperty('top', 'auto', 'important');
+                    btn.style.setProperty('left', 'auto', 'important');
+                }
+                if (style.pointerEvents === 'none' || style.display === 'none' || style.visibility === 'hidden') {
+                    console.warn('Detected button styles overridden, fixing...');
+                    btn.style.setProperty('pointer-events', 'auto', 'important');
+                    btn.style.setProperty('display', 'flex', 'important');
+                    btn.style.setProperty('visibility', 'visible', 'important');
+                }
+            }
+        }, 1000); // Check every second
+        
+        // Bind event listeners to button - Use multiple methods to ensure response
+        realtimeButton.addEventListener('click', handleButtonClick);
+        // Also bind mousedown and touchend to ensure mobile device response
+        realtimeButton.addEventListener('mousedown', function(e) {
+            console.log('Button mousedown event triggered');
+        });
+        realtimeButton.addEventListener('touchend', function(e) {
+            e.preventDefault();
+            console.log('Button touchend event triggered');
+            handleButtonClick(e);
+        });
+        
+        // Test button click
+        console.log('Button click event bound');
+        console.log('Button styles:', {
+            pointerEvents: window.getComputedStyle(realtimeButton).pointerEvents,
+            cursor: window.getComputedStyle(realtimeButton).cursor,
+            zIndex: window.getComputedStyle(realtimeButton).zIndex,
+            display: window.getComputedStyle(realtimeButton).display,
+            visibility: window.getComputedStyle(realtimeButton).visibility
+        });
+        
+        // Expose handler function to global scope for event delegation
+        window.NavTalkHandleButtonClick = handleButtonClick;
+        
+        // Expose test function in console
+        window.testNavTalkButtonClick = function() {
+            console.log('Manually trigger button click test');
+            handleButtonClick(new MouseEvent('click', { bubbles: true, cancelable: true }));
+        };
+        
+        console.log('Button handler function exposed to global scope: window.NavTalkHandleButtonClick');
+
+        // Clear the websocket on the front end
+        async function cleanupResources() {
+            try {
+                console.log('Starting cleanup');
+
+                if (pc) {
+                    console.log('Closing PeerConnection');
+                    // Remove event listeners (if they exist)
+                    // Note: These listener functions may be undefined, so wrap in try-catch
+                    try {
+                        // These event listeners may never have been added, so removal may error, ignore it
+                        if (typeof on_icecandidate !== 'undefined') {
+                            pc.removeEventListener('icecandidate', on_icecandidate);
+                        }
+                        if (typeof on_connectionstatechange !== 'undefined') {
+                            pc.removeEventListener('connectionstatechange', on_connectionstatechange);
+                        }
+                        if (typeof iceconnectionstatechange !== 'undefined') {
+                            pc.removeEventListener('iceconnectionstatechange', iceconnectionstatechange);
+                        }
+                        if (typeof signalingstatechange !== 'undefined') {
+                            pc.removeEventListener('signalingstatechange', signalingstatechange);
+                        }
+                    } catch (e) {
+                        // Ignore errors when removing listeners
+                        console.log('Some event listeners may not exist, continuing cleanup...');
+                    }
+
+                    if (pc.connectionState !== 'closed') {
+                        await pc.close();
+                        console.log('PeerConnection closed');
+                    }
+                    pc = null;
+                }
+
+                if (peerConnectionA) {
+                    console.log('Closing peerConnectionA');
+                    peerConnectionA.onicecandidate = null;
+                    peerConnectionA.close();
+                    peerConnectionA = null;  // Ensure it's completely reset
+                }
+
+                currentTracks.forEach(track => {
+                    if (track.stop) track.stop();
+                    if (track.dispatchEvent) {
+                        track.dispatchEvent(new Event('ended'));
+                    }
+                });
+                currentTracks = [];
+                console.log('Tracks cleaned up');
+
+                const remoteVideo = document.getElementById('character-avatar-video');
+                if (remoteVideo) {
+                    remoteVideo.srcObject = null;
+                    remoteVideo.removeAttribute('src');
+                    remoteVideo.load();
+                }
+
+                await new Promise(resolve => setTimeout(resolve, 100));
+                console.log('Cleanup complete');
+            } catch (err) {
+                console.error('Resource cleanup error:', err);
+            }
+        }
+
+        async function startWebSocket() {
+            try {
+                console.log('=== Starting WebSocket connection ===');
+                let websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
+                console.log('WebSocket URL:', websocketUrl);
+                
+                // Retrieve license information from Chrome storage
+                const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(API_KEY)}&characterName=${CHARACTER_NAME}`;
+                console.log('Full WebSocket URL (key hidden):', websocketUrlWithParams.replace(/license=[^&]+/, 'license=***'));
+
+                // Initialize the WebSocket connection
+                console.log('Creating WebSocket connection...');
+                socket = new WebSocket(websocketUrlWithParams);
+                socket.binaryType = 'arraybuffer';
+                console.log('WebSocket object created');
+
+            // Listen for WebSocket messages
+            socket.onmessage = (event) => {
+                if (typeof event.data === 'string') {
+                    try {
+                        // Parse and handle non-binary messages
+                        const data = JSON.parse(event.data);
+                        // console.log("data:"+JSON.stringify(data))
+                        handleReceivedMessage(data);
+                    } catch (e) {
+                        console.error("Failed to parse JSON message:", e);
+                    }
+                } else if (event.data instanceof ArrayBuffer) {
+                    // Handle binary messages
+                    const arrayBuffer = event.data;
+                    handleReceivedBinaryMessage(arrayBuffer);
+                } else {
+                    console.warn("Unknown WebSocket message type");
+                }
+            };
+
+            // Triggered when the WebSocket connection is successfully opened
+            socket.onopen = function () {
+                console.log("WebSocket connection established");
+            };
+
+            // Handle WebSocket errors
+            socket.onerror = function (error) {
+                console.error("WebSocket error: ", error);
+            };
+
+            // Triggered when the WebSocket connection is closed
+            socket.onclose = async function (event) {
+                // Show an error message if points are insufficient
+                if (event.reason === 'Insufficient points') {
+                    showErrorTip("You need more points to complete this action.");
+                }
+                console.log("WebSocket connection closed", event.code, event.reason);
+                // Hide loading animation
+                const loadingOverlay = document.getElementById('connection-loading-overlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+                // Clean up old connection
+                await cleanupResources();
+
+                stopRecording();
+
+                // Update the points information
+
+                // Clear the span record elements
+                responseSpans = new Map();
+
+            };
+
+
+            // WebSocket for receiving video results
+            let remoteVideoA = document.getElementById('character-avatar-video');
+
+            let targetSessionId = API_KEY;
+            console.log("Start connecting " + (new Date()).toLocaleTimeString())
+            resultSocket = new WebSocket('wss://'+webrtcUrl+'/api/webrtc?userId=' + targetSessionId);  // Replace with your WebSocket server address
+
+            let localStream;
+
+            resultSocket.onopen = () => {
+                console.log("WebSocketResult connection established.");
+                console.log("Connection successful " + (new Date()).toLocaleTimeString())
+                const message = { type: 'create', targetSessionId: targetSessionId };
+                resultSocket.send(JSON.stringify(message));
+            };
+
+            resultSocket.onmessage = (event) => {
+                console.log("Received message:", event.data);
+                const message = JSON.parse(event.data);
+                console.log("Received message:", message.type);
+                console.log("Received message:", message);
+                if (message.type === 'offer') {
+                    handleOffer(message);
+                } else if (message.type === 'answer') {
+                    handleAnswer(message);
+                } else if (message.type === 'iceCandidate') {
+                    handleIceCandidate(message);
+                }
+            };
+
+            resultSocket.onerror = (error) => {
+                // Clean up old connection
+                cleanupResources();
+                console.error("WebSocket error:", error);
+            };
+
+            resultSocket.onclose = (event) => {
+                console.log("WebSocket connection closed:");
+                console.log("  code:", event);
+                console.log("  code:", event.code);
+                console.log("  reason:", event.reason);
+                console.log("  wasClean:", event.wasClean);
+                console.log("  readyState:", resultSocket.readyState);
+            };
+
+            async function handleOffer(message) {
+                // Fetch ICE servers configuration
+                try {
+                    const res = await fetch('https://' + webrtcUrl + '/api/webrtc/generate-ice-servers', { method: 'POST' });
+                    const data = await res.json();
+                    console.log("handleOffer - ICE servers response:", data);
+                    if (data && data.code === 200 && data.data && data.data.iceServers) {
+                        configuration.iceServers = data.data.iceServers;
+                        console.log("handleOffer - Updated configuration:", configuration);
+                    }
+                } catch (error) {
+                    console.error("handleOffer - Failed to fetch ICE servers:", error);
+                    // Continue with default configuration if fetch fails
+                }
+                
+                const targetId = message.targetSessionId;
+                const offer = new RTCSessionDescription(message.sdp);
+                console.log("Created offer SDP:", offer);
+                peerConnectionA = new RTCPeerConnection(configuration);
+                console.log("Created peer connection:", peerConnectionA);
+
+                peerConnectionA.setRemoteDescription(offer)
+                    .then(() => peerConnectionA.createAnswer())
+                    .then(answer => peerConnectionA.setLocalDescription(answer))
+                    .then(() => {
+                        const responseMessage = {
+                            type: 'answer',
+                            targetSessionId: targetId,
+                            sdp: peerConnectionA.localDescription
+                        };
+                        resultSocket.send(JSON.stringify(responseMessage));
+                    })
+                    .catch(err => console.error('Error handling offer:', err));
+
+                // Add ICE state monitoring
+                peerConnectionA.oniceconnectionstatechange = () => {
+                    console.log('ICE connection state:', peerConnectionA.iceConnectionState);
+                    if (peerConnectionA.iceConnectionState === 'connected') {
+                        console.log('WebRTC connection fully established!');
+                    } else if (peerConnectionA.iceConnectionState === 'failed') {
+                        console.log('ICE connection failed, attempting reconnection...');
+                        // You can add reconnection logic here
+                    }
+                };
+
+                peerConnectionA.ontrack = (event) => {
+                    console.log("Received remote track:", event);
+                    console.log("Streams:", event.streams);
+                    if (remoteVideoA) {
+                        remoteVideoA.srcObject = event.streams[0]; // Show remote video
+                        console.log("Set video source object:", remoteVideoA.srcObject);
+                        setTimeout(() => {
+                            try {
+                                remoteVideoA.play().then(() => {
+                                    console.log("Video play started successfully");
+                                    // Video playback successful, hide static image and loading animation, show video
+                                    const staticImage = document.getElementById('character-static-image');
+                                    if (staticImage) {
+                                        staticImage.style.display = 'none';
+                                    }
+                                    if (remoteVideoA) {
+                                        remoteVideoA.style.display = 'block';
+                                    }
+                                    // Hide loading animation
+                                    const loadingOverlay = document.getElementById('connection-loading-overlay');
+                                    if (loadingOverlay) {
+                                        loadingOverlay.style.display = 'none';
+                                        console.log('Video connection successful, hiding loading animation and static image, showing video');
+                                    }
+                                }).catch(e => {
+                                    console.error("Video play failed:", e);
+                                    // Also hide loading animation on playback failure
+                                    const loadingOverlay = document.getElementById('connection-loading-overlay');
+                                    if (loadingOverlay) {
+                                        loadingOverlay.style.display = 'none';
+                                    }
+                                });
+                            } catch (e) {
+                                console.error("Video play failed:", e);
+                                // Also hide loading animation on playback failure
+                                const loadingOverlay = document.getElementById('connection-loading-overlay');
+                                if (loadingOverlay) {
+                                    loadingOverlay.style.display = 'none';
+                                }
+                            }
+                        }, 1000);
+                    } else {
+                        console.error("Remote video element not found");
+                        // Video element not found, also hide loading animation
+                        const loadingOverlay = document.getElementById('connection-loading-overlay');
+                        if (loadingOverlay) {
+                            loadingOverlay.style.display = 'none';
+                        }
+                    }
+                };
+
+                // Logs when handling ICE Candidate
+                peerConnectionA.onicecandidate = (event) => {
+                    console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
+                    if (event.candidate) {
+                        const message = {
+                            type: 'iceCandidate',
+                            targetSessionId: targetId,
+                            candidate: event.candidate
+                        };
+                        resultSocket.send(JSON.stringify(message));
+                    }
+                };
+            }
+
+            // Function to handle Answer messages
+            function handleAnswer(message) {
+                const targetSessionId = message.targetSessionId;
+                // events_maps may be undefined, check if it exists
+                const events_maps = window.NavTalkEventsMaps || new Map();
+                const map_item = events_maps.get(targetSessionId);
+                if (!map_item) {
+                    console.warn('handleAnswer: map_item not found for', targetSessionId);
+                    // If not in events_maps, try using peerConnectionA directly
+                    if (peerConnectionA) {
+                        const answer = new RTCSessionDescription(message.sdp);
+                        peerConnectionA.setRemoteDescription(answer)
+                            .catch(err => console.error('Failed to handle Answer:', err));
+                    }
+                    return;
+                }
+
+                pc = map_item.peerConnection;
+                const answer = new RTCSessionDescription(message.sdp);
+
+                if (pc && pc.signalingState === 'stable') {
+                    console.warn('Triggering renegotiation: State is stable');
+                    pc.restartIce(); // Force refresh ICE candidates
+                    if (map_item.socket) {
+                        recreateOffer(pc, targetSessionId, map_item.socket); // Call renegotiation function
+                    }
+                } else if (pc && pc.signalingState === 'have-local-offer') {
+                    pc.setRemoteDescription(answer)
+                        .catch(err => console.error('Failed to handle Answer:', err));
+                }
+            }
+
+            // Function to recreate Offer
+            async function recreateOffer(pc, targetSessionId, socket) {
+                try {
+                    // Create a new Offer
+                    const offer = await pc.createOffer({
+                        offerToReceiveAudio: true,
+                        offerToReceiveVideo: true
+                    });
+                    await pc.setLocalDescription(offer);
+
+                    // Send the new Offer to the peer
+                    socket.send(JSON.stringify({
+                        type: 'offer',
+                        targetSessionId: targetSessionId,
+                        sdp: pc.localDescription
+                    }));
+                } catch (err) {
+                    console.error('Failed to recreate Offer:', err);
+                }
+            }
+
+            function handleIceCandidate(message) {
+                console.log('Handling ICE candidate:', message.candidate);
+                const candidate = new RTCIceCandidate(message.candidate);
+                console.log('Created ICE candidate:', candidate);
+                peerConnectionA.addIceCandidate(candidate)
+                    .then(() => console.log('ICE candidate added successfully'))
+                    .catch(err => console.error('Error adding ICE candidate:', err));
+            }
+            
+            console.log('WebSocket connection startup process completed');
+            } catch (error) {
+                console.error('Error starting WebSocket connection:', error);
+                alert('WebSocket connection failed: ' + error.message);
+                // Restore connection state and styles
+                const btn = document.getElementById('btnRealtime');
+                if (btn) {
+                    btn.classList.remove('active');
+                    btn.style.setProperty('background', 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', 'important');
+                    btn.style.setProperty('box-shadow', '0 10px 20px rgba(118, 75, 162, 0.3)', 'important');
+                }
+                window.NavTalkConnectionActive = false;
+            }
+        }
+
+
+
+        function showErrorTip(message) {
+            const realtimeButton = document.getElementById('btnRealtime');
+            if (realtimeButton.classList.contains('active')) {
+                realtimeButton.click();
+            }
+            const errorTip = document.getElementById("errorTipRealtime");
+            errorTip.textContent = message;
+            errorTip.style.display = "block";
+            errorTip.style.opacity = "1";
+            errorTip.style.visibility = "visible";
+            // Automatically hide error message after 3 seconds
+            setTimeout(() => {
+                errorTip.style.opacity = "0";
+                errorTip.style.visibility = "hidden";
+                setTimeout(() => {
+                    errorTip.style.display = "none";
+                }, 500);
+            }, 3000);
+        }
+
+        async function sendSessionUpdate() {
+            const history = localStorage.getItem("realtimeChatHistory");
+            const conversationHistory = history ? JSON.parse(history) : [];
+
+            let userLanguage = await getFromChromeStorage("userLanguage");
+
+            let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
+            let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
+            realtimeChatHistory = JSON.parse(realtimeChatHistory);
+
+            // Session configuration
+            let sessionConfig = {
+                type: "session.update",
+                session: {
+                    instructions: PROMPT,
+                    turn_detection: {
+                        type: "server_vad",
+                        threshold: 0.5,
+                        prefix_padding_ms: 300,
+                        silence_duration_ms: 500
+                    },
+                    voice: VOICE,
+                    temperature: 1,
+                    max_response_output_tokens: 4096,
+                    modalities: ["text", "audio"],
+                    input_audio_format: "pcm16",
+                    output_audio_format: "pcm16",
+                    input_audio_transcription: {
+                        model: "whisper-1"
+                    },
+                    tools: [
+                        {
+                            type: "function",
+                            name: "function_call_judge",
+                            description: "Are there any function calls or tasks beyond your capability...",
+                            parameters: {
+                                type: "object",
+                                properties: {
+                                    userInput: {
+                                        type: "string",
+                                        description: "the user input"
+                                    }
+                                },
+                                required: ["userInput"]
+                            }
+                        }
+                    ]
+                }
+            };
+
+            // Send session update
+            try {
+                socket.send(JSON.stringify(sessionConfig));
+            } catch (e) {
+                console.error("Error sending session update:", e);
+            }
+
+            // Send each item in history
+            conversationHistory.forEach((msg) => {
+                const messageConfig = {
+                    type: "conversation.item.create",
+                    item: {
+                        type: "message",
+                        role: msg.role,
+                        content: [
+                            {
+                                type: msg.role === "user" ? "input_text" : "text",
+                                text: msg.content
+                            }
+                        ]
+                    }
+                };
+
+                try {
+                    if (msg.role === "user") {
+                        console.log("Sending message:", JSON.stringify(messageConfig));
+                        socket.send(JSON.stringify(messageConfig));
+                    }
+                } catch (e) {
+                    console.error("Error sending message:", e);
+                }
+            });
+        }
+
+        async function handleReceivedMessage(data) {
+            let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
+            let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
+            realtimeChatHistory = JSON.parse(realtimeChatHistory);
+
+            switch (data.type) {
+                // Session created, send configuration
+                case "session.created":
+                    console.log("Session created, sending session update.");
+                    await sendSessionUpdate();
+                    break;
+
+                // Session established after configuration
+                case "session.updated":
+                    console.log("Session updated. Ready to receive audio.");
+                    startRecording();
+                    break;
+
+                // User starts speaking
+                case "input_audio_buffer.speech_started":
+                    console.log("Speech started detected by server.");
+                    stopCurrentAudioPlayback();
+                    audioQueue = [];
+                    isPlaying = false;
+                    playVideo = false;
+                    break;
+
+                // User stops speaking
+                case "input_audio_buffer.speech_stopped":
+                    console.log("Speech stopped detected by server.");
+                    break;
+
+                // Full transcription of user speech
+                case "conversation.item.input_audio_transcription.completed":
+                    console.log("Received transcription: " + data.transcript);
+                    const userMessageContainer = document.createElement('div');
+                    userMessageContainer.classList.add('character-chat-item', 'item-user');
+
+                    const userMessage = document.createElement('span');
+                    userMessage.textContent = data.transcript;
+                    userMessageContainer.appendChild(userMessage);
+
+                    await appendRealtimeChatHistory("user", data.transcript);
+                    break;
+
+                // Response text stream
+                case "response.audio_transcript.delta":
+                    playVideo = true;
+                    const transcript = data.delta;
+                    const responseId = data.response_id;
+
+                    if (!markdownBuffer.has(responseId)) {
+                        markdownBuffer.set(responseId, "");
+                    }
+
+                    const existingBuffer = markdownBuffer.get(responseId);
+                    markdownBuffer.set(responseId, existingBuffer + transcript);
+
+                    let aiMessageSpan = responseSpans.get(responseId);
+
+                    if (!aiMessageSpan) {
+                        const aiMessageContainer = document.createElement('div');
+                        aiMessageContainer.classList.add('character-chat-item', 'item-character');
+
+                        aiMessageSpan = document.createElement('span');
+                        aiMessageSpan.classList.add('markdown-content');
+                        aiMessageContainer.appendChild(aiMessageSpan);
+
+                        responseSpans.set(responseId, aiMessageSpan);
+                    }
+
+                    const fullContent = markdownBuffer.get(responseId);
+                    // Ensure marked library is loaded
+                    if (typeof marked === 'undefined') {
+                        console.warn('marked library not loaded, waiting for loading...');
+                        // If marked is not loaded, wait a bit and try again
+                        await new Promise(resolve => {
+                            const checkMarked = setInterval(() => {
+                                if (typeof marked !== 'undefined') {
+                                    clearInterval(checkMarked);
+                                    resolve();
+                                }
+                            }, 100);
+                            // Wait at most 5 seconds
+                            setTimeout(() => {
+                                clearInterval(checkMarked);
+                                resolve();
+                            }, 5000);
+                        });
+                    }
+                    // If marked is still not loaded, display raw text
+                    let parsedContent;
+                    if (typeof marked !== 'undefined' && typeof marked.parse === 'function') {
+                        parsedContent = marked.parse(fullContent);
+                    } else {
+                        console.warn('marked.parse not available, using raw text');
+                        parsedContent = fullContent.replace(/\n/g, '<br>');
+                    }
+                    aiMessageSpan.innerHTML = parsedContent;
+                    // Ensure Prism library is loaded
+                    if (typeof Prism !== 'undefined' && typeof Prism.highlightAllUnder === 'function') {
+                        Prism.highlightAllUnder(aiMessageSpan);
+                    }
+
+                    break;
+
+                // Response audio stream
+                case "response.audio.delta":
+                    if (data.delta) {
+                        // Handle audio delta
+                    }
+                    break;
+
+                // Full assistant transcription
+                case "response.audio_transcript.done":
+                    console.log("Received transcription: " + data.transcript);
+                    await appendRealtimeChatHistory("assistant", data.transcript);
+                    break;
+
+                // Response completed
+                case "response.audio.done":
+                    console.log("Audio response complete.");
+                    isPlaying = false;
+                    playVideo = false;
+                    break;
+
+                // Function call response
+                case "response.function_call_arguments.done":
+                    console.log("data：" + data)
+                    handleFunctionCall(data);
+                    break;
+
+                case "session.gpu_full":
+                    showErrorTip("The gpu resources are full. Please try again later!");
+                    break;
+
+                case "session.insufficient_balance":
+                    showErrorTip("Insufficient balance, service has stopped, please recharge!");
+                    break;
+
+                default:
+                    console.warn("Unhandled event type: " + data.type);
+            }
+        }
+
+        function handleReceivedBinaryMessage(arrayBuffer) {
+            // Handle binary messages (audio data, etc.)
+            // If you need to process audio streams, you can add logic here
+            console.log('Received binary message, size:', arrayBuffer.byteLength);
+            // TODO: Process binary audio data
+        }
+
+        function handleFunctionCall(eventJson) {
+            try {
+                const functionArguments = eventJson.arguments;
+                const functionCallArgs = JSON.parse(functionArguments);
+                const userInput = functionCallArgs.userInput;
+                const callId = eventJson.call_id;
+
+                if (userInput) {
+                    // Call handleWithMemAgent to process user input
+                    handleWithMemAgent(userInput)
+                        .then(result => {
+                            // Print the response from backend
+                            console.log("Result from backend: " + result);
+                            // Send the result back to the caller
+                            sendFunctionCallResult(result, callId);
+                        })
+                        .catch(error => {
+                            console.error("Error calling MemAgent:", error);
+                        });
+                } else {
+                    console.log("City not provided for get_weather function.");
+                }
+            } catch (error) {
+                console.error("Error parsing function call arguments: ", error);
+            }
+        }
+
+        function handleWithMemAgent(userInput) {
+            return new Promise(async (resolve, reject) => {
+                let chatId = await getFromChromeStorage("chatId");
+                // Send request to Java backend API
+                fetch('https://'+baseUrl + '/api/realtime_function_call', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        userInput: userInput,  // Pass user input to backend
+                        license: API_KEY,
+                        chatId: chatId
+                    }),
+                })
+                    .then(response => response.text())  // Parse response content
+                    .then(result => {
+                        // Handle the returned result
+                        resolve(result);  // Return result to caller
+                    })
+                    .catch(error => {
+                        console.error("Error during function call:", error);
+                        reject(error);  // Handle error
+                    });
+            });
+        }
+
+        function sendFunctionCallResult(result, callId) {
+            const resultJson = {
+                type: "conversation.item.create",
+                item: {
+                    type: "function_call_output",
+                    output: result,
+                    call_id: callId
+                }
+            };
+
+            socket.send(JSON.stringify(resultJson));
+            console.log("Sent function call result: ", resultJson);
+
+            // Actively request a response.create to get the result
+            const rpJson = {
+                type: "response.create"
+            };
+            socket.send(JSON.stringify(rpJson));
+            console.log("Response sent: ", rpJson);
+        }
+
+        function stopCurrentAudioPlayback() {
+            if (currentAudioSource) {
+                currentAudioSource.stop();
+                currentAudioSource = null;
+                console.log("Current audio playback stopped.");
+            }
+        }
+
+        function startRecording() {
+            navigator.mediaDevices.getUserMedia({ audio: true })
+                .then(stream => {
+                    audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                    audioStream = stream;
+                    const source = audioContext.createMediaStreamSource(stream);
+                    // Increase buffer size to 8192
+                    audioProcessor = audioContext.createScriptProcessor(8192, 1, 1);
+
+                    audioProcessor.onaudioprocess = (event) => {
+                        if (socket && socket.readyState === WebSocket.OPEN) {
+                            const inputBuffer = event.inputBuffer.getChannelData(0);
+                            const pcmData = floatTo16BitPCM(inputBuffer);
+                            const base64PCM = base64EncodeAudio(new Uint8Array(pcmData));
+
+                            // Increase audio chunk size to 4096
+                            const chunkSize = 4096;
+                            for (let i = 0; i < base64PCM.length; i += chunkSize) {
+                                const chunk = base64PCM.slice(i, i + chunkSize);
+                                socket.send(JSON.stringify({ type: "input_audio_buffer.append", audio: chunk }));
+                            }
+                        }
+                    };
+
+                    source.connect(audioProcessor);
+                    audioProcessor.connect(audioContext.destination);
+                    console.log("Recording started");
+                })
+                .catch(error => {
+                    console.error("Unable to access microphone: ", error);
+                });
+        }
+
+        function floatTo16BitPCM(float32Array) {
+            const buffer = new ArrayBuffer(float32Array.length * 2);
+            const view = new DataView(buffer);
+            let offset = 0;
+            for (let i = 0; i < float32Array.length; i++, offset += 2) {
+                let s = Math.max(-1, Math.min(1, float32Array[i]));
+                view.setInt16(offset, s < 0 ? s * 0x8000 : s * 0x7fff, true);
+            }
+            return buffer;
+        }
+
+        function base64EncodeAudio(uint8Array) {
+            let binary = '';
+            const chunkSize = 0x8000; // Keep 32KB chunk size
+            for (let i = 0; i < uint8Array.length; i += chunkSize) {
+                const chunk = uint8Array.subarray(i, i + chunkSize);
+                binary += String.fromCharCode.apply(null, chunk);
+            }
+            return btoa(binary);
+        }
+
+
+
+        function stopRecording() {
+            if (audioProcessor) {
+                audioProcessor.disconnect();
+            }
+            if (audioStream) {
+                audioStream.getTracks().forEach(track => track.stop());
+            }
+            if (socket) {
+                socket.close();
+            }
+        }
+
+
+        // Play the next audio segment and synchronize lip movement
+        function playNextAudio() {
+            if (audioQueue.length > 0) {
+                isPlaying = true;
+                const audioData = audioQueue.shift(); // Get one audio segment from the queue
+                playPCM(audioData, playNextAudio); // Play the audio
+            } else {
+                isPlaying = false;
+            }
+        }
+
+        function playPCM(pcmBuffer, callback) {
+            const wavBuffer = createWavBuffer(pcmBuffer, 24000);
+            audioContext.decodeAudioData(wavBuffer, function (audioBuffer) {
+                const source = audioContext.createBufferSource();
+                source.buffer = audioBuffer;
+                source.connect(audioContext.destination);
+                source.onended = callback; // Call callback after audio playback ends
+                source.start(0);
+                currentAudioSource = source;
+                console.log("Audio played successfully.");
+            }, function (error) {
+                console.error("Error decoding audio data", error);
+                callback(); // Continue to play the next audio if decoding fails
+            });
+        }
+
+        function createWavBuffer(pcmBuffer, sampleRate) {
+            const wavHeader = new ArrayBuffer(44);
+            const view = new DataView(wavHeader);
+
+            // RIFF header
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + pcmBuffer.byteLength, true); // Chunk size
+            writeString(view, 8, 'WAVE');
+
+            // fmt subchunk
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); // Subchunk1 size (16 for PCM)
+            view.setUint16(20, 1, true);  // Audio format (1 for PCM)
+            view.setUint16(22, 1, true);  // Number of channels (1 for mono)
+            view.setUint32(24, sampleRate, true); // Sample rate
+            view.setUint32(28, sampleRate * 2, true); // Byte rate (Sample Rate * Block Align)
+            view.setUint16(32, 2, true);  // Block align (Channels * Bits per sample / 8)
+            view.setUint16(34, 16, true); // Bits per sample
+
+            // data subchunk
+            writeString(view, 36, 'data');
+            view.setUint32(40, pcmBuffer.byteLength, true); // Subchunk2 size
+
+            function writeString(view, offset, string) {
+                for (let i = 0; i < string.length; i++) {
+                    view.setUint8(offset + i, string.charCodeAt(i));
+                }
+            }
+
+            return concatenateBuffers(wavHeader, pcmBuffer);
+        }
+
+        function concatenateBuffers(buffer1, buffer2) {
+            const tmp = new Uint8Array(buffer1.byteLength + buffer2.byteLength);
+            tmp.set(new Uint8Array(buffer1), 0);
+            tmp.set(new Uint8Array(buffer2), buffer1.byteLength);
+            return tmp.buffer;
+        }
+
+
+
+        async function appendRealtimeChatHistory(role, content) {
+            let history = localStorage.getItem("realtimeChatHistory");
+            let realtimeChatHistory = history ? JSON.parse(history) : [];
+
+            realtimeChatHistory.push({ role, content });
+
+            localStorage.setItem("realtimeChatHistory", JSON.stringify(realtimeChatHistory));
+        }
+
+    }
+
+
+    function appendContentToList(role, context) {
+        const container = document.createElement('div');
+        container.classList.add('item', role === 'user' ? 'item-right' : 'item-left');
+
+        const contentDiv = document.createElement('div');
+        contentDiv.classList.add('item-content');
+        const contentSpan = document.createElement('span');
+        contentSpan.textContent = context; // Display transcribed user input text
+        contentDiv.appendChild(contentSpan);
+        container.appendChild(contentDiv);
+
+        return contentSpan;
+    }
+
+
+    initDigtalHumanRealtimeButton();
+
+    // Expose initialization function to global scope for Elementor Popup opening
+    window.NavTalkInitButton = initDigtalHumanRealtimeButton;
+    console.log('Initialization function exposed to global scope: window.NavTalkInitButton');
+
+    // IIFE ends, all code is within this scope
+    console.log('NavTalk digital human module initialized');
+})(); // Immediately invoked function expression ends
+
+</script>
+
+<style>
+    /* Base reset and global styles */
+    body {
+        margin: 0;
+        padding: 0;
+        font-family: 'Arial', sans-serif;
+        background-color: #f5f5f7;
+        color: #333;
+        /* Fixed size container */
+        min-height: 400px;
+    }
+
+    /* Main container style */
+    .real-time-container {
+        display: flex;
+        flex-direction: column;
+        /* Fixed size container */
+        min-height: 400px;
+        height: 400px;
+        position: relative;
+        background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        width: 400px;
+    }
+
+    /* Header button group */
+    .ah-agent-header {
+        display: flex;
+        justify-content: flex-end;
+    }
+
+    .ah-btn-group {
+        display: flex;
+        gap: 10px;
+    }
+
+    .ah-btn {
+        background: rgba(255, 255, 255, 0.2);
+        border: none;
+        border-radius: 50%;
+        width: 40px;
+        height: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        backdrop-filter: blur(5px);
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .ah-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .ah-icon {
+        transition: all 0.3s ease;
+    }
+
+    /* Character container */
+    .ah-character-box {
+        position: relative;
+        width: 400px;
+        height: 400px;
+        min-height: 400px;
+        max-height: 400px;
+        display: flex;
+        justify-content: center;
+        align-items: stretch;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+
+    .ah-character-avatar {
+        border-radius: 0;
+        width: 400px;
+        height: 400px;
+        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        background: #fff;
+        display: flex;
+        align-items: stretch;
+    }
+
+    /* Character background */
+    .ah-character-bg {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+        filter: blur(8px);
+        opacity: 0.7;
+    }
+
+    /* Call button - positioned relative to popup container */
+    .btn-character-call {
+        position: absolute !important;
+        /* Position relative to .real-time-container */
+        bottom: 30px !important;
+        right: 30px !important;
+        width: 60px !important;
+        height: 60px !important;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
+        box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3) !important;
+        z-index: 1000 !important;
+        top: auto !important;
+        left: auto !important;
+    }
+    
+    /* Button positioning in Elementor Popup */
+    .elementor-popup-modal .btn-character-call,
+    .elementor-popup-modal .real-time-container .btn-character-call {
+        position: absolute !important;
+        bottom: 30px !important;
+        right: 30px !important;
+    }
+
+    .btn-character-call:hover {
+        transform: scale(1.1);
+        box-shadow: 0 15px 25px rgba(118, 75, 162, 0.4);
+    }
+
+    /* Active state - Hang up state (red gradient) */
+    .btn-character-call.active {
+        background: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%) !important;
+        box-shadow: 0 10px 20px rgba(255, 94, 98, 0.4) !important;
+    }
+    
+    /* Active state hover */
+    .btn-character-call.active:hover {
+        background: linear-gradient(135deg, #ff4757 0%, #ff7675 100%) !important;
+        box-shadow: 0 15px 25px rgba(255, 94, 98, 0.5) !important;
+    }
+
+    /* Chat container - Hidden, no need to display text */
+    .ah-character-chat {
+        display: none !important;
+        visibility: hidden !important;
+        opacity: 0 !important;
+    }
+
+    .character-chat-item {
+        max-width: 70%;
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 16px;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease-out;
+    }
+
+    .item-user {
+        align-self: flex-end;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+    .item-character {
+        align-self: flex-start;
+        background: white;
+        color: #333;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Scrollbar style */
+    .ah-character-chat::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .ah-character-chat::-webkit-scrollbar-track {
+        background: rgba(0, 0, 0, 0.05);
+        border-radius: 10px;
+    }
+
+    .ah-character-chat::-webkit-scrollbar-thumb {
+        background: rgba(0, 0, 0, 0.2);
+        border-radius: 10px;
+    }
+
+
+    /* Chat container */
+    .item .item-content {
+        padding: 12px 18px;
+        border-radius: 18px;
+        font-size: 16px;
+        line-height: 1.4;
+        animation: fadeIn 0.3s ease-out;
+        margin-bottom: 15px;
+    }
+
+    .item {
+        display: flex;
+    }
+
+    .item.item-left {
+        justify-content: start;
+    }
+
+    .item.item-left .item-content {
+        background: white;
+        color: #333;
+        border-bottom-left-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .item.item-right {
+        justify-content: end;
+    }
+
+    .item.item-right .item-content {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-bottom-right-radius: 4px;
+    }
+
+
+    /* Animation definition */
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    /* Connection loading overlay - Transition animation during connection */
+    .connection-loading-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        /* Semi-transparent modal background, keep image visible */
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        /* Slight blur effect to highlight loading animation */
+        backdrop-filter: blur(2px);
+        animation: fadeIn 0.3s ease-in;
+    }
+
+    /* Loading spinner - Rotating rings */
+    .loading-spinner {
+        position: relative;
+        width: 70px;
+        height: 70px;
+        margin-bottom: 20px;
+    }
+
+    .spinner-ring {
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        border: 4px solid transparent;
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+    }
+
+    .spinner-ring:nth-child(1) {
+        animation-delay: -0.45s;
+        border-top-color: rgba(255, 255, 255, 1);
+        border-width: 4px;
+    }
+
+    .spinner-ring:nth-child(2) {
+        animation-delay: -0.3s;
+        border-top-color: rgba(255, 255, 255, 0.8);
+        border-width: 3px;
+        width: 75%;
+        height: 75%;
+        top: 12.5%;
+        left: 12.5%;
+    }
+
+    .spinner-ring:nth-child(3) {
+        animation-delay: -0.15s;
+        border-top-color: rgba(255, 255, 255, 0.6);
+        border-width: 2px;
+        width: 50%;
+        height: 50%;
+        top: 25%;
+        left: 25%;
+    }
+
+    @keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    /* Loading pulse - Pulse animation */
+    .loading-pulse {
+        position: absolute;
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
+        animation: pulse 2s ease-in-out infinite;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+    }
+
+    @keyframes pulse {
+        0% {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0.8;
+        }
+        50% {
+            transform: translate(-50%, -50%) scale(1.3);
+            opacity: 0.4;
+        }
+        100% {
+            transform: translate(-50%, -50%) scale(0.9);
+            opacity: 0.8;
+        }
+    }
+
+    /* Hover effect for video element */
+    #character-avatar-video:hover {
+        transform: translate(-50%, -50%) scale(1.02);
+        transition: transform 0.3s ease;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 768px) {
+        .ah-character-box {
+            width: 400px;
+            height: 400px;
+            min-height: 400px;
+            max-height: 400px;
+        }
+        
+        .ah-character-avatar {
+            width: 400px;
+            height: 400px;
+        }
+        
+        #character-static-image,
+        #character-avatar-video {
+            width: 400px !important;
+            height: 400px !important;
+        }
+
+        .ah-character-chat {
+            bottom: 20px;
+            left: 10px;
+            right: 10px;
+            padding: 10px;
+        }
+
+        .btn-character-call {
+            width: 50px;
+            height: 50px;
+            bottom: 20px;
+            right: 20px;
+            position: absolute !important;
+        }
+    }
+
+    /* Dark mode */
+    @media (prefers-color-scheme: dark) {
+        body {
+            background-color: #121212;
+            color: #e0e0e0;
+        }
+
+        .ah-character-avatar {
+            background: #1e1e1e;
+        }
+
+        .item-character {
+            background: #2d2d2d;
+            color: #e0e0e0;
+        }
+
+        .ah-btn {
+            background: rgba(30, 30, 30, 0.5);
+        }
+    }
+
+    /* Remove fullscreen styles, adapt to popup container */
+    /* .ah-character-box height is already defined above, no longer using 100vw */
+    
+    /* Adjust video container style */
+    .ah-character-avatar {
+        width: 400px;
+        height: 400px;
+        border-radius: 0;
+        box-shadow: 0 20px 30px rgba(0, 0, 0, 0.2);
+    }
+
+    /* Video positioning in popup container - Fixed size 400x400 */
+    #character-avatar-video {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 400px !important;
+        height: 400px !important;
+        transform: none !important;
+        object-fit: cover !important;
+        z-index: 1;
+    }
+    
+    /* Static image uses the same positioning - Fixed size 400x400 */
+    #character-static-image {
+        position: absolute !important;
+        top: 0 !important;
+        left: 0 !important;
+        width: 400px !important;
+        height: 400px !important;
+        transform: none !important;
+        object-fit: cover !important;
+    }
+
+    /* Adjust background element */
+    .ah-character-bg {
+        display: none;
+        /* Hide background image */
+    }
+    
+    /* z-index is already defined in respective styles, no need to repeat */
+</style>
+
+</html>

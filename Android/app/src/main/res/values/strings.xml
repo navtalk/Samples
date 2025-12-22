@@ -1,0 +1,14 @@
+<resources>
+    <string name="app_name">NavTalkDemo</string>
+    <string name="title_activity_realtime">RealtimeActivity</string>
+    <!-- String for Static Image description -->
+    <string name="static_image">Character Image</string>
+
+    <!-- String for Realtime Button -->
+    <string name="realtime_button">Start/End Realtime Interaction</string>
+
+    <!-- String for Chat Input Hint -->
+    <string name="type_message">Type a message...</string>
+    <string name="key_message">Enter Key</string>
+
+</resources>

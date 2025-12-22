@@ -1,0 +1,10 @@
+<!-- res/drawable/bg_input_field.xml -->
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+    <solid android:color="#F0F0F0" />
+    <corners android:radius="12dp" />
+    <padding
+        android:left="12dp"
+        android:right="12dp"
+        android:top="8dp"
+        android:bottom="8dp" />
+</shape>
