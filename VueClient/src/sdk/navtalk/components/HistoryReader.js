@@ -2,7 +2,7 @@ import {assert, assertNonEmptyStr} from "../utils/assert.js";
 
 export default function historyReader(options = {}){
     assertNonEmptyStr(options.type,`storage type must be a non-empty string: type=${options.type}`)
-    typeFactory(options.key,options.type)
+    return typeFactory(options.localKey,options.type)
 }
 
 const typeFactory = (key,type)=>{
@@ -18,7 +18,11 @@ const typeFactory = (key,type)=>{
             },
             clear(){
                 localStorage.setItem(key,JSON.stringify([]));
-            }
+            },
+            getUserMessage(){
+                const history = this.get();
+                return history.filter(item => item.role === 'user');
+            },
         }
     }else{
         assert(false,`storage type ${type} is not supported`)

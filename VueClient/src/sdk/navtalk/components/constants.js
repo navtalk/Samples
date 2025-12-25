@@ -20,3 +20,15 @@ export const NavTalkMessageType = Object.freeze({
     REALTIME_INPUT_TEXT: "realtime.input_text",
     REALTIME_INPUT_IMAGE: "realtime.input_image"
 })
+
+export const HumanEvent = Object.freeze({
+    CONNECT: "connect",
+    SEND: "send",
+    RECEIVE: "receive",
+    ERROR: "error",
+    LOAD_HISTORY: "load_history",
+    NATIVE_RADIO: 'native_radio',
+    DIGITAL_HUMAN_VIDEO: 'receive_native_video',
+    AUDIO_WILL_PLAY: 'audioWillPlay',
+    CLOSE: 'close'
+})

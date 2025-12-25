@@ -1,8 +1,9 @@
-import {humanConfig as config} from './config.js'
-import { NavTalkMessageType as messageType } from './constants.js'
+import {humanConfig as config,createSocketFactory} from './config.js'
+import {HumanEvent, NavTalkMessageType as MessageType} from './constants.js'
 import {assertFunction, assertNonEmptyStr} from "../utils/assert.js";
 import {ListenerManager} from "./ListenerManager.js";
 import HistoryReader from "./HistoryReader.js";
+import register from "../register.js";
 export class NavTalkDigitalHuman{
     /**
      * apiKey
@@ -10,15 +11,11 @@ export class NavTalkDigitalHuman{
      */
     constructor(options = {}) {
         this.socket = null;
-        this.config = {
-            ...config,
-            ...options
-        }
+        this.config = {...config, ...options}
         this.historyReader = HistoryReader(this.config.history)
         this.listenerManager = new ListenerManager()
-        this.connect()
+        register(this)
     };
-
     /**
      *
      * @param eventKey
@@ -28,42 +25,53 @@ export class NavTalkDigitalHuman{
     on(eventKey,handler){
         assertNonEmptyStr(eventKey,`eventKey must be a non-empty string: eventKey=${eventKey}`)
         assertFunction(handler,`handler must be a function: eventKey=${eventKey}`)
-        const eventType = messageType[eventKey]
+        const eventType = reverseKV({...MessageType, ...HumanEvent})[eventKey]
         assertNonEmptyStr(eventType,`must be a valid event: eventKey=${eventKey}`)
-        return this.listenerManager.on(eventType,handler)
+        return this.listenerManager.on(eventKey,handler)
     };
-    connect(){
-        const socket = new WebSocket(config.serverUrl)
-        this.socket = socket
-        this.config.connectHandler({human:this})
-        socket.onopen = () => {
-            this.config?.socketOpenHandler({human:this})
+    openChannel(){
+        this.socket = createSocketFactory(this.config)
+        this.socket.onopen = () => {
             console.log('Connected to server')
         }
-        socket.onmessage = (event) => {
+        this.socket.onmessage = (event) => {
             this.#onMessage(event)
-            console.log('Received message:', event)
         }
-        socket.onerror = (error) => {
-            this.config.socketErrorHandler({human:this,event:error})
+        this.socket.onerror = (error) => {
             console.error('WebSocket error:', error)
         }
-        socket.onclose = () => {
-            this.config?.socketCloseHandler({human:this})
+        this.socket.onclose = () => {
             console.log('Disconnected from server')
         }
+        this.#loadHistoryMessage()
     };
-    disconnect(){
-        this.config.disconnectHandler({human:this})
+    closeChannel(){
+        try {
+            if (this.socket) {
+                this.socket.close()
+            }
+        }finally {
+            this.emit(HumanEvent.CLOSE,{human:this})
+        }
     };
     send(data){
         this.socket.send(data)
     };
     #onMessage(event){
-        const key = event.type
-        this.listenerManager.emit(key,event)
+        const responseData = JSON.parse(event.data)
+        const { type:key } = responseData
+        this.emit(key,{data:responseData.data,human:this})
     };
-    loadLocalHistory(){
-        return this.historyReader.get()
+    emit(key,data){
+        this.listenerManager.emit(key,data)
+    };
+    #loadHistoryMessage(){
+        this.emit(HumanEvent.LOAD_HISTORY,{data: this.historyReader.get()})
     }
 }
+
+const reverseKV = (obj) =>
+    Object.entries(obj).reduce((acc, [key, value]) => {
+        acc[value] = key;
+        return acc;
+    }, {});

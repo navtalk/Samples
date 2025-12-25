@@ -1,19 +1,24 @@
 export class ListenerManager {
     constructor() {
-        this.listenerManager = {}
+        this.events = {}
     }
     on(key, handler) {
-        this.listenerManager[key] ??= []
-        this.listenerManager[key].push(handler)
+        if (typeof handler !== 'function') {
+            throw new TypeError('Handler must be a function');
+        }
+        this.events[key] ??= []
+        if (!this.events[key].includes(handler)) {
+            this.events[key].push(handler);
+        }
         // Return the function for unsubscribing
         return ()=>{
-            const index = this.listenerManager[key].indexOf(handler)
+            const index = this.events[key].indexOf(handler)
             if(index !== -1){
-                this.listenerManager[key].splice(index, 1)
+                this.events[key].splice(index, 1)
             }
         }
     };
     emit(key, data){
-        this.listenerManager[key]?.forEach(handler => handler(data))
+        this.events[key]?.forEach(handler => handler(data))
     }
 }
