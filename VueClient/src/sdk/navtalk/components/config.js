@@ -5,6 +5,7 @@ export const humanConfig =  {
     apiKey: '',
     model: 'gpt-realtime',
     name: 'Brain',
+    autoSendHistoryOnStart: true,
     videoElement: ()=> document.getElementById('character-avatar-video'),
     history: {
         localKey: 'realtimeChatHistory', //default localStorage key
