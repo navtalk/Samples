@@ -62,5 +62,11 @@ export default function register(eventBus){
         console.log("WEB_RTC_ICE_CANDIDATE:", data);
         handleIceCandidate(data)
     })
+
+    //HumanEvent.SOCKET_ERROR
+    eventBus.on(HumanEvent.SOCKET_ERROR, ({error,human}) => {
+        console.error("WebSocket connection failed. Common causes include an invalid API key, incorrect digital avatar name, or an unsupported AI model. Please verify these parameters and try again.", error);
+        human.closeChannel()
+    })
 }
 

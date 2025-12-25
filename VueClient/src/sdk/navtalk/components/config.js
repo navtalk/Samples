@@ -6,7 +6,9 @@ export const humanConfig =  {
     model: 'gpt-realtime',
     name: 'Brain',
     autoSendHistoryOnStart: true,
-    videoElement: ()=> document.getElementById('character-avatar-video'),
+    videoElement: ()=> {
+        throw new Error('videoElement is not defined')
+    },
     history: {
         localKey: 'realtimeChatHistory', //default localStorage key
         type: 'localStorage'

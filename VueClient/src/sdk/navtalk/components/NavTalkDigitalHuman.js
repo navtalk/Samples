@@ -38,6 +38,7 @@ export class NavTalkDigitalHuman{
             this.#onMessage(event)
         }
         this.socket.onerror = (error) => {
+            this.emit(HumanEvent.SOCKET_ERROR,{error,human:this})
             console.error('WebSocket error:', error)
         }
         this.socket.onclose = () => {

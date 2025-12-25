@@ -39,7 +39,13 @@ import { marked } from 'marked'
 import Prism from 'prismjs'
 import NavTalkDigitalHuman from '../sdk/navtalk/index.js'
 import {HumanEvent} from "../sdk/navtalk/components/constants.js";
-const navTalkDigitalHuman = new NavTalkDigitalHuman({apiKey: 'sk_navtalk_eIiW4S7CDURPcqSUgqkxz4XTkDadgOEA'})
+const navTalkDigitalHuman = new NavTalkDigitalHuman({
+  apiKey: 'sk_navtalk_eIiW4S7CDURPcqSUgqkxz4XTkDadgOEA',
+  // digital avatar name
+  name: 'Lauren',
+  // video element to display the digital avatar's video
+  videoElement: ()=> document.getElementById('character-avatar-video')
+})
 // Optional: import a Prism theme css from node_modules if desired
 // import 'prismjs/themes/prism.css'
 
@@ -75,8 +81,6 @@ onMounted(async () => {
     isVideoPlay.value = false
   })
 
-  // await initDigtalHumanHistoryData()
-  // await initDigtalHumanRealtimeButton()
 })
 </script>
 

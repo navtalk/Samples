@@ -30,5 +30,6 @@ export const HumanEvent = Object.freeze({
     NATIVE_RADIO: 'native_radio',
     DIGITAL_HUMAN_VIDEO: 'receive_native_video',
     AUDIO_WILL_PLAY: 'audioWillPlay',
-    CLOSE: 'close'
+    CLOSE: 'close',
+    SOCKET_ERROR: 'socketError'
 })
