@@ -6,22 +6,24 @@ export default function register(eventBus){
     socket.videoElement = eventBus.config.videoElement
     // Send historical messages to the digital person
     eventBus.on(MessageType.REALTIME_SESSION_CREATED, ({data,human}) => {
-        human.historyReader.getUserMessage().forEach(msg => {
-            const messageConfig = {
-                type: 'conversation.item.create',
-                item: {
-                    type: 'message',
-                    role: msg.role,
-                    content: [
-                        {
-                            type: 'input_text',
-                            text: msg.content
-                        }
-                    ]
+        if(human.config.autoSendHistoryOnStart){
+            human.historyReader.getUserMessage().forEach(msg => {
+                const messageConfig = {
+                    type: 'conversation.item.create',
+                    item: {
+                        type: 'message',
+                        role: msg.role,
+                        content: [
+                            {
+                                type: 'input_text',
+                                text: msg.content
+                            }
+                        ]
+                    }
                 }
-            }
-            human.send(JSON.stringify(messageConfig))
-        })
+                human.send(JSON.stringify(messageConfig))
+            })
+        }
     })
 
     //Send audio messages to the digital person
