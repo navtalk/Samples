@@ -39,6 +39,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         return tableView
     }()
+    
     lazy var playTapView = {
         let view = UIView(frame: CGRectMake(kScreen_WIDTH/2-120/2, kScreen_HEIGHT-safeBottom()-20-39, 120, 39))
         view.clipsToBounds = true
@@ -62,6 +63,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         return view
     }()
+    
     lazy var connectingShowView = {
         let view = UIView(frame: CGRectMake(kScreen_WIDTH/2-150/2, kScreen_HEIGHT-safeBottom()-20-39, 150, 39))
         view.clipsToBounds = true
@@ -84,6 +86,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
            
         return view
     }()
+    
     lazy var stopTapView = {
         let view = UIView(frame: CGRectMake(kScreen_WIDTH/2-135/2, kScreen_HEIGHT-safeBottom()-20-39, 135, 39))
         view.clipsToBounds = true
@@ -105,6 +108,15 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         view.addGestureRecognizer(tap)
         
         return view
+    }()
+    
+    lazy var closeOfOpenCammeraButton = {
+        let button = UIButton(type: .custom)
+        button.frame = CGRect(x: kScreen_WIDTH-20-30, y: safeTop()+10, width: 30, height: 25)
+        button.setImage(UIImage(named: "camera_open"), for: .normal)
+        button.contentMode = .scaleAspectFit
+        button.addTarget(self, action: #selector(clickOpenOrCloseCamerabutton), for: .touchUpInside)
+        return button
     }()
     
     enum NavTalkStatus: Int {
@@ -129,7 +141,6 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         view.addSubview(backgroudImage)
         
-        
         view.addSubview(stopTapView)
         view.addSubview(connectingShowView)
         view.addSubview(playTapView)
@@ -138,15 +149,31 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         
         view.addSubview(myTableView)
         
-        NotificationCenter.default.addObserver(self, selector: #selector(changeRTCWebSocketStatus), name: NSNotification.Name(rawValue: "WebRTCManager_socket_status_changed"), object: nil)
+        if WebSocketManager.shared.isOrNotSaveHistoryChatMessages == false{
+            UserDefaults.standard.removeObject(forKey: "SavedHistoryChatMessagesInLocal")
+        }else{
+            if let localSavedModels_string = UserDefaults.standard.string(forKey: "SavedHistoryChatMessagesInLocal"),
+               let localSavedModels_array = jsonStringToArray(localSavedModels_string){
+                if localSavedModels_array.count > 0{
+                    allMessageModels = [[String: Any]]()
+                    allMessageModels.append(contentsOf: localSavedModels_array)
+                    myTableView.reloadData()
+                    let lastIndex = IndexPath(row: self.allMessageModels.count - 1, section: 0)
+                    self.myTableView.scrollToRow(at: lastIndex, at: .top, animated: true)
+                }
+            }
+        }
+        
         NotificationCenter.default.addObserver(self, selector: #selector(changeWebSocketStatus), name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(changeWebRTCStatus), name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
-        
         NotificationCenter.default.addObserver(self, selector: #selector(HaveInputText), name: NSNotification.Name(rawValue: "HaveInputText"), object: nil)
         NotificationCenter.default.addObserver(self, selector: #selector(HaveOutputText), name: NSNotification.Name(rawValue: "HaveOutputText"), object: nil)
+        NotificationCenter.default.addObserver(self, selector: #selector(refreshCameraButtonStatus), name: NSNotification.Name(rawValue: "CameraStateIsChanged"), object: nil)
+        
         
         WebRTCManager.shared.superVC = self
         WebSocketManager.shared.superVC = self
+        CameraCaptureManager.shared.superVC = self
         
         NotificationCenter.default.addObserver(
             self,
@@ -154,6 +181,10 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             name: .didGainNetwork,
             object: nil
         )
+        
+        if WebSocketManager.shared.isOpenCameraRecognitionToAI{
+            view.addSubview(self.closeOfOpenCammeraButton)
+        }
     }
     @objc private func onGainNetwork() {
         if let currentURL = URL(string: "https://api.navtalk.ai/uploadFiles/\(WebSocketManager.shared.characterName).png"){
@@ -168,9 +199,9 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             //Refresh UI
             talk_status = .connecting
             refreshNavTalkStatusUI()
-            //Connect RTC-WebSocket
+            //Connect WebSocket: k
             isJudgeNotificationOfStatuse = true
-            WebRTCManager.shared.connectWebRTCOfNavTalk()
+            WebSocketManager.shared.connectWebSocketOfNavTalk()
         }
     }
     @objc func clickStopTapView(){
@@ -210,43 +241,12 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         //disconect WebRTC
         print("stop--2")
         WebRTCManager.shared.disconnectWebRTC()
-        //disconnect RTC-WebSocket
-        print("stop--3")
-        WebRTCManager.shared.disconnectRTCWebSocketOfNavTalk()
         //dicconect websocket
-        print("stop--4")
+        print("stop--3")
         WebSocketManager.shared.disconnectWebSocketOfNavTalk()
     }
-    //MARK: 1.RTC-WebSocket:
-    @objc func changeRTCWebSocketStatus(){
-        if isJudgeNotificationOfStatuse == false{
-            return
-        }
-        DispatchQueue.main.async {
-            if WebRTCManager.shared.webRTC_socket_status == .Connectting{
-                print("RTC-WebSocket status is changed，current is--Connectting")
-                MBProgressHUD.showJuHuaGifImageLongLongTime(view: self.view) {
-                    print("RTC-WebSocket status is changed，current is--connect--Time Out")
-                    MBProgressHUD.showTextWithTitleAndSubTitle(title: "Connect is time out.", subTitle: "", view: self.view)
-                    self.talk_status = .notConnected
-                    self.refreshNavTalkStatusUI()
-                    self.isJudgeNotificationOfStatuse = false
-                    self.stopAllTask()
-                }
-            }else if WebRTCManager.shared.webRTC_socket_status == .NotConnected{
-                print("RTC-WebSocket status is changed，current is--NotConnected")
-                MBProgressHUD.removeCurrentMBProgressHUD()
-                self.talk_status = .notConnected
-                self.refreshNavTalkStatusUI()
-                self.isJudgeNotificationOfStatuse = false
-                self.stopAllTask()
-            }else if WebRTCManager.shared.webRTC_socket_status == .Connected{
-                print("RTC-WebSocket status is changed，current is--Connected")
-                WebSocketManager.shared.connectWebSocketOfNavTalk()
-            }
-        }
-    }
-    //MARK: 2.WebSocket:
+    
+    //MARK: 1.WebSocket:
     @objc func changeWebSocketStatus(){
         if isJudgeNotificationOfStatuse == false{
             return
@@ -262,46 +262,63 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
                 self.isJudgeNotificationOfStatuse = false
                 self.stopAllTask()
             }else if WebSocketManager.shared.socket_status == .Connected{
-                print("WebSocket status is changed，current is--Connecte")
-            }else if WebSocketManager.shared.socket_status == .UpdatedSession{
-                print("WebSocket status is changed，current is--UpdatedSession")
-                WebSocketManager.shared.sendHistoryToCurrentChat()
-                WebRTCManager.shared.gotoSendStartCommand()
+                print("WebSocket status is changed，current is--Connected")
             }
         }
     }
-    //MARK: 3.RTC-WebRTC:
+    //MARK: 2.WebRTC:
+    var WebRTCConnect_Timer: Timer?
     @objc func changeWebRTCStatus(){
         if isJudgeNotificationOfStatuse == false{
             return
         }
         DispatchQueue.main.async {
             if WebRTCManager.shared.webRTC_status == .Connectting{
-                print("RTC-WebRTC status is changed，current is--Connectting")
+                print("WebRTC status is changed，current is--Connectting")
+                if self.WebRTCConnect_Timer != nil{
+                    self.WebRTCConnect_Timer?.invalidate()
+                    self.WebRTCConnect_Timer = nil
+                }
+                self.WebRTCConnect_Timer = Timer(timeInterval: 15.0, repeats: false, block: { timer in
+                    if WebRTCManager.shared.webRTC_status == .Connectting{
+                        WebSocketManager.shared.disconnectWebSocketOfNavTalk()
+                    }
+                })
+                RunLoop.current.add(self.WebRTCConnect_Timer!, forMode: .common)
             }else if WebRTCManager.shared.webRTC_status == .NotConnected{
-                print("RTC-WebRTC status is changed，current is--NotConnected")
+                print("WebRTC status is changed，current is--NotConnected")
                 MBProgressHUD.removeCurrentMBProgressHUD()
                 self.talk_status = .notConnected
                 self.refreshNavTalkStatusUI()
                 self.isJudgeNotificationOfStatuse = false
                 self.stopAllTask()
+                if self.WebRTCConnect_Timer != nil{
+                    self.WebRTCConnect_Timer?.invalidate()
+                    self.WebRTCConnect_Timer = nil
+                }
             }else if WebRTCManager.shared.webRTC_status == .Connected{
-                print("RTC-WebRTC status is changed，current is--Connected")
+                print("WebRTC status is changed，current is--Connected")
                 MBProgressHUD.removeCurrentMBProgressHUD()
                 self.talk_status = .connected
                 self.refreshNavTalkStatusUI()
+                if self.WebRTCConnect_Timer != nil{
+                    self.WebRTCConnect_Timer?.invalidate()
+                    self.WebRTCConnect_Timer = nil
+                }
             }else if WebRTCManager.shared.webRTC_status == .HaveRecieveRemoteVideoRender{
-                print("RTC-WebRTC status is changed，current is--HaveRecieveRemoteVideoRender")
+                print("WebRTC status is changed，current is--HaveRecieveRemoteVideoRender")
             }
         }
     }
     @objc func HaveInputText(notifiction: Notification){
         if let dict = notifiction.object as? [String: Any] {
+            //print("User Ask：\(dict)")
             if let transcript = dict["text"] as? String{
                 var messageModel = [String: Any]()
                 messageModel["type"] = "question"
                 messageModel["content"] = transcript
                 allMessageModels.append(messageModel)
+                saveChatMessageToLocal()
                 if allMessageModels.count == 2{
                     let firstDict = allMessageModels[0]
                     if let firstDict_type = firstDict["type"] as? String,
@@ -323,11 +340,13 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     @objc func HaveOutputText(notifiction: Notification){
         if let dict = notifiction.object as? [String: Any]{
+            //print("AI Answer：\(dict)")
             if let transcript = dict["text"] as? String{
                 var messageModel = [String: Any]()
                 messageModel["type"] = "answer"
                 messageModel["content"] = transcript
                 allMessageModels.append(messageModel)
+                saveChatMessageToLocal()
                 self.myTableView.reloadData()
                 if self.allMessageModels.count > 0 {
                     let lastIndex = IndexPath(row: self.allMessageModels.count - 1, section: 0)
@@ -336,7 +355,14 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }
     }
-    //MARK: UITableViewDelegate, UITableViewDataSource
+    func saveChatMessageToLocal(){
+        if WebSocketManager.shared.isOrNotSaveHistoryChatMessages{
+            let localMessagesArray_string = arrayToJSONString(allMessageModels)
+            UserDefaults.standard.set(localMessagesArray_string, forKey: "SavedHistoryChatMessagesInLocal")
+            UserDefaults.standard.synchronize()
+        }
+    }
+    //MARK: 3.UITableViewDelegate, UITableViewDataSource
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return allMessageModels.count
     }
@@ -368,6 +394,29 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             }
         }
     }
-    
-
+    //MARK: 4.Cloase Or Open Camera
+    @objc func clickOpenOrCloseCamerabutton(){
+        if WebSocketManager.shared.socket_status != .Connected{
+            MBProgressHUD.showTextWithTitleAndSubTitleWithShortTime(title: "Please connect to the WebSocket first", subTitle: "", view: self.view)
+            return
+        }
+        if WebRTCManager.shared.webRTC_status != .Connected{
+            MBProgressHUD.showTextWithTitleAndSubTitleWithShortTime(title: "Please connect to the WebRTC first", subTitle: "", view: self.view)
+            return
+        }
+        if CameraCaptureManager.shared.current_camera_state == .opened{
+            CameraCaptureManager.shared.stopRunningSession()
+        }else{
+            CameraCaptureManager.shared.openCamera()
+        }
+    }
+    @objc func refreshCameraButtonStatus(){
+        DispatchQueue.main.async {
+            if CameraCaptureManager.shared.current_camera_state == .opened{
+                self.closeOfOpenCammeraButton.setImage(UIImage(named: "camera_close"), for: .normal)
+            }else{
+                self.closeOfOpenCammeraButton.setImage(UIImage(named: "camera_open"), for: .normal)
+            }
+        }
+    }
 }

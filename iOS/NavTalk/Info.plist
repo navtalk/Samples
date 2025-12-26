@@ -4,5 +4,8 @@
 <dict>
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
+	<key>Privacy - Camera Usage Description 
+</key>
+	<string>Need capture image by camera.</string>
 </dict>
 </plist>

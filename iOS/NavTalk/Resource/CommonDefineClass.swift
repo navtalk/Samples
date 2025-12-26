@@ -125,3 +125,30 @@ func int16DataToPCMBuffer(int16Data: [Int16], sampleRate: Double, channels: AVAu
 func COLORFROMRGB(r:CGFloat,_ g:CGFloat,_ b:CGFloat, alpha:CGFloat) -> UIColor{
     return UIColor(red: (r)/255.0, green: (g)/255.0, blue: (b)/255.0, alpha: alpha)
 }
+
+func arrayToJSONString(_ array: [[String: Any]]) -> String? {
+    guard JSONSerialization.isValidJSONObject(array) else {
+        return nil
+    }
+
+    do {
+        let data = try JSONSerialization.data(withJSONObject: array, options: [])
+        return String(data: data, encoding: .utf8)
+    } catch {
+        print("转换失败:", error)
+        return nil
+    }
+}
+func jsonStringToArray(_ jsonString: String) -> [[String: Any]]? {
+    guard let data = jsonString.data(using: .utf8) else {
+        return nil
+    }
+
+    do {
+        let object = try JSONSerialization.jsonObject(with: data, options: [])
+        return object as? [[String: Any]]
+    } catch {
+        print("解析失败:", error)
+        return nil
+    }
+}

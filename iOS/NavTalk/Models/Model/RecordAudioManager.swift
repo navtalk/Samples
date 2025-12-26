@@ -38,6 +38,7 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         } catch {
             print("Set up AVAudioSession1 fail: \(error)")
         }
+        
         //1.Initialize.
         var audioComponentDesc = AudioComponentDescription()
         //1.1AudioUnits are categorized into the following types：
@@ -114,14 +115,14 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             }else{
                 print("Start Audio Unit--fail")
                 print("Try record Audio again -- 1")
-                if WebSocketManager.shared.socket_status == .Connected || WebSocketManager.shared.socket_status == .UpdatedSession{
+                if WebSocketManager.shared.socket_status == .Connected{
                     self.startRecordAudio()
                 }
             }
         }else{
             print("Initialize Audio Unit--fail")
             print("Try record Audio again -- 2")
-            if WebSocketManager.shared.socket_status == .Connected || WebSocketManager.shared.socket_status == .UpdatedSession{
+            if WebSocketManager.shared.socket_status == .Connected{
                 self.startRecordAudio()
             }
         }
@@ -188,7 +189,6 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             }
             rmsValue = sqrt(rmsValue / Float(frameCount))
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "showMonitorAudioDataView"), object: ["rmsValue": Float(rmsValue)])
-            
         } else {
             print("AudioUnitRender failed with status: \(status)")
         }
@@ -199,6 +199,12 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             return
         }
         if WebSocketManager.shared.socket_status == .NotConnected || WebSocketManager.shared.socket_status == .Connectting{
+            return
+        }
+        if WebRTCManager.shared.webRTC_status != .Connected{
+            if self.local_record_Array.count > 0{
+                self.local_record_Array.removeFirst()
+            }
             return
         }
         let firstEventInfo = self.local_record_Array[0]
@@ -215,7 +221,7 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
                     if self.local_record_Array.count > 0{
                         self.local_record_Array.removeFirst()
                         self.sendMessageOneByOne()
-                        print("send message of audio data success---\(sequenceNumber)")
+                        //print("send message of audio data success---\(sequenceNumber)")
                     }
                 }
             }
