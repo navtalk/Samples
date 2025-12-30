@@ -11,7 +11,6 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         case NotConnected = 0
         case Connectting = 1
         case Connected = 2
-        case UpdatedSession = 3
     }
 
     //MARK: 1.init
@@ -25,19 +24,31 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     var socket: WebSocket!
 
     let baseUrl = "transfer.navtalk.ai"
+    //WebSocket URL
+    let websocketUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat"
+    // your api kye here
     let license = "Your Api Key"
-
-    // Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Lily, navtalk.Emma, navtalk.Sophia, ...
-    let characterName = "navtalk.Leo"
+    // Currently supported characters include:
+    // navtalk.Leo, navtalk.Emily, navtalk.Lisa
+    //https://docs.navtalk.ai/api/resources/avatars
+    let characterName = "navtalk.Freya"
+    // optional
+    let modelName = "gpt-realtime-mini"
+    
     // alloy/shimmer/ballad/coral/echo/ash/sage/verse
+    // https://docs.navtalk.ai/api/real-time-digital-human-api/voice-styles
     let voice_type = "verse"
-
+    
+    // Is or not save history chat message
+    var isOrNotSaveHistoryChatMessages = false
+    
     func connectWebSocketOfNavTalk(){
         if socket_status == .NotConnected{
             //(1).Get Full URL
             let encodedLicense = license.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
             let encodedCharacterName = characterName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            guard let url = URL(string: "wss://\(baseUrl)/api/realtime-api?license=\(encodedLicense)&characterName=\(encodedCharacterName)") else { return }
+            let encodedModelName = modelName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+            guard let url = URL(string: "\(websocketUrl)?license=\(encodedLicense)&name=\(encodedCharacterName)&model=\(encodedModelName)") else { return }
             //2.Connect Socket
             let request = URLRequest(url: url)
             socket = WebSocket(request: request)
@@ -50,25 +61,24 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         }else if socket_status == .Connectting{
             MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebSocket is currently connecting, please try again later.", subTitle: "", view: getCurrentVc().view)
         }
-
-
     }
 
     //MARK: 3.Disconnect NavTalk WebSocket
     func disconnectWebSocketOfNavTalk(){
         if socket_status == .Connected{
             socket.disconnect()
+            WebRTCManager.shared.disconnectWebRTC()
+            CameraCaptureManager.shared.stopRunningSession()
         }else if socket_status == .NotConnected{
             //MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebSocket is not connected, please connect it first.", subTitle: "", view:  getCurrentVc().view)
         }else if socket_status == .Connectting{
             socket.disconnect()
-        }else if socket_status == .UpdatedSession{
-            socket.disconnect()
+            WebRTCManager.shared.disconnectWebRTC()
+            CameraCaptureManager.shared.stopRunningSession()
         }
     }
     //MARK: 4.WebSocketDelegate： When webSocket received a message
     func didReceive(event: WebSocketEvent, client: WebSocketClient) {
-        print("===========================")
         switch event {
             case .connected(let headers):
                 print("WebSocket--WebSocket is connected:\(headers)")
@@ -117,7 +127,141 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         }
     }
 
-    //MARK: 5.Set this chat configuration parameters
+    //MARK: 5.Handle Recieved Message
+    var audio_String = ""
+    var audio_String_count = 0
+    func handleRecivedMeaage(message_string: String){
+        print("===========================")
+        //print("Handle Recieved Message:\(message_string)")
+        //(0).String-->Dictionary
+        let  message_jsonData = message_string.data(using: .utf8) ?? Data()
+        var message_dict = [String: Any]()
+        do {
+            if let dictionary = try JSONSerialization.jsonObject(with: message_jsonData, options: []) as? [String: Any] {
+                message_dict = dictionary
+            }
+        } catch {
+            print("********************")
+            print("Conver message string to dictionary is fail: \(message_string)")
+            print("Fail error is: \(error.localizedDescription)")
+            print("********************")
+            return
+        }
+        
+        guard let message_type = message_dict["type"] as? String else {
+            print("********************")
+            print("Can't get message type.")
+            print("********************")
+            return
+        }
+    
+        print("Handle Recieved Message -- Type is:\(message_type)")
+        
+        //(1).tye == conversation.connected.success:
+        //Connection established, sessionId contains iceServers for WebRTC
+        if message_type == "conversation.connected.success"{
+            print("conversation.connected.success:\(message_dict)")
+            let current_data = message_dict["data"] as? [String: Any] ?? [String: Any]()
+            let sessionId = current_data["sessionId"] as? String ?? message_dict["session_id"] as? String
+            let iceServers = current_data["iceServers"] as? [[String: Any]] ?? [[String: Any]]()
+            // Close existing WebRTC socket
+            WebRTCManager.shared.disconnectWebRTC()
+            // Setup paramDict
+            WebRTCManager.shared.targetSessionId = sessionId
+            WebRTCManager.shared.iceServers = iceServers
+            return
+        }
+        
+        //(2).type == realtime.session.created
+        //Need to set session configuration parameters
+        if message_type == "realtime.session.created"{
+            settingThisTalkConfiguration()
+            return
+        }
+        
+        //(3).type == realtime.session.updated
+        //Need to send history message date.
+        //Need to start record audio
+        if message_type == "realtime.session.updated"{
+            sendHistoryToCurrentChat()
+            RecordAudioManager.shared.startRecordAudio()
+            return
+        }
+        
+        //(4).type == realtime.input_audio_buffer.speech_started
+        //When OpenAI detects someone speaking, it returns the following message.
+        if message_type == "realtime.input_audio_buffer.speech_started"{
+            //print("===========================\nConfigure session Success")
+            return
+        }
+        //(5).type == realtime.response.audio.delta
+        //The audio data increment returned by OpenAI: divided into N packets sent sequentially to the frontend until all packets are sent.
+        if message_type == "realtime.response.audio.delta"{
+            if let delta = message_dict["delta"] as? String{
+                //You Can Play Audio with Iphone
+            }
+            return
+        }
+        //(6).type == realtime.response.audio_transcript.delta
+        //The transcribed text content of each incremental packet of audio data returned by OpenAI: divided into N packets sent sequentially to the frontend until all packets are sent.
+        if message_type == "realtime.response.audio_transcript.delta"{
+            return
+        }
+        //(7).type == realtime.conversation.item.input_audio_transcription.completed
+        //This is the complete transcribed text content of a detected speech question by OpenAI (the sum of all increments).
+        if message_type == "realtime.conversation.item.input_audio_transcription.completed"{
+            print("\(message_dict)")
+            if  let raw_data = message_dict["raw_data"] as? [String: Any],
+                let transcript = raw_data["transcript"] as? String{
+                let dict = ["text": transcript]
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "HaveInputText"), object: dict)
+            }
+        }
+        //(8).type == realtime.response.audio_transcript.done
+        //Complete a reply.
+        if message_type == "realtime.response.audio_transcript.done"{
+            print("\(message_dict)")
+            if let raw_data = message_dict["raw_data"] as? [String: Any],
+               let transcript = raw_data["transcript"] as? String,
+               transcript.count > 0{
+               let dict = ["text": transcript]
+               NotificationCenter.default.post(name: NSNotification.Name(rawValue: "HaveOutputText"), object: dict)
+            }
+        }
+        //(9).type == response.function_call_arguments.done
+        //Function call message
+        if message_type == "realtime.response.function_call_arguments.done"{
+            handleFunctionCall(message: message_dict)
+        }
+        
+        //(10).type == webrtc.signaling.offer
+        if message_type == "webrtc.signaling.offer"{
+            WebRTCManager.shared.handleOfferMessage(message: message_dict)
+        }
+        //(11).type == webrtc.signaling.answer
+        if message_type == "webrtc.signaling.answer"{
+            WebRTCManager.shared.handleAnswerMessage(message: message_dict)
+        }
+        //(12).type == webrtc.signaling.iceCandidate
+        if message_type == "webrtc.signaling.iceCandidate"{
+            WebRTCManager.shared.handleIceCandidateMessage(message: message_dict)
+        }
+        
+        //(13).Other:
+        //conversation.connected.fail
+        if message_type == "conversation.connected.fail"{
+            print("Connect websocket fail: \(message_dict)")
+        }
+        if message_type == "conversation.connected.close"{
+            print("WebSocket is closed: \(message_dict)")
+        }
+        if message_type == "conversation.connected.insufficient_balance"{
+            print("WebSocket is closed: \(message_dict)")
+        }
+        
+    }
+    
+    //MARK: 6.Set this chat configuration parameters
     func settingThisTalkConfiguration(){
         var sessionConfig = [String: Any]()
         sessionConfig["type"] = "session.update"
@@ -157,99 +301,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
         }
     }
 
-    //MARK: 6.Handle Recieved Message
-    var audio_String = ""
-    var audio_String_count = 0
-    func handleRecivedMeaage(message_string: String){
-        //print("Handle Recieved Message:\(message_string)")
-        //(1).String-->Dictionary
-        let  message_jsonData = message_string.data(using: .utf8) ?? Data()
-        var message_dict = [String: Any]()
-        do {
-            if let dictionary = try JSONSerialization.jsonObject(with: message_jsonData, options: []) as? [String: Any] {
-                message_dict = dictionary
-            }
-        } catch {
-            print("Conver Fail: \(error.localizedDescription)")
-        }
-        if let type = message_dict["type"] as? String, type == "response.audio.delta"{
-
-        }else{
-            print("Handle Recieved Message:\(message_dict)")
-        }
-        //(2).if feedback: session.created，need to set session configuration parameters
-        if let type = message_dict["type"] as? String, type == "session.created"{
-            settingThisTalkConfiguration()
-            return
-        }
-
-        //(3).if feedback: session.updated, this chat has updated success.
-        if let type = message_dict["type"] as? String, type == "session.updated"{
-            print("===========================\nConfigure session Success")
-            RecordAudioManager.shared.startRecordAudio()
-            self.socket_status = .UpdatedSession
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
-            return
-        }
-        
-        //(3.5).if feedback: session.session_id, setup WebRTC signaling connection
-        if let type = message_dict["type"] as? String, type == "session.session_id"{
-            print("===========================\nReceived session.session_id")
-            let sessionId = message_dict["sessionId"] as? String ?? message_dict["session_id"] as? String
-            if let sessionId = sessionId, sessionId != WebRTCManager.shared.proxySessionId {
-                print("Received proxy session_id: \(sessionId)")
-                WebRTCManager.shared.proxySessionId = sessionId
-                // Close existing WebRTC socket if any
-                if WebRTCManager.shared.webRTC_socket_status == .Connected || WebRTCManager.shared.webRTC_socket_status == .Connectting {
-                    WebRTCManager.shared.disconnectRTCWebSocketOfNavTalk()
-                }
-                // Setup WebRTC signaling connection
-                WebRTCManager.shared.setupSignalingSocketIfReady()
-            }
-            return
-        }
-        //(4).input_audio_buffer.speech_started:
-        //When OpenAI detects someone speaking, it returns the following message.
-        if let type = message_dict["type"] as? String, type == "input_audio_buffer.speech_started"{
-            //print("===========================\nConfigure session Success")
-            return
-        }
-        //(5).The audio data increment returned by OpenAI: divided into N packets sent sequentially to the frontend until all packets are sent.
-        if let type = message_dict["type"] as? String, type == "response.audio.delta"{
-            if let delta = message_dict["delta"] as? String{
-                //You Can Play Audio with Iphone
-            }
-        }
-        //(6).The transcribed text content of each incremental packet of audio data returned by OpenAI: divided into N packets sent sequentially to the frontend until all packets are sent.
-        if let type = message_dict["type"] as? String, type == "response.audio_transcript.delta"{
-        }
-        //(7).This is the complete transcribed text content of a detected speech question by OpenAI (the sum of all increments).
-        if let type = message_dict["type"] as? String, type == "conversation.item.input_audio_transcription.completed"{
-            if let transcript = message_dict["transcript"] as? String{
-                let dict = ["text": transcript]
-                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "HaveInputText"), object: dict)
-            }
-        }
-        //(8).Complete a reply.
-        if let type = message_dict["type"] as? String, type == "response.done"{
-            if let response = message_dict["response"] as? [String: Any],
-               let output = response["output"] as? [[String: Any]],
-               output.count > 0,
-               let first_output = output.first,
-               let content = first_output["content"] as? [[String: Any]],
-               content.count > 0,
-               let first_content = content.first,
-               let transcript = first_content["transcript"] as? String{
-                  let dict = ["text": transcript]
-                  NotificationCenter.default.post(name: NSNotification.Name(rawValue: "HaveOutputText"), object: dict)
-            }
-        }
-        //(9).response.function_call_arguments.done
-        if let type = message_dict["type"] as? String, type == "response.function_call_arguments.done"{
-            handleFunctionCall(message: message_dict)
-        }
-
-    }
+    
     //MARK: 7.Send History
     func sendHistoryToCurrentChat(){
         let allMessageModels = superVC.allMessageModels
@@ -288,13 +340,22 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     func handleFunctionCall(message: [String: Any]){
         print("Handle Function Call:\(message)")
        /*
-       ["call_id": call_FpjEsnhzjawKwfye, "event_id": event_CL1O3Hwh8vmP9zbCSM648, "output_index": 0, "arguments": {
-         "userInput": "***"
-       }
-       , "type": response.function_call_arguments.done, "item_id": item_CL1O2jXM1jTwuUKWhfLP6, "name": function_call_close_talk, "response_id": resp_CL1O2od9yCw9OYKNb31Vi]
+        ["type": realtime.response.function_call_arguments.done, "raw_data": {
+            arguments = "{\"userInput\":\"\U5173\U95ed\"}";
+            "call_id" = "call_Js0w3d5Ad8ZFmaKc";
+            "event_id" = "event_CqUqFuBfEHd1cYZkA0z6N";
+            "item_id" = "item_CqUqF9UiXWQanOTyb1Qo8";
+            name = "function_call_close_talk";
+            "output_index" = 0;
+            "response_id" = "resp_CqUqF2s1G0OxyXAMKiLrF";
+            type = "response.function_call_arguments.done";
+        }, "data": {
+        }]
        */
-        if let name = message["name"] as? String, name == "function_call_close_talk"{
-            self.superVC.clickStopTapView()
+        if let raw_data = message["raw_data"] as? [String: Any],
+           let name = raw_data["name"] as? String,
+           name == "function_call_close_talk"{
+            self.superVC.clickOpenOrCloesCallStatusButton()
         }
     }
 }

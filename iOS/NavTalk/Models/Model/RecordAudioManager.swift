@@ -8,6 +8,8 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     var local_record_buffers = [AVAudioPCMBuffer]()
     var local_record_Array = [[String: Any]]()
     
+    var recordSatus = "no"
+    
     static let shared = RecordAudioManager()
     private override init(){
         super.init()
@@ -111,17 +113,19 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             print("Initialize Audio Unit--Success")
             if AudioOutputUnitStart(audioUnit) == noErr{
                 print("Start Audio Unit--Success")
+                self.recordSatus = "yes"
+                NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
             }else{
                 print("Start Audio Unit--fail")
                 print("Try record Audio again -- 1")
-                if WebSocketManager.shared.socket_status == .Connected || WebSocketManager.shared.socket_status == .UpdatedSession{
+                if WebSocketManager.shared.socket_status == .Connected{
                     self.startRecordAudio()
                 }
             }
         }else{
             print("Initialize Audio Unit--fail")
             print("Try record Audio again -- 2")
-            if WebSocketManager.shared.socket_status == .Connected || WebSocketManager.shared.socket_status == .UpdatedSession{
+            if WebSocketManager.shared.socket_status == .Connected{
                 self.startRecordAudio()
             }
         }
@@ -171,7 +175,9 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             current_audio_data["type"] = "input_audio_buffer.append"
             current_audio_data["audio"] = data_base64
             current_audio_data["sequenceNumber"] = Int(RecordAudioManager.shared.count)
-            RecordAudioManager.shared.local_record_Array.append(current_audio_data)
+            if RecordAudioManager.shared.recordSatus == "yes"{
+                RecordAudioManager.shared.local_record_Array.append(current_audio_data)
+            }
             if RecordAudioManager.shared.count == 0 || RecordAudioManager.shared.local_record_Array.count == 1{
                 RecordAudioManager.shared.sendMessageOneByOne()
             }
@@ -188,17 +194,25 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             }
             rmsValue = sqrt(rmsValue / Float(frameCount))
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "showMonitorAudioDataView"), object: ["rmsValue": Float(rmsValue)])
-            
         } else {
             print("AudioUnitRender failed with status: \(status)")
         }
         return noErr
     }
     func sendMessageOneByOne(){
+        if self.recordSatus == "no"{
+            return
+        }
         if self.local_record_Array.count <= 0{
             return
         }
         if WebSocketManager.shared.socket_status == .NotConnected || WebSocketManager.shared.socket_status == .Connectting{
+            return
+        }
+        if WebRTCManager.shared.webRTC_status != .Connected{
+            if self.local_record_Array.count > 0{
+                self.local_record_Array.removeFirst()
+            }
             return
         }
         let firstEventInfo = self.local_record_Array[0]
@@ -234,5 +248,15 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             }
         }
     }
-
+    //MARK: 4.Pause send audio to AI
+    func pauseSendAudioMessageToAI(){
+        self.recordSatus = "no"
+        NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+    }
+    //MARK: 5.Stat send audio to AI
+    func startSendAudioMessageToAI(){
+        self.local_record_Array.removeAll()
+        self.recordSatus = "yes"
+        NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+    }
 }

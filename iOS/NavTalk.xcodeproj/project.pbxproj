@@ -8,6 +8,7 @@
 
 /* Begin PBXBuildFile section */
 		175AB6533E5A1965BDB960D2 /* Pods_NavTalk.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 72A4A354636D9D3F9B4FF581 /* Pods_NavTalk.framework */; };
+		A93785F52EFD0EAB001F41EF /* CameraCaptureManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93785F42EFD0EAB001F41EF /* CameraCaptureManager.swift */; };
 		A94A34012E85413900563F7A /* RecordAudioManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = A94A34002E85413900563F7A /* RecordAudioManager.swift */; };
 		A9779AB62E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = A9779AB42E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift */; };
 		A9779AB72E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib in Resources */ = {isa = PBXBuildFile; fileRef = A9779AB52E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib */; };
@@ -27,6 +28,7 @@
 /* Begin PBXFileReference section */
 		72A4A354636D9D3F9B4FF581 /* Pods_NavTalk.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_NavTalk.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		8FB263EC3324E36043610D5F /* Pods-NavTalk.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-NavTalk.debug.xcconfig"; path = "Target Support Files/Pods-NavTalk/Pods-NavTalk.debug.xcconfig"; sourceTree = "<group>"; };
+		A93785F42EFD0EAB001F41EF /* CameraCaptureManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = CameraCaptureManager.swift; sourceTree = "<group>"; };
 		A94A34002E85413900563F7A /* RecordAudioManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RecordAudioManager.swift; sourceTree = "<group>"; };
 		A9779AB42E8A2EB5002E9831 /* ChatTableViewQuestionCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChatTableViewQuestionCell.swift; sourceTree = "<group>"; };
 		A9779AB52E8A2EB5002E9831 /* ChatTableViewQuestionCell.xib */ = {isa = PBXFileReference; lastKnownFileType = file.xib; path = ChatTableViewQuestionCell.xib; sourceTree = "<group>"; };
@@ -144,6 +146,7 @@
 				A9C0AAF62E85143F004F64C9 /* WebSocketManager.swift */,
 				A9C0AAF82E85144F004F64C9 /* WebRTCManager.swift */,
 				A94A34002E85413900563F7A /* RecordAudioManager.swift */,
+				A93785F42EFD0EAB001F41EF /* CameraCaptureManager.swift */,
 			);
 			path = Model;
 			sourceTree = "<group>";
@@ -284,6 +287,7 @@
 				A94A34012E85413900563F7A /* RecordAudioManager.swift in Sources */,
 				A9779ABB2E8A74DB002E9831 /* NetworkMonitor.swift in Sources */,
 				A9C0AAF52E84D57D004F64C9 /* RealTimeTalkVC.swift in Sources */,
+				A93785F52EFD0EAB001F41EF /* CameraCaptureManager.swift in Sources */,
 				A9C0AAF72E85143F004F64C9 /* WebSocketManager.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -310,7 +314,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 65GGU7L5YK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NavTalk/Info.plist;
@@ -350,7 +354,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CLANG_ENABLE_MODULES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				CURRENT_PROJECT_VERSION = 1;
+				CURRENT_PROJECT_VERSION = 5;
 				DEVELOPMENT_TEAM = 65GGU7L5YK;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = NavTalk/Info.plist;

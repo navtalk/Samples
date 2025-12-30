@@ -4,23 +4,14 @@ import WebRTC
 import AVFoundation
 import Starscream
 
-class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
+class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
     
     var superVC: RealTimeTalkVC!
     
-    private var webSocket: WebSocket!
-    private var webSocketTask: URLSessionWebSocketTask?
-    private var RTC_URL = "stun:stun.l.google.com:19302"
-    private var peerConnection: RTCPeerConnection?
+    var peerConnection: RTCPeerConnection?
     private var peerConnectionFactory: RTCPeerConnectionFactory?
-    var proxySessionId: String?
-    private var targetSessionId: String?
-    
-    enum webRTCSocketStatus: Int{
-        case NotConnected = 0
-        case Connectting = 1
-        case Connected = 2
-    }
+    var iceServers: [[String: Any]]?
+    var targetSessionId: String?
     
     enum webRTCStatus: Int{
         case NotConnected = 0
@@ -36,148 +27,12 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         self.peerConnectionFactory = RTCPeerConnectionFactory.init()
     }
     
-    //MARK: 2.Craere WebSocket-WebRTC
-    var webRTC_socket_status: webRTCSocketStatus = .NotConnected
-    func connectWebRTCOfNavTalk(){
-        if webRTC_socket_status == .NotConnected{
-            gotoConnectSingalSocket()
-        }else if webRTC_socket_status == .Connected{
-            MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebRTC is already connected, no need to connect again.", subTitle: "", view:  getCurrentVc().view)
-        }else if webRTC_socket_status == .Connectting{
-            MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebRTC is currently connecting, please try again later.", subTitle: "", view: getCurrentVc().view)
-        }
-    }
-    //MARK: 2.1.WebSocket Data Chanel：
-    func gotoConnectSingalSocket(){
-        // Don't connect immediately, wait for session.session_id event
-        // The connection will be established in setupSignalingSocketIfReady()
-        print("WebRTC signaling socket will be established after receiving session.session_id")
-    }
-    
-    //MARK: 2.1.1.Setup Signaling Socket If Ready
-    func setupSignalingSocketIfReady(){
-        guard let sessionId = proxySessionId, webRTC_socket_status == .NotConnected else {
-            print("Cannot setup signaling socket: proxySessionId is nil or already connected")
-            return
-        }
-        
-        // Close existing socket if any
-        if webSocket != nil {
-            webSocket.disconnect()
-            webSocket = nil
-        }
-        
-        targetSessionId = "target-\(sessionId)"
-        let encodedSessionId = sessionId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-        guard let url = URL(string: "wss://\(WebSocketManager.shared.baseUrl)/api/webrtc?userId=\(encodedSessionId)") else {
-            print("Failed to create WebRTC signaling URL")
-            return
-        }
-        
-        print("Starting WebRTC signaling connection for session: \(sessionId)")
-        let request = URLRequest(url: url)
-        webSocket = WebSocket(request: request)
-        webSocket.delegate = self
-        webSocket.connect()
-        webRTC_socket_status = .Connectting
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_socket_status_changed"), object: nil)
-    }
-    //MARK: 2.2.WebSocketDelegate：
-    func didReceive(event: WebSocketEvent, client: WebSocketClient) {
-        print("===========================")
-        switch event {
-        case .connected(let headers):
-            print("RTC-WebSocket is connected:\(headers)")
-            webRTC_socket_status = .Connected
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_socket_status_changed"), object: nil)
-            break
-        case .disconnected(let reason, let code):
-            print("RTC-WebSocket disconnected: \(reason) with code: \(code)")
-            webRTC_socket_status = .NotConnected
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_socket_status_changed"), object: nil)
-            break
-        case .text(let text):
-            print("RTC-Received text message:")
-            self.handleRecivedMeaage(message_string: text)
-        case .binary(let data):
-            print("RTC-Process the returned binary data (such as audio data): \(data.count)")
-            break
-        case .pong(let data):
-            print("RTC-Received pong: \(String(describing: data))")
-            break
-        case .ping(let data):
-            print("RTC-Received ping: \(String(describing: data))")
-            break
-        case .error(let error):
-            print("RTC-Error: \(String(describing: error))")
-            break
-        case .viabilityChanged(let isViable):
-            print("RTC-WebSocket feasibility has changed: \(isViable)")
-            break
-        case .reconnectSuggested(let isSuggested):
-            print("RTC-Reconnect suggested: \(isSuggested)")
-            break
-        case .cancelled:
-            print("RTC-WebSocket was cancelled")
-            break
-        case .peerClosed:
-            print("RTC-WebSocket peer closed")
-            webRTC_socket_status = .NotConnected
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_socket_status_changed"), object: nil)
-        }
-    }
-    //MARK: 2.3.Send Start Command
-    func gotoSendStartCommand(){
-        guard let currentTargetSessionId = targetSessionId else {
-            print("Cannot send start command: targetSessionId is nil")
-            return
-        }
-        var sessionConfig = [String: Any]()
-        sessionConfig["type"] = "create"
-        sessionConfig["targetSessionId"] = currentTargetSessionId
-        print("===========================\nSend Start Command:\(sessionConfig)")
-        if let jsonData = try? JSONSerialization.data(withJSONObject: sessionConfig),
-           let jsonString = String(data: jsonData, encoding: .utf8){
-            WebRTCManager.shared.webSocket.write(string: jsonString) {
-                print("===========================\nSend Start Command--Success")
-            }
-        }
-    }
-    //MARK: 2.4.Handle Recieved Message：
-    func handleRecivedMeaage(message_string: String){
-        //(0).String-->Dictionary
-        let  message_jsonData = message_string.data(using: .utf8) ?? Data()
-        var message_dict = [String: Any]()
-        do {
-            if let dictionary = try JSONSerialization.jsonObject(with: message_jsonData, options: []) as? [String: Any] {
-                message_dict = dictionary
-            }
-        } catch {
-            print("Conver Fail: \(error.localizedDescription)")
-        }
-        print("RTC--socket--Handle Recieved Message:\(message_dict)")
-        
-        //(1).offer
-        if let type = message_dict["type"] as? String, type == "offer"{
-            handleOfferMessage(message: message_dict)
-        }
-        //(2).answer
-        if let type = message_dict["type"] as? String, type == "answer"{
-            handleAnswerMessage(message: message_dict)
-        }
-        //(3).iceCandidate
-        if let type = message_dict["type"] as? String, type == "iceCandidate"{
-            handleIceCandidateMessage(message: message_dict)
-        }
-    }
-    //MARK: (1).Hnadle Offer
+    //MARK: 2.Hnadle Offer
     func handleOfferMessage(message: [String: Any]){
+        print("=========")
+        print("Offer Message:\(message)")
         
-        print("=========\nRTC--Hnadle Offer")
-        webRTC_status = .Connectting
-        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
-        
-        guard let current_targetSessionId = message["targetSessionId"] as? String else{
+        guard let current_targetSessionId = targetSessionId else{
             webRTC_status = .NotConnected
             NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
             return
@@ -186,7 +41,15 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         configureAudioSessionToSpeakerForWebRTC()
       
         let config = RTCConfiguration()
-        config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
+        //config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
+        guard let current_iceServers = iceServers else {
+            print("Can't get iceServers.")
+            return
+        }
+        //print("current_iceServers:\(current_iceServers)")
+        let current_iceServers_array = parseIceServers(from: current_iceServers)
+        //print("current_iceServers_array:\(current_iceServers_array)")
+        config.iceServers = current_iceServers_array
         config.iceTransportPolicy = .all
         config.rtcpMuxPolicy = .require
         config.bundlePolicy = RTCBundlePolicy.maxBundle
@@ -197,15 +60,19 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         let constraints0 = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
         self.peerConnection = self.peerConnectionFactory?.peerConnection(with: config, constraints:constraints0, delegate: self)
     
-        guard let offer_sdp_dict = message["sdp"] as? [String: Any] else{ return }
+        guard let offer_date_dict = message["data"] as? [String: Any] else{ return }
+        guard let offer_sdp_dict = offer_date_dict["sdp"] as? [String: Any] else{return}
         guard let offer_sdp_string = offer_sdp_dict["sdp"] as? String else{return}
+        
+        self.webRTC_status = .Connectting
+        NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
+        
         let remoteOffer = RTCSessionDescription(type: .offer, sdp: offer_sdp_string)
         self.peerConnection?.setRemoteDescription(remoteOffer, completionHandler: { error1 in
             if let error1 = error1 {
                 print("Set Offer SDP Fail: \(error1)")
                 return
             }
-            
             //create Answer
             let mandatoryConstraints1 = ["OfferToReceiveAudio": "true","OfferToReceiveVideo": "true"]
             let constraints1 = RTCMediaConstraints(mandatoryConstraints: mandatoryConstraints1, optionalConstraints: nil)
@@ -226,13 +93,12 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
                     }
                     //(6).Send Answer To Socket
                     var answer_param = [String: Any]()
-                    answer_param["type"] = "answer"
-                    answer_param["targetSessionId"] = current_targetSessionId
-                    answer_param["sdp"] = ["type": "answer", "sdp": current_local_sdp.sdp]
+                    answer_param["type"] = "webrtc.signaling.answer"
+                    answer_param["data"] = ["sdp": ["type": "answer", "sdp": current_local_sdp.sdp]]
                     print("===========================\nSend Answer To Socket:\(answer_param)")
                     if let jsonData = try? JSONSerialization.data(withJSONObject: answer_param),
                        let jsonString = String(data: jsonData, encoding: .utf8){
-                        WebRTCManager.shared.webSocket.write(string: jsonString) {
+                        WebSocketManager.shared.socket.write(string: jsonString) {
                             print("===========================\nSend Answer To Socket--Success")
                         }
                     }
@@ -240,42 +106,57 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
             })
         })
     }
+    func parseIceServers(from rawServers: [[String: Any]]) -> [RTCIceServer] {
+        var iceServers: [RTCIceServer] = []
+
+        for server in rawServers {
+            guard let urls = server["urls"] as? [String] else { continue }
+
+            let username = server["username"] as? String
+            let credential = server["credential"] as? String
+
+            if let username = username, let credential = credential {
+                let iceServer = RTCIceServer(
+                    urlStrings: urls,
+                    username: username,
+                    credential: credential
+                )
+                iceServers.append(iceServer)
+            } else {
+                let iceServer = RTCIceServer(urlStrings: urls)
+                iceServers.append(iceServer)
+            }
+        }
+
+        return iceServers
+    }
     
-    //MARK: (2).Hnadle Answer
+    //MARK: 4.Hnadle Answer
     func handleAnswerMessage(message: [String: Any]){
-        print("=========\nRTC--Hnadle Answer")
+        print("=========")
+        print("Answer Message:\(message)")
         guard let sdpDict = message["sdp"] as? [String: Any],
         let sdpString = sdpDict["sdp"] as? String else { return }
         let answer = RTCSessionDescription(type: .answer, sdp: sdpString)
         peerConnection?.setRemoteDescription(answer)
     }
-    //MARK: (3).Hnadle IceCandidate
+    //MARK:5.Hnadle IceCandidate
     func handleIceCandidateMessage(message: [String: Any]){
-        print("=========\nRTC--Hnadle IceCandidate")
-        guard let candidateDict = message["candidate"] as? [String: Any],
-              let sdp = candidateDict["candidate"] as? String,
-              let sdpMLineIndex = candidateDict["sdpMLineIndex"] as? Int32,
-              let sdpMid = candidateDict["sdpMid"] as? String else { return }
+        print("=========")
+        print("IceCandidate Message:\(message)")
+        guard let data = message["data"] as? [String: Any],
+                  let candidateDict = data["candidate"] as? [String: Any],
+                  let sdp = candidateDict["candidate"] as? String,
+                  let sdpMLineIndex = candidateDict["sdpMLineIndex"] as? Int32,
+                  let sdpMid = candidateDict["sdpMid"] as? String else { return }
+
         let candidate = RTCIceCandidate(sdp: sdp, sdpMLineIndex: sdpMLineIndex, sdpMid: sdpMid)
         peerConnection?.add(candidate)
     }
 
-    //MARK: 2.5.Disconnect NavTalk RTC - WebSocket
-    func disconnectRTCWebSocketOfNavTalk(){
-        if webRTC_socket_status == .Connected{
-            webSocket.disconnect()
-        }else if webRTC_socket_status == .NotConnected{
-            //MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebSocket Of RTC is not connected, please connect it first.", subTitle: "", view:  getCurrentVc().view)
-        }else if webRTC_socket_status == .Connectting{
-            webSocket.disconnect()
-        }
-        proxySessionId = nil
-        targetSessionId = nil
-    }
-    
-    //MARK: 3.PeerConnectionDelegate
+    //MARK: 6.PeerConnectionDelegate
     var webRTC_status: webRTCStatus = .NotConnected
-    //MARK: 3.1.PeerConnection
+    //MARK: 6.1.PeerConnection
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
         print("peerConnection--RTCIceConnectionState--Changed--->\(newState.rawValue)")
         switch newState {
@@ -334,7 +215,7 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
          */
         print("peerConnection--RTCSignalingState--Changed--->\(stateChanged.rawValue)")
     }
-    //MARK: 3.2.Get Remote Video View
+    //MARK: 6.2.Get Remote Video View
     func peerConnection(_ peerConnection: RTCPeerConnection, didAdd rtpReceiver: RTCRtpReceiver, streams: [RTCMediaStream]) {
         if let track = rtpReceiver.track as? RTCVideoTrack {
             print("111-stream.videoTracks:\(track)")
@@ -364,7 +245,7 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         }
     }
     
-    //MARK: 3.3.Set To Speaker
+    //MARK: 6.3.Set To Speaker
     func configureAudioSessionToSpeakerForWebRTC() {
         let session = AVAudioSession.sharedInstance()
         do {
@@ -385,24 +266,26 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceGatheringState) {
         
     }
-    //MARK: 3.4.Local ICE Candidate
+    //MARK: 6.4.Local ICE Candidate
     func peerConnection(_ peerConnection: RTCPeerConnection, didGenerate candidate: RTCIceCandidate) {
         guard let currentTargetSessionId = targetSessionId else {
             print("Cannot send ICE candidate: targetSessionId is nil")
             return
         }
+        print("========")
         let message: [String: Any] = [
-            "type": "iceCandidate",
-            "targetSessionId": currentTargetSessionId,
-            "candidate": [
-                "candidate": candidate.sdp,
-                "sdpMLineIndex": candidate.sdpMLineIndex,
-                "sdpMid": candidate.sdpMid ?? ""
+            "type": "webrtc.signaling.iceCandidate",
+            "data": [
+                "candidate":[
+                    "candidate": candidate.sdp,
+                    "sdpMLineIndex": candidate.sdpMLineIndex,
+                    "sdpMid": candidate.sdpMid ?? ""
+                ]
             ]
         ]
         if let data = try? JSONSerialization.data(withJSONObject: message),
            let jsonString = String(data: data, encoding: .utf8) {
-            webSocket.write(string: jsonString)
+            WebSocketManager.shared.socket.write(string: jsonString)
             print("ICE Candidate Have Sended:\(message)")
         }
     }
@@ -413,9 +296,43 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
     func peerConnection(_ peerConnection: RTCPeerConnection, didOpen dataChannel: RTCDataChannel) {
         
     }
-    
+    // Send Offer Message：
     func peerConnectionShouldNegotiate(_ peerConnection: RTCPeerConnection) {
-        
+        print("=========")
+        print("Get peerConnectionShouldNegotiate, now need send offer message")
+        let constraints = RTCMediaConstraints(mandatoryConstraints: nil, optionalConstraints: nil)
+            peerConnection.offer(for: constraints) { [weak self] offer, error in
+                guard let self = self else { return }
+                if let error = error {
+                    print("Failed to create offer: \(error)")
+                    return
+                }
+                guard let offer = offer else { return }
+                peerConnection.setLocalDescription(offer) { error in
+                    if let error = error {
+                        print("Failed to set local description: \(error)")
+                        return
+                    }
+                    self.sendOfferMessage(offer)
+                }
+        }
+    }
+    func sendOfferMessage(_ offer: RTCSessionDescription) {
+        guard let targetSessionId = targetSessionId else { return }
+        let message: [String: Any] = [
+            "type": "webrtc.signaling.offer",
+            "data": [
+                "sdp": [
+                    "type": "offer",
+                    "sdp": offer.sdp
+                ]
+            ]
+        ]
+        if let data = try? JSONSerialization.data(withJSONObject: message),
+           let jsonString = String(data: data, encoding: .utf8) {
+            WebSocketManager.shared.socket.write(string: jsonString)
+            print("Offer sent success:\n\(message)")
+        }
     }
     
     func dataChannel(_ dataChannel: RTCDataChannel, didReceiveMessageWith buffer: RTCDataBuffer) {
@@ -426,18 +343,22 @@ class WebRTCManager: NSObject, WebSocketDelegate, RTCPeerConnectionDelegate, RTC
         
     }
     
-    //MARK: 3.5.RTCVideoViewDelegate
+    //MARK: 5.5.RTCVideoViewDelegate
     func videoView(_ videoView: RTCVideoRenderer, didChangeVideoSize size: CGSize) {
+        print("RTCVideoRenderer->didChangeVideoSize")
         self.remoteVideoView.isHidden = false
     }
     
-    //MARK: 3.6.Disconnect WebRTC
+    //MARK: 5.6.Disconnect WebRTC
     func disconnectWebRTC(){
         if webRTC_status == .Connected{
+            remoteVideoView.isHidden = true
+            remoteVideoView.removeFromSuperview()
             peerConnection?.close()
             peerConnection = nil
             remoteVideoTrack = nil
-            remoteVideoView.removeFromSuperview()
+            targetSessionId = nil
+            iceServers = nil
         }
     }
 }
