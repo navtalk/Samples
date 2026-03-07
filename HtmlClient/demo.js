@@ -1,20 +1,40 @@
+// NavTalk v2 API Message Type Constants
+const NavTalkMessageType = Object.freeze({
+    CONNECTED_SUCCESS: "conversation.connected.success",
+    CONNECTED_FAIL: "conversation.connected.fail",
+    CONNECTED_CLOSE: "conversation.connected.close",
+    INSUFFICIENT_BALANCE: "conversation.connected.insufficient_balance",
+    CONNECTION_LIMIT_EXCEEDED: "conversation.connected.connection_limit_exceeded",
+    GPU_FULL: "conversation.connected.gpu_full",
+    BACKEND_ERROR: "conversation.connected.backend_error",
+    WEB_RTC_OFFER: "webrtc.signaling.offer",
+    WEB_RTC_ANSWER: "webrtc.signaling.answer",
+    WEB_RTC_ICE_CANDIDATE: "webrtc.signaling.iceCandidate",
+    REALTIME_SESSION_CREATED: "realtime.session.created",
+    REALTIME_SESSION_UPDATED: "realtime.session.updated",
+    REALTIME_SPEECH_STARTED: "realtime.input_audio_buffer.speech_started",
+    REALTIME_SPEECH_STOPPED: "realtime.input_audio_buffer.speech_stopped",
+    REALTIME_CONVERSATION_ITEM_COMPLETED: "realtime.conversation.item.input_audio_transcription.completed",
+    REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA: "realtime.response.audio_transcript.delta",
+    REALTIME_RESPONSE_AUDIO_DELTA: "realtime.response.audio.delta",
+    REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE: "realtime.response.audio_transcript.done",
+    REALTIME_RESPONSE_AUDIO_DONE: "realtime.response.audio.done",
+    REALTIME_INPUT_AUDIO_BUFFER_APPEND: "realtime.input_audio_buffer.append",
+    REALTIME_INPUT_TEXT: "realtime.input_text",
+    REALTIME_INPUT_IMAGE: "realtime.input_image",
+    UNKNOWN_TYPE: "unknown"
+});
+
 // ❗You need to manually modify the following variables.
 // ✒️ api key
-const LICENSE = "sk_navtalk_your_key"
+const LICENSE = "sk_navtalk_pbxJGVOTi7XYtzFaVQ2kSlgezTF426sI"
 
 // ✒️ // ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const CHARACTER_NAME = "navtalk.Zoe"
 
-// ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
-// You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
-const VOICE = "cedar"
-
-// ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
-const PROMPT = "You are a helpful assistant."
-
-// web server url
-let baseUrl = "transfer.navtalk.ai"
+// web server url (v2 uses unified endpoint)
+let baseUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat"
 
 // Global variable for connection state
 let peerConnectionA = null;
@@ -52,11 +72,14 @@ async function initDigtalHumanRealtimeButton() {
     let currentAudioSource = null; // Currently playing audio source
 
     let audioQueue = []; // Used to store audio chunks
+    let isPlaying = false; // Flag to indicate whether audio is currently playing
     // Use a Map to store the span element corresponding to each response_id
     let responseSpans = new Map();
 
+    let playVideo = false;
     // Define a buffer object to accumulate incomplete Markdown content
     let markdownBuffer = new Map();
+    let pendingUserMessageSpan = null; // Store reference to user message placeholder
 
     realtimeButton.addEventListener('click', async function () {
         const staticImage = document.getElementById('character-static-image');
@@ -119,20 +142,6 @@ async function initDigtalHumanRealtimeButton() {
         try {
             console.log('Starting cleanup');
 
-            if (pc) {
-                console.log('Closing PeerConnection');
-                pc.removeEventListener('icecandidate', on_icecandidate);
-                pc.removeEventListener('connectionstatechange', on_connectionstatechange);
-                pc.removeEventListener('iceconnectionstatechange', iceconnectionstatechange);
-                pc.removeEventListener('signalingstatechange', signalingstatechange);
-
-                if (pc.connectionState !== 'closed') {
-                    await pc.close();
-                    console.log('PeerConnection closed');
-                }
-                pc = null;
-            }
-
             if (peerConnectionA) {
                 console.log('Closing peerConnectionA');
                 peerConnectionA.onicecandidate = null;
@@ -140,13 +149,6 @@ async function initDigtalHumanRealtimeButton() {
                 peerConnectionA = null;  // Ensure it's completely reset
             }
 
-            currentTracks.forEach(track => {
-                if (track.stop) track.stop();
-                if (track.dispatchEvent) {
-                    track.dispatchEvent(new Event('ended'));
-                }
-            });
-            currentTracks = [];
             console.log('Tracks cleaned up');
 
             const remoteVideo = document.getElementById('character-avatar-video');
@@ -155,14 +157,6 @@ async function initDigtalHumanRealtimeButton() {
                 remoteVideo.removeAttribute('src');
                 remoteVideo.load();
             }
-
-            if (resultSocket) {
-                console.log('Closing resultSocket');
-                resultSocket.close();
-                resultSocket = null;
-            }
-            proxySessionId = null;
-            targetSessionId = null;
 
             await new Promise(resolve => setTimeout(resolve, 100));
             console.log('Cleanup complete');
@@ -174,14 +168,9 @@ async function initDigtalHumanRealtimeButton() {
     async function startWebSocket() {
         try {
             proxySessionId = null;
-            if (resultSocket) {
-                console.log('Closing previous WebRTC result socket before reconnecting');
-                resultSocket.close();
-                resultSocket = null;
-            }
-            websocketUrl = "wss://"+baseUrl+"/api/realtime-api";
-            // Retrieve license information from Chrome storage
-            const websocketUrlWithParams = `${websocketUrl}?license=${encodeURIComponent(LICENSE)}&characterName=${CHARACTER_NAME}`;
+            // v2 uses unified WebSocket connection, no separate resultSocket needed
+            // v2 uses 'name' parameter instead of 'characterName'
+            const websocketUrlWithParams = `${baseUrl}?license=${encodeURIComponent(LICENSE)}&name=${CHARACTER_NAME}`;
 
             // Initialize the WebSocket connection
             socket = new WebSocket(websocketUrlWithParams);
@@ -243,77 +232,13 @@ async function initDigtalHumanRealtimeButton() {
 
     const remoteVideoA = document.getElementById('character-avatar-video');
 
-    function setupSignalingSocketIfReady() {
-        if (!proxySessionId || resultSocket) {
-            return;
-        }
-
-        targetSessionId = `target-${proxySessionId}`;
-        const queryString = new URLSearchParams({ userId: proxySessionId }).toString();
-        const signalingUrl = `wss://${baseUrl}/api/webrtc?${queryString}`;
-
-        console.log("Start connecting " + (new Date()).toLocaleTimeString());
-        console.log("Opening WebRTC result socket:", signalingUrl);
-        resultSocket = new WebSocket(signalingUrl);
-
-        resultSocket.onopen = () => {
-            console.log("WebSocketResult connection established.");
-            console.log("Connection successful " + (new Date()).toLocaleTimeString());
-            const message = { type: 'create', targetSessionId: targetSessionId };
-            resultSocket.send(JSON.stringify(message));
-        };
-
-        resultSocket.onmessage = (event) => {
-            try {
-                const message = JSON.parse(event.data);
-                console.log("Received message:", message);
-                if (message.type === 'offer') {
-                    handleOffer(message);
-                } else if (message.type === 'answer') {
-                    handleAnswer(message);
-                } else if (message.type === 'iceCandidate') {
-                    handleIceCandidate(message);
-                }
-            } catch (err) {
-                console.error("Failed to parse result socket message:", err);
-            }
-        };
-
-        resultSocket.onerror = (error) => {
-            cleanupResources();
-            console.error("WebSocket error:", error);
-        };
-
-        resultSocket.onclose = (event) => {
-            console.log("WebSocket connection closed:");
-            console.log("  code:", event.code);
-            console.log("  reason:", event.reason);
-            console.log("  wasClean:", event.wasClean);
-            const readyState = resultSocket ? resultSocket.readyState : 'closed';
-            console.log("  readyState:", readyState);
-            resultSocket = null;
-            targetSessionId = null;
-        };
-    }
-
-    async function handleOffer(message) {
-        console.log("Handling offer for targetSessionId:", message.targetSessionId);
-        const targetId = message.targetSessionId;
-        const offer = new RTCSessionDescription(message.sdp);
+    // ======================== WebRTC Signaling Handlers (v2) ====================
+    async function handleWebRTCOffer(nav_data) {
+        console.log("Handling WebRTC offer");
+        const offer = new RTCSessionDescription(nav_data.sdp);
         console.log("Created offer SDP:", offer);
-        try {
-            const endpoint = `https://${baseUrl}/api/webrtc/generate-ice-servers`
-            const res = await fetch(endpoint, { method: 'POST' })
-            if (res.ok) {
-                const data = await res.json()
-                const servers = data?.data?.iceServers ?? data?.iceServers
-                if (Array.isArray(servers) && servers.length > 0) {
-                    configuration = { iceServers: servers }
-                }
-            }
-        } catch (e) {
-            // keep default configuration
-        }
+
+        // Use ICE servers from connection success event
         peerConnectionA = new RTCPeerConnection(configuration);
         console.log("Created peer connection:", peerConnectionA);
 
@@ -321,12 +246,13 @@ async function initDigtalHumanRealtimeButton() {
             .then(() => peerConnectionA.createAnswer())
             .then(answer => peerConnectionA.setLocalDescription(answer))
             .then(() => {
+                // Send answer through unified WebSocket
                 const responseMessage = {
-                    type: 'answer',
-                    targetSessionId: targetId,
-                    sdp: peerConnectionA.localDescription
+                    type: NavTalkMessageType.WEB_RTC_ANSWER,
+                    data: { sdp: peerConnectionA.localDescription }
                 };
-                resultSocket.send(JSON.stringify(responseMessage));
+                socket.send(JSON.stringify(responseMessage));
+                console.log("Sent WebRTC answer");
             })
             .catch(err => console.error('Error handling offer:', err));
 
@@ -337,7 +263,6 @@ async function initDigtalHumanRealtimeButton() {
                 console.log('WebRTC connection fully established!');
             } else if (peerConnectionA.iceConnectionState === 'failed') {
                 console.log('ICE connection failed, attempting reconnection...');
-                // You can add reconnection logic here
             }
         };
 
@@ -345,7 +270,7 @@ async function initDigtalHumanRealtimeButton() {
             console.log("Received remote track:", event);
             console.log("Streams:", event.streams);
             if (remoteVideoA) {
-                remoteVideoA.srcObject = event.streams[0]; // Show remote video
+                remoteVideoA.srcObject = event.streams[0];
                 console.log("Set video source object:", remoteVideoA.srcObject);
                 setTimeout(() => {
                     try {
@@ -360,76 +285,42 @@ async function initDigtalHumanRealtimeButton() {
             }
         };
 
-        // Logs when handling ICE Candidate
+        // Send ICE candidates through unified WebSocket
         peerConnectionA.onicecandidate = (event) => {
             console.log('onicecandidate:', event.candidate ? 'new candidate' : 'gathering complete');
             if (event.candidate) {
                 const message = {
-                    type: 'iceCandidate',
-                    targetSessionId: targetSessionId,
-                    candidate: event.candidate
+                    type: NavTalkMessageType.WEB_RTC_ICE_CANDIDATE,
+                    data: { candidate: event.candidate }
                 };
-                resultSocket.send(JSON.stringify(message));
+                socket.send(JSON.stringify(message));
             }
         };
     }
 
-    // Function to handle Answer messages
-    function handleAnswer(message) {
-        const targetSessionId = message.targetSessionId;
-        const events_maps = window.NavTalkEventsMaps || new Map();
-        const map_item = events_maps.get(targetSessionId);
-        if (!map_item) {
-            console.warn('handleAnswer: map_item not found for', targetSessionId);
-            if (peerConnectionA) {
-                const answer = new RTCSessionDescription(message.sdp);
-                peerConnectionA.setRemoteDescription(answer)
-                    .catch(err => console.error('Failed to handle Answer:', err));
-            }
-            return;
-        }
-
-        pc = map_item.peerConnection;
-        const answer = new RTCSessionDescription(message.sdp);
-
-        if (pc.signalingState === 'stable') {
-            console.warn('Triggering renegotiation: State is stable');
-            pc.restartIce(); // Force refresh ICE candidates
-            recreateOffer(pc, targetSessionId, map_item.socket); // Call renegotiation function
-        } else if (pc.signalingState === 'have-local-offer') {
-            pc.setRemoteDescription(answer)
+    function handleWebRTCAnswer(nav_data) {
+        console.log("Handling WebRTC answer");
+        if (peerConnectionA) {
+            const answer = new RTCSessionDescription(nav_data.sdp);
+            peerConnectionA.setRemoteDescription(answer)
+                .then(() => console.log("Remote description set successfully"))
                 .catch(err => console.error('Failed to handle Answer:', err));
+        } else {
+            console.warn('No peer connection available for answer');
         }
     }
 
-    // Function to recreate Offer
-    async function recreateOffer(pc, targetSessionId, socket) {
-        try {
-            // Create a new Offer
-            const offer = await pc.createOffer({
-                offerToReceiveAudio: true,
-                offerToReceiveVideo: true
-            });
-            await pc.setLocalDescription(offer);
-
-            // Send the new Offer to the peer
-            socket.send(JSON.stringify({
-                type: 'offer',
-                targetSessionId: targetSessionId,
-                sdp: pc.localDescription
-            }));
-        } catch (err) {
-            console.error('Failed to recreate Offer:', err);
+    function handleWebRTCIceCandidate(nav_data) {
+        console.log('Handling ICE candidate:', nav_data.candidate);
+        if (peerConnectionA) {
+            const candidate = new RTCIceCandidate(nav_data.candidate);
+            console.log('Created ICE candidate:', candidate);
+            peerConnectionA.addIceCandidate(candidate)
+                .then(() => console.log('ICE candidate added successfully'))
+                .catch(err => console.error('Error adding ICE candidate:', err));
+        } else {
+            console.warn('No peer connection available for ICE candidate');
         }
-    }
-
-    function handleIceCandidate(message) {
-        console.log('Handling ICE candidate:', message.candidate);
-        const candidate = new RTCIceCandidate(message.candidate);
-        console.log('Created ICE candidate:', candidate);
-        peerConnectionA.addIceCandidate(candidate)
-            .then(() => console.log('ICE candidate added successfully'))
-            .catch(err => console.error('Error adding ICE candidate:', err));
     }
 
 
@@ -455,158 +346,156 @@ async function initDigtalHumanRealtimeButton() {
     }
 
     async function sendSessionUpdate() {
+        // v2: Session configuration (instructions, voice, etc.) is passed via URL parameters
+        // This function only sends conversation history
         const history = localStorage.getItem("realtimeChatHistory");
         const conversationHistory = history ? JSON.parse(history) : [];
 
-        let userLanguage = await getFromChromeStorage("userLanguage");
-
-        let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
-        let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
-        realtimeChatHistory = JSON.parse(realtimeChatHistory);
-
-        // Session configuration
-        let sessionConfig = {
-            type: "session.update",
-            session: {
-                instructions: PROMPT,
-                turn_detection: {
-                    type: "server_vad",
-                    threshold: 0.5,
-                    prefix_padding_ms: 300,
-                    silence_duration_ms: 500
-                },
-                voice: VOICE,
-                temperature: 1,
-                max_response_output_tokens: 4096,
-                modalities: ["text", "audio"],
-                input_audio_format: "pcm16",
-                output_audio_format: "pcm16",
-                input_audio_transcription: {
-                    model: "whisper-1"
-                },
-                tools: [
-                    {
-                        type: "function",
-                        name: "function_call_judge",
-                        description: "Are there any function calls or tasks beyond your capability...",
-                        parameters: {
-                            type: "object",
-                            properties: {
-                                userInput: {
-                                    type: "string",
-                                    description: "the user input"
-                                }
-                            },
-                            required: ["userInput"]
-                        }
-                    }
-                ]
-            }
-        };
-
-        // Send session update
-        try {
-            socket.send(JSON.stringify(sessionConfig));
-        } catch (e) {
-            console.error("Error sending session update:", e);
-        }
-
-        // Send each item in history
+        // Send each user message in history
         conversationHistory.forEach((msg) => {
-            const messageConfig = {
-                type: "conversation.item.create",
-                item: {
-                    type: "message",
-                    role: msg.role,
-                    content: [
-                        {
-                            type: msg.role === "user" ? "input_text" : "text",
-                            text: msg.content
-                        }
-                    ]
-                }
-            };
+            if (msg.role === "user") {
+                const messageConfig = {
+                    type: "conversation.item.create",
+                    item: {
+                        type: "message",
+                        role: msg.role,
+                        content: [
+                            {
+                                type: "input_text",
+                                text: msg.content
+                            }
+                        ]
+                    }
+                };
 
-            try {
-                if (msg.role === "user") {
-                    console.log("Sending message:", JSON.stringify(messageConfig));
+                try {
+                    console.log("Sending user message from history:", msg.content);
                     socket.send(JSON.stringify(messageConfig));
+                } catch (e) {
+                    console.error("Error sending message:", e);
                 }
-            } catch (e) {
-                console.error("Error sending message:", e);
             }
         });
     }
 
     async function handleReceivedMessage(data) {
+        // v2: Extract data from data.data field
+        const nav_data = data.data || {};
+
         let activeCharacterLogId = await getFromChromeStorage("digitalHumanLogId");
         let realtimeChatHistory = await getFromChromeStorage("realtimeChatHistory");
         realtimeChatHistory = JSON.parse(realtimeChatHistory);
 
         switch (data.type) {
-            // Session created, send configuration
-            case "session.created":
-                console.log("Session created, sending session update.");
+            // ======================== Connection Events ====================
+            case NavTalkMessageType.CONNECTED_SUCCESS:
+                console.log("WebSocket connection successful");
+                const sessionId = nav_data.sessionId;
+                const iceServers = nav_data.iceServers;
+                if (sessionId && sessionId !== proxySessionId) {
+                    console.log("Received session ID:", sessionId);
+                    proxySessionId = sessionId;
+                    targetSessionId = `target-${proxySessionId}`;
+                    // Store ICE servers configuration for WebRTC
+                    if (iceServers && Array.isArray(iceServers) && iceServers.length > 0) {
+                        configuration = { iceServers: iceServers };
+                        console.log("ICE servers configuration received:", configuration);
+                    }
+                }
+                break;
+
+            case NavTalkMessageType.CONNECTED_FAIL:
+                console.error("WebSocket connection failed:", data.message);
+                showErrorTip(data.message || "Connection failed");
+                break;
+
+            case NavTalkMessageType.CONNECTED_CLOSE:
+                console.log("WebSocket connection closed:", data.message);
+                break;
+
+            case NavTalkMessageType.INSUFFICIENT_BALANCE:
+                console.error("Insufficient balance");
+                showErrorTip("Insufficient balance, service has stopped, please recharge!");
+                break;
+
+            case NavTalkMessageType.GPU_FULL:
+                console.error("GPU resources full");
+                showErrorTip("The gpu resources are full. Please try again later!");
+                break;
+
+            case NavTalkMessageType.CONNECTION_LIMIT_EXCEEDED:
+                console.error("Connection limit exceeded");
+                showErrorTip("Maximum concurrent connections exceeded. Please try again later.");
+                break;
+
+            case NavTalkMessageType.BACKEND_ERROR:
+                console.error("Backend error:", data.message);
+                showErrorTip("Backend error occurred. Please try again.");
+                break;
+
+            // ======================== Session Events ====================
+            case NavTalkMessageType.REALTIME_SESSION_CREATED:
+                console.log("Session created, sending conversation history.");
                 await sendSessionUpdate();
                 break;
 
-            // Session established after configuration
-            case "session.updated":
+            case NavTalkMessageType.REALTIME_SESSION_UPDATED:
                 console.log("Session updated. Ready to receive audio.");
                 startRecording();
                 break;
 
-            // Session ID received, setup WebRTC signaling
-            case "session.session_id": {
-                const sessionId = data.sessionId ?? data.session_id;
-                if (sessionId && sessionId !== proxySessionId) {
-                    console.log("Received proxy session_id:", sessionId);
-                    proxySessionId = sessionId;
-                    if (resultSocket) {
-                        resultSocket.close();
-                        resultSocket = null;
-                    }
-                    setupSignalingSocketIfReady();
-                }
-                break;
-            }
-
-            // User starts speaking
-            case "input_audio_buffer.speech_started":
+            // ======================== User Speech Detection Events ====================
+            case NavTalkMessageType.REALTIME_SPEECH_STARTED:
                 console.log("Speech started detected by server.");
                 stopCurrentAudioPlayback();
                 audioQueue = [];
                 isPlaying = false;
                 playVideo = false;
+                pendingUserMessageSpan = createTypingPlaceholder();
                 break;
 
-            // User stops speaking
-            case "input_audio_buffer.speech_stopped":
+            case NavTalkMessageType.REALTIME_SPEECH_STOPPED:
                 console.log("Speech stopped detected by server.");
                 break;
 
-            // Full transcription of user speech
-            case "conversation.item.input_audio_transcription.completed":
-                console.log("Received transcription: " + data.transcript);
-                const userMessageContainer = document.createElement('div');
-                userMessageContainer.classList.add('character-chat-item', 'item-user');
+            // ======================== User Transcription Events ====================
+            case NavTalkMessageType.REALTIME_CONVERSATION_ITEM_COMPLETED:
+                const userTranscript = nav_data.transcript || nav_data.content;
+                console.log("Received transcription: " + userTranscript);
+                if (userTranscript && userTranscript.trim()) {
+                    // If placeholder exists, update its content; otherwise create new message
+                    if (pendingUserMessageSpan) {
+                        // Clear animation elements and replace with actual text
+                        pendingUserMessageSpan.innerHTML = '';
+                        pendingUserMessageSpan.classList.remove('typing-indicator');
+                        pendingUserMessageSpan.textContent = userTranscript;
+                        pendingUserMessageSpan = null; // Clear reference
+                    } else {
+                        // No placeholder case (e.g., via text input)
+                        const userMessageContainer = document.createElement('div');
+                        userMessageContainer.classList.add('character-chat-item', 'item-user');
 
-                const userMessage = document.createElement('span');
-                userMessage.textContent = data.transcript;
-                userMessageContainer.appendChild(userMessage);
+                        const userMessage = document.createElement('span');
+                        userMessage.textContent = userTranscript;
+                        userMessageContainer.appendChild(userMessage);
 
-                const chatContent = document.querySelector('.ah-character-chat');
-                chatContent.appendChild(userMessageContainer);
-                chatContent.scrollTop = chatContent.scrollHeight;
-
-                await appendRealtimeChatHistory("user", data.transcript);
+                        const chatContent = document.querySelector('.ah-character-chat');
+                        chatContent.appendChild(userMessageContainer);
+                        chatContent.scrollTop = chatContent.scrollHeight;
+                    }
+                    await appendRealtimeChatHistory("user", userTranscript);
+                } else if (pendingUserMessageSpan) {
+                    // If the transcription is empty but contains placeholders, remove the placeholders.
+                    pendingUserMessageSpan.parentElement.remove();
+                    pendingUserMessageSpan = null;
+                }
                 break;
 
-            // Response text stream
-            case "response.audio_transcript.delta":
+            // ======================== AI Response Events ====================
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DELTA:
                 playVideo = true;
-                const transcript = data.delta;
-                const responseId = data.response_id;
+                const transcript = nav_data.delta || nav_data.content;
+                const responseId = nav_data.response_id || nav_data.id;
 
                 if (!markdownBuffer.has(responseId)) {
                     markdownBuffer.set(responseId, "");
@@ -632,126 +521,50 @@ async function initDigtalHumanRealtimeButton() {
                 }
 
                 const fullContent = markdownBuffer.get(responseId);
-                const parsedContent = marked.parse(fullContent);
+                const parsedContent = fullContent;
                 aiMessageSpan.innerHTML = parsedContent;
-                Prism.highlightAllUnder(aiMessageSpan);
 
                 const chatContainer = document.querySelector('.ah-character-chat');
                 chatContainer.scrollTop = chatContainer.scrollHeight;
                 break;
 
-            // Response audio stream
-            case "response.audio.delta":
-                if (data.delta) {
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DELTA:
+                if (nav_data.delta) {
                     // Handle audio delta
                 }
                 break;
 
-            // Full assistant transcription
-            case "response.audio_transcript.done":
-                console.log("Received transcription: " + data.transcript);
-                await appendRealtimeChatHistory("assistant", data.transcript);
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_TRANSCRIPT_DONE:
+                const assistantTranscript = nav_data.transcript || nav_data.content;
+                console.log("Received transcription: " + assistantTranscript);
+                await appendRealtimeChatHistory("assistant", assistantTranscript);
                 break;
 
-            // Response completed
-            case "response.audio.done":
+            case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DONE:
                 console.log("Audio response complete.");
                 isPlaying = false;
                 playVideo = false;
                 break;
 
-            // Function call response
-            case "response.function_call_arguments.done":
-                console.log("data：" + data)
-                handleFunctionCall(data);
+            // ======================== WebRTC Signaling Events ====================
+            case NavTalkMessageType.WEB_RTC_OFFER:
+                console.log("Received WebRTC offer");
+                await handleWebRTCOffer(nav_data);
                 break;
 
-            case "session.gpu_full":
-                this.$message.error("The gpu resources are full. Please try again later!")
+            case NavTalkMessageType.WEB_RTC_ANSWER:
+                console.log("Received WebRTC answer");
+                handleWebRTCAnswer(nav_data);
                 break;
 
-            case "session.insufficient_balance":
-                this.$message.error("Insufficient balance, service has stopped, please recharge!")
+            case NavTalkMessageType.WEB_RTC_ICE_CANDIDATE:
+                console.log("Received WebRTC ICE candidate");
+                handleWebRTCIceCandidate(nav_data);
                 break;
 
             default:
                 console.warn("Unhandled event type: " + data.type);
         }
-    }
-
-    function handleFunctionCall(eventJson) {
-        try {
-            const arguments = eventJson.arguments;
-            const functionCallArgs = JSON.parse(arguments);
-            const userInput = functionCallArgs.userInput;
-            const callId = eventJson.call_id;
-
-            if (userInput) {
-                // Call handleWithMemAgent to process user input
-                handleWithMemAgent(userInput)
-                    .then(result => {
-                        // Print the response from backend
-                        console.log("Result from backend: " + result);
-                        // Send the result back to the caller
-                        sendFunctionCallResult(result, callId);
-                    })
-                    .catch(error => {
-                        console.error("Error calling MemAgent:", error);
-                    });
-            } else {
-                console.log("City not provided for get_weather function.");
-            }
-        } catch (error) {
-            console.error("Error parsing function call arguments: ", error);
-        }
-    }
-
-    function handleWithMemAgent(userInput) {
-        return new Promise(async (resolve, reject) => {
-            let chatId = await getFromChromeStorage("chatId");
-            // Send request to Java backend API
-            fetch('https://'+baseUrl + '/api/realtime_function_call', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    userInput: userInput,  // Pass user input to backend
-                    license: LICENSE,
-                    chatId: chatId
-                }),
-            })
-                .then(response => response.text())  // Parse response content
-                .then(result => {
-                    // Handle the returned result
-                    resolve(result);  // Return result to caller
-                })
-                .catch(error => {
-                    console.error("Error during function call:", error);
-                    reject(error);  // Handle error
-                });
-        });
-    }
-
-    function sendFunctionCallResult(result, callId) {
-        const resultJson = {
-            type: "conversation.item.create",
-            item: {
-                type: "function_call_output",
-                output: result,
-                call_id: callId
-            }
-        };
-
-        socket.send(JSON.stringify(resultJson));
-        console.log("Sent function call result: ", resultJson);
-
-        // Actively request a response.create to get the result
-        const rpJson = {
-            type: "response.create"
-        };
-        socket.send(JSON.stringify(rpJson));
-        console.log("Response sent: ", rpJson);
     }
 
     function stopCurrentAudioPlayback() {
@@ -781,7 +594,11 @@ async function initDigtalHumanRealtimeButton() {
                         const chunkSize = 4096;
                         for (let i = 0; i < base64PCM.length; i += chunkSize) {
                             const chunk = base64PCM.slice(i, i + chunkSize);
-                            socket.send(JSON.stringify({ type: "input_audio_buffer.append", audio: chunk }));
+                            // v2: Use NavTalkMessageType constant and wrap audio in data field
+                            socket.send(JSON.stringify({
+                                type: NavTalkMessageType.REALTIME_INPUT_AUDIO_BUFFER_APPEND,
+                                data: { audio: chunk }
+                            }));
                         }
                     }
                 };
@@ -816,7 +633,29 @@ async function initDigtalHumanRealtimeButton() {
         return btoa(binary);
     }
 
+    // Create animated user message placeholder
+    function createTypingPlaceholder() {
+        const userMessageContainer = document.createElement('div');
+        userMessageContainer.classList.add('character-chat-item', 'item-user');
 
+        const userMessage = document.createElement('span');
+        userMessage.classList.add('typing-indicator');
+
+        // Create three bouncing dots
+        for (let i = 0; i < 3; i++) {
+            const dot = document.createElement('span');
+            dot.classList.add('typing-dot');
+            userMessage.appendChild(dot);
+        }
+
+        userMessageContainer.appendChild(userMessage);
+
+        const chatContent = document.querySelector('.ah-character-chat');
+        chatContent.appendChild(userMessageContainer);
+        chatContent.scrollTop = chatContent.scrollHeight;
+
+        return userMessage;
+    }
 
     function stopRecording() {
         if (audioProcessor) {
