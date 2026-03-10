@@ -91,10 +91,12 @@
 			isa = PBXGroup;
 			children = (
 				A9C0AAD42E84D420004F64C9 /* AppDelegate.swift */,
+				A9C0AADD2E84D421004F64C9 /* Assets.xcassets */,
 				A9C0AAFA2E851582004F64C9 /* NavTalk-Bridging-Header.h */,
+				A9C0AADF2E84D421004F64C9 /* LaunchScreen.storyboard */,
 				A9C0AAE22E84D421004F64C9 /* Info.plist */,
 				A9C0AAEB2E84D511004F64C9 /* Resource */,
-				A9C0AAED2E84D52F004F64C9 /* Models */,
+				A9C0AAED2E84D52F004F64C9 /* Moduls */,
 			);
 			path = NavTalk;
 			sourceTree = "<group>";
@@ -102,8 +104,6 @@
 		A9C0AAEB2E84D511004F64C9 /* Resource */ = {
 			isa = PBXGroup;
 			children = (
-				A9C0AADD2E84D421004F64C9 /* Assets.xcassets */,
-				A9C0AADF2E84D421004F64C9 /* LaunchScreen.storyboard */,
 				A9C0AB1D2E8518AB004F64C9 /* CommonDefineClass.swift */,
 				A9C0AB1F2E852C34004F64C9 /* Extention+MBProgress.swift */,
 				A9779ABA2E8A74DB002E9831 /* NetworkMonitor.swift */,
@@ -111,14 +111,14 @@
 			path = Resource;
 			sourceTree = "<group>";
 		};
-		A9C0AAED2E84D52F004F64C9 /* Models */ = {
+		A9C0AAED2E84D52F004F64C9 /* Moduls */ = {
 			isa = PBXGroup;
 			children = (
 				A9C0AAF32E84D562004F64C9 /* Model */,
 				A9C0AAF22E84D55D004F64C9 /* View */,
 				A9C0AAF12E84D54C004F64C9 /* Contrtoller */,
 			);
-			path = Models;
+			path = Moduls;
 			sourceTree = "<group>";
 		};
 		A9C0AAF12E84D54C004F64C9 /* Contrtoller */ = {
