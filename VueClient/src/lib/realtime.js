@@ -46,18 +46,11 @@ const NavTalkMessageType = Object.freeze({
 const LICENSE = "sk_navtalk_your_key";
 
 // ✒️ model. Currently supported models include: gpt-realtime, gpt-realtime-mini
-const MODEL = "gpt-realtime";
-
 // ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const CHARACTER_NAME = "navtalk.Zoe";
 
-// ✒️ voice. Currently supported voices include: alloy, ash, ballad, cedar, coral, echo, marin, sage, shimmer, verse
-// You can check the specific voices on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
-const VOICE = "cedar";
-
-// ✒️ prompt. You want him to act in the conversation, or the knowledge he needs to have, and things to watch out for.
-const PROMPT = "You are a helpful assistant.";
+// Note: model, voice, and prompt configurations are managed through the console, not in client code
 
 let baseUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat";
 let configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
@@ -157,7 +150,7 @@ export async function initDigtalHumanRealtimeButton() {
   }
 
   async function startWebSocket() {
-    const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&name=${CHARACTER_NAME}&model=${MODEL}`;
+    const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&name=${CHARACTER_NAME}`;
     socket = new WebSocket(websocketUrlWithParams);
     socket.binaryType = 'arraybuffer';
 
@@ -304,68 +297,6 @@ export async function initDigtalHumanRealtimeButton() {
     console.error(message);
   }
 
-  async function sendSessionUpdate() {
-    const history = localStorage.getItem("realtimeChatHistory");
-    const conversationHistory = history ? JSON.parse(history) : [];
-
-    // Session configuration
-    let sessionConfig = {
-      type: "session.update",
-      session: {
-        instructions: PROMPT,
-        turn_detection: {
-          type: "server_vad",
-          threshold: 0.5,
-          prefix_padding_ms: 300,
-          silence_duration_ms: 500
-        },
-        voice: VOICE,
-        temperature: 1,
-        max_response_output_tokens: 4096,
-        modalities: ["text", "audio"],
-        input_audio_format: "pcm16",
-        output_audio_format: "pcm16",
-        input_audio_transcription: {
-          model: "whisper-1"
-        }
-      }
-    };
-
-    try {
-      if (socket && socket.readyState === WebSocket.OPEN) {
-        socket.send(JSON.stringify(sessionConfig));
-      }
-    } catch (e) {
-      console.error("Error sending session update:", e);
-    }
-
-    // Send each item in history
-    conversationHistory.forEach((msg) => {
-      const messageConfig = {
-        type: "conversation.item.create",
-        item: {
-          type: "message",
-          role: msg.role,
-          content: [
-            {
-              type: msg.role === "user" ? "input_text" : "text",
-              text: msg.content
-            }
-          ]
-        }
-      };
-
-      try {
-        if (msg.role === "user" && socket && socket.readyState === WebSocket.OPEN) {
-          console.log("Sending message:", JSON.stringify(messageConfig));
-          socket.send(JSON.stringify(messageConfig));
-        }
-      } catch (e) {
-        console.error("Error sending message:", e);
-      }
-    });
-  }
-
   async function handleReceivedMessage(data) {
     let nav_data = data.data;
 
@@ -387,11 +318,10 @@ export async function initDigtalHumanRealtimeButton() {
         console.log(configuration);
         break;
 
-        // Session created, send configuration
-      case NavTalkMessageType.REALTIME_SESSION_CREATED:
-        console.log("Session created, sending session update.");
-        await sendSessionUpdate();
-        break;
+            // Session created
+            case NavTalkMessageType.REALTIME_SESSION_CREATED:
+                console.log("Session created.");
+                break;
 
         // Session established after configuration
       case NavTalkMessageType.REALTIME_SESSION_UPDATED:
