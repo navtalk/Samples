@@ -1,0 +1,1005 @@
+/**
+ * NavTalk Digital Human Styles
+ * Includes avatar card styles and chat modal styles
+ */
+
+/* ==========================================================================
+   Avatar Card Styles
+   ========================================================================== */
+
+.navtalk-avatar-container {
+    /* 容器宽度由Grid自动分配，不设置固定宽度 */
+}
+
+.navtalk-avatar-list {
+    margin: 20px 0;
+    display: grid;
+    gap: 20px;
+}
+
+/* Auto-fit responsive grid - 根据容器宽度自动调整列数 */
+/* 1列：最小宽度100% */
+.navtalk-avatar-list[data-columns="1"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr));
+}
+
+/* 2列：最小宽度280px，自动适应 */
+.navtalk-avatar-list[data-columns="2"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(280px, 100%), 1fr));
+}
+
+/* 3列：最小宽度250px，自动适应 */
+.navtalk-avatar-list[data-columns="3"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(250px, 100%), 1fr));
+}
+
+/* 4列：最小宽度220px，自动适应 */
+.navtalk-avatar-list[data-columns="4"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(220px, 100%), 1fr));
+}
+
+/* 5列：最小宽度200px，自动适应 */
+.navtalk-avatar-list[data-columns="5"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(200px, 100%), 1fr));
+}
+
+/* 6列：最小宽度180px，自动适应 */
+.navtalk-avatar-list[data-columns="6"] {
+    grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+}
+
+.navtalk-avatar-list.navtalk-list-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Responsive adjustments - 只调整间距和其他非布局属性 */
+@media (max-width: 768px) {
+    .navtalk-avatar-list {
+        gap: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    .navtalk-avatar-list {
+        gap: 10px;
+    }
+}
+
+.navtalk-avatar-card {
+    width: 100%; /* 填充Grid单元格 */
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.navtalk-avatar-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+.navtalk-avatar-image {
+    position: relative;
+    width: 100%;
+    padding-top: 133%; /* 4:3 aspect ratio */
+    background: #f0f0f0;
+    overflow: hidden;
+}
+
+.navtalk-avatar-image img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 5% !important ;
+}
+
+.navtalk-avatar-placeholder {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.navtalk-avatar-placeholder span {
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.navtalk-avatar-placeholder p {
+    font-size: 18px;
+    margin: 0;
+}
+
+.navtalk-avatar-info {
+    padding: 15px;
+}
+
+.navtalk-avatar-title {
+    margin: 0 0 8px 0;
+    font-size: 20px;
+    font-weight: 600;
+    color: #333;
+    text-transform: none;
+}
+
+.navtalk-avatar-status {
+    display: flex;
+    align-items: center;
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+.status-indicator {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+}
+
+.status-available .status-indicator {
+    background: #4caf50;
+    box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
+}
+
+.status-unavailable .status-indicator {
+    background: #f44336;
+}
+
+.navtalk-start-chat {
+    width: 100%;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+    border: none;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navtalk-start-chat:hover:not(:disabled) {
+    background: #3D3D3D;
+    transform: scale(1.02);
+    border-radius: 8px 8px 8px 8px;
+}
+
+.navtalk-start-chat:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+/* ==========================================================================
+   New Avatar Card Layout Styles
+   ========================================================================== */
+
+/* Overlay Layout */
+.navtalk-layout-overlay .navtalk-avatar-card {
+    position: relative;
+}
+
+.navtalk-avatar-overlay {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 15px;
+    background: transparent;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    z-index: 2;
+}
+
+/* When title is present, show background gradient */
+.navtalk-avatar-overlay:has(.navtalk-avatar-title) {
+    background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.6) 100%);
+}
+
+.navtalk-layout-overlay .navtalk-avatar-title {
+    color: #fff;
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    flex: 1;
+}
+
+/* Status Badge (Corner) */
+.navtalk-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    z-index: 3;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.navtalk-status-badge.status-available {
+    background: #4caf50;
+}
+
+.navtalk-status-badge.status-unavailable {
+    background: #f44336;
+}
+
+/* Icon Buttons */
+.navtalk-button-group {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+}
+
+.navtalk-icon-button {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: transparent;
+    color: rgba(255, 255, 255, 0.95);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+    flex-shrink: 0;
+}
+
+.navtalk-icon-button:hover {
+    background: transparent;
+    color: #fff;
+    transform: scale(1.1);
+}
+
+.navtalk-icon-button svg,
+.navtalk-icon-button .navtalk-phone-icon,
+.navtalk-icon-button .navtalk-download-icon {
+    width: 20px;
+    height: 20px;
+    min-width: 20px;
+    min-height: 20px;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Bottom Layout */
+.navtalk-layout-bottom .navtalk-avatar-info {
+    padding: 15px;
+    text-align: center;
+}
+
+/* ==========================================================================
+   Avatar Preview Video Styles
+   ========================================================================== */
+
+/* Preview video base styles */
+.navtalk-avatar-preview-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    position: absolute;
+    top: 0;
+    left: 0;
+}
+
+/* List mode: videos default to poster frame (not autoplay) */
+.navtalk-avatar-list .navtalk-avatar-preview-video {
+    /* Browsers show poster by default when not playing */
+}
+
+/* Inline mode z-index layering */
+.navtalk-inline-mode .navtalk-avatar-preview-video {
+    z-index: 0; /* Bottom layer - preview video */
+}
+
+.navtalk-inline-mode .navtalk-avatar-static-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0; /* Same as preview video, mutually exclusive */
+    display: block;
+}
+
+.navtalk-inline-mode .navtalk-avatar-inline-video {
+    z-index: 2; /* Top layer - realtime call video */
+}
+
+/* Hidden state helpers */
+.navtalk-inline-mode .navtalk-avatar-static-img.hidden {
+    display: none !important;
+}
+
+.navtalk-inline-mode .navtalk-avatar-preview-video.hidden {
+    display: none !important;
+}
+
+.navtalk-inline-mode .navtalk-avatar-inline-video.active {
+    display: block !important;
+}
+
+/* ==========================================================================
+   Bottom Layout Continued
+   ========================================================================== */
+
+.navtalk-layout-bottom .navtalk-avatar-title {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #333;
+    font-weight: 600;
+}
+
+.navtalk-layout-bottom .navtalk-button-group {
+    margin-top: 10px;
+    justify-content: center;
+}
+
+.navtalk-layout-bottom .navtalk-icon-button {
+    background: transparent;
+    color: #667eea;
+}
+
+.navtalk-layout-bottom .navtalk-icon-button:hover {
+    background: transparent;
+    color: #7c8ef3;
+}
+
+/* Phone icon and download icon image: white SVG on overlay, dark on bottom layout */
+.navtalk-layout-bottom .navtalk-icon-button .navtalk-phone-icon,
+.navtalk-layout-bottom .navtalk-icon-button .navtalk-download-icon {
+    filter: brightness(0) saturate(100%) invert(39%) sepia(90%) saturate(1500%) hue-rotate(230deg);
+}
+.navtalk-layout-bottom .navtalk-icon-button:hover .navtalk-phone-icon,
+.navtalk-layout-bottom .navtalk-icon-button:hover .navtalk-download-icon {
+    filter: brightness(0) saturate(100%) invert(51%) sepia(90%) saturate(1500%) hue-rotate(230deg);
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .navtalk-avatar-overlay {
+        padding: 10px;
+    }
+    
+    .navtalk-layout-overlay .navtalk-avatar-title {
+        font-size: 14px;
+    }
+    
+    .navtalk-icon-button {
+        width: 32px;
+        height: 32px;
+    }
+    
+    .navtalk-icon-button svg {
+        width: 16px;
+        height: 16px;
+    }
+}
+
+/* ==========================================================================
+   Button Shortcode Styles
+   ========================================================================== */
+
+.navtalk-trigger-button {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.navtalk-trigger-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.navtalk-trigger-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Button Styles */
+.navtalk-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
+.navtalk-btn-secondary {
+    background: #6c757d;
+    color: #fff;
+}
+
+.navtalk-btn-outline {
+    background: transparent;
+    border: 2px solid #667eea;
+    color: #667eea;
+}
+
+.navtalk-btn-outline:hover:not(:disabled) {
+    background: #667eea;
+    color: #fff;
+}
+
+/* Button Sizes */
+.navtalk-btn-small {
+    padding: 8px 16px;
+    font-size: 14px;
+}
+
+.navtalk-btn-medium {
+    padding: 12px 24px;
+    font-size: 16px;
+}
+
+.navtalk-btn-large {
+    padding: 16px 32px;
+    font-size: 18px;
+}
+
+.navtalk-btn-icon {
+    width: 20px;
+    height: 20px;
+}
+
+/* ==========================================================================
+   Floating Button Styles
+   ========================================================================== */
+
+.navtalk-floating-button {
+    position: fixed;
+    z-index: 9998;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    border-radius: 50%;
+}
+
+.navtalk-floating-bottom-right {
+    bottom: 30px;
+    right: 30px;
+}
+
+.navtalk-floating-bottom-left {
+    bottom: 30px;
+    left: 30px;
+}
+
+.navtalk-floating-top-right {
+    top: 30px;
+    right: 30px;
+}
+
+.navtalk-floating-top-left {
+    top: 30px;
+    left: 30px;
+}
+
+.navtalk-floating-btn {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: none;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.navtalk-floating-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 30px rgba(0, 0, 0, 0.4);
+}
+
+/* ==========================================================================
+   Link Shortcode Styles
+   ========================================================================== */
+
+.navtalk-trigger-link {
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-decoration: none;
+}
+
+.navtalk-trigger-link:hover {
+    opacity: 0.8;
+}
+
+.navtalk-link-default {
+    color: #667eea;
+    text-decoration: underline;
+}
+
+.navtalk-link-button {
+    display: inline-block;
+    padding: 8px 16px;
+    background: #667eea;
+    color: #fff;
+    border-radius: 4px;
+    text-decoration: none;
+}
+
+.navtalk-link-underline {
+    color: inherit;
+    border-bottom: 2px solid #667eea;
+    text-decoration: none;
+}
+
+.navtalk-link-disabled {
+    color: #999;
+    cursor: not-allowed;
+    text-decoration: line-through;
+}
+
+/* ==========================================================================
+   Chat Modal Styles
+   ========================================================================== */
+
+.navtalk-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--modal-overlay-color, transparent);
+    z-index: 999999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.navtalk-modal.active {
+    display: flex;
+}
+
+.navtalk-modal-content {
+    position: relative;
+    width: var(--modal-width, 1200px);
+    height: var(--modal-height, 800px);
+    max-width: var(--modal-max-width, 90vw);
+    max-height: var(--modal-max-height, 90vh);
+    background: #000;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+.navtalk-modal-close {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 10000;
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    color: #fff;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+}
+
+.navtalk-modal-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: scale(1.1);
+}
+
+/* ==========================================================================
+   Real-time Container Styles (from demo.html)
+   ========================================================================== */
+
+.real-time-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.ah-character-box {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.ah-character-avatar {
+    width: 100% !important;
+    height: 100% !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    overflow: hidden;
+    background: #000;
+}
+
+#character-static-image {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: 50% 5% !important;
+    transform: translate(-50%, -50%);
+    background: #000;
+}
+
+#character-avatar-video {
+    position: absolute !important;
+    top: 0 !important;
+    left: 0 !important;
+    width: 100% !important;
+    height: 100% !important;
+    transform: none !important;
+    z-index: 1;
+    object-fit: cover;
+    object-position: 50% 5% !important;
+}
+
+#character-avatar-video:hover {
+    transform: translate(-50%, -50%) scale(1.02);
+    transition: transform 0.3s ease;
+}
+
+/* Call button - positioned inside modal content */
+.btn-character-call {
+    position: absolute;
+    bottom: 30px;
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
+    z-index: 9999;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+}
+
+/* Button position: center-bottom (default) */
+.btn-character-call.position-center-bottom {
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+/* Button position: bottom-left */
+.btn-character-call.position-bottom-left {
+    left: 30px;
+}
+
+/* Button position: bottom-right */
+.btn-character-call.position-bottom-right {
+    right: 30px;
+}
+
+.btn-character-call:hover {
+    transform: scale(1.1);
+    box-shadow: 0 15px 25px rgba(118, 75, 162, 0.4);
+}
+
+.btn-character-call.active {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4) !important;
+    animation: pulse-red 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-red {
+    0%, 100% {
+        box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 10px 30px rgba(231, 76, 60, 0.6);
+    }
+}
+
+/* Inline mode styles */
+.navtalk-inline-mode .navtalk-avatar-image {
+    position: relative;
+    overflow: hidden;
+}
+
+.navtalk-inline-mode .navtalk-avatar-inline-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    display: none; /* 默认隐藏 */
+}
+
+.navtalk-inline-mode .navtalk-avatar-static-img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 0;
+    display: block;
+}
+
+.navtalk-inline-mode .navtalk-avatar-static-img.hidden {
+    display: none !important;
+}
+
+.navtalk-inline-mode .navtalk-avatar-inline-video.active {
+    display: block !important;
+}
+
+.navtalk-inline-mode .navtalk-call-btn.active {
+    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4) !important;
+    animation: pulse-red-small 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-red-small {
+    0%, 100% {
+        box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    }
+    50% {
+        box-shadow: 0 6px 18px rgba(231, 76, 60, 0.6);
+    }
+}
+
+.ah-btn {
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(5px);
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.ah-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+}
+
+.ah-icon {
+    transition: all 0.3s ease;
+}
+
+/* Chat container */
+.ah-character-chat {
+    position: fixed;
+    bottom: 100px;
+    left: 20px;
+    right: 20px;
+    max-height: 30vh;
+    overflow-y: auto;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    z-index: 999;
+}
+
+.character-chat-item {
+    max-width: 70%;
+    padding: 12px 18px;
+    border-radius: 18px;
+    font-size: 16px;
+    line-height: 1.4;
+    animation: fadeIn 0.3s ease-out;
+}
+
+.item-user {
+    align-self: flex-end;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+
+.item-character {
+    align-self: flex-start;
+    background: white;
+    color: #333;
+    border-bottom-left-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+/* Scrollbar style */
+.ah-character-chat::-webkit-scrollbar {
+    width: 6px;
+}
+
+.ah-character-chat::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.05);
+    border-radius: 10px;
+}
+
+.ah-character-chat::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+/* Typing animation */
+.typing-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 0;
+}
+
+.typing-dot {
+    width: 8px;
+    height: 8px;
+    background: currentColor;
+    border-radius: 50%;
+    animation: typingAnimation 1.4s ease-in-out infinite;
+    opacity: 0.6;
+}
+
+.typing-dot:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-dot:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dot:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+/* ==========================================================================
+   Animations
+   ========================================================================== */
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes typingAnimation {
+    0%, 60%, 100% {
+        transform: translateY(0);
+        opacity: 0.6;
+    }
+    30% {
+        transform: translateY(-8px);
+        opacity: 1;
+    }
+}
+
+/* Button animation effects */
+@keyframes navtalk-pulse {
+    0%, 100% {
+        transform: scale(1);
+        opacity: 1;
+    }
+    50% {
+        transform: scale(1.05);
+        opacity: 0.9;
+    }
+}
+
+@keyframes navtalk-bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-5px);
+    }
+}
+
+/* ==========================================================================
+   Responsive Design
+   ========================================================================== */
+
+@media (max-width: 768px) {
+    .navtalk-avatar-container {
+        max-width: 100%;
+    }
+    
+    .ah-character-chat {
+        bottom: 80px;
+        max-height: 25vh;
+    }
+    
+    .btn-character-call {
+        width: 50px;
+        height: 50px;
+        bottom: 20px;
+    }
+    
+    .btn-character-call.position-bottom-left {
+        left: 20px;
+    }
+    
+    .btn-character-call.position-bottom-right {
+        right: 20px;
+    }
+    
+    .navtalk-modal-close {
+        width: 40px;
+        height: 40px;
+        top: 15px;
+        right: 15px;
+    }
+}
+
+/* ==========================================================================
+   Dark Mode Support
+   ========================================================================== */
+
+@media (prefers-color-scheme: dark) {
+    .navtalk-avatar-card {
+        background: #1e1e1e;
+    }
+    
+    .navtalk-avatar-title {
+        color: #e0e0e0;
+    }
+    
+    .navtalk-avatar-status {
+        color: #999;
+    }
+    
+    .item-character {
+        background: #2d2d2d;
+        color: #e0e0e0;
+    }
+    
+    .ah-character-avatar {
+        background: #1e1e1e;
+    }
+    
+    .ah-btn {
+        background: rgba(30, 30, 30, 0.5);
+    }
+}
