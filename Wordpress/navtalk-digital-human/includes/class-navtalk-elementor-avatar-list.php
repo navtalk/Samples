@@ -153,6 +153,48 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         
         $this->end_controls_section();
         
+        // Add session configuration controls
+        $this->start_controls_section(
+            'session_config_section',
+            [
+                'label' => __('Session Configuration', 'navtalk-dh'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'config_voice',
+            [
+                'label' => __('Voice', 'navtalk-dh'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => '',
+                'description' => __('Voice configuration for the avatar', 'navtalk-dh'),
+            ]
+        );
+        
+        $this->add_control(
+            'config_prompt',
+            [
+                'label' => __('Prompt', 'navtalk-dh'),
+                'type' => \Elementor\Controls_Manager::TEXTAREA,
+                'default' => '',
+                'description' => __('Custom prompt for the conversation', 'navtalk-dh'),
+            ]
+        );
+        
+        $this->add_control(
+            'config_tools',
+            [
+                'label' => __('Tools', 'navtalk-dh'),
+                'type' => \Elementor\Controls_Manager::TEXTAREA,
+                'default' => '',
+                'description' => __('Tools configuration (JSON array format)', 'navtalk-dh'),
+                'placeholder' => '[{"name":"weather","type":"function"}]',
+            ]
+        );
+        
+        $this->end_controls_section();
+        
         // Add modal controls
         $this->add_modal_controls();
         
@@ -206,9 +248,10 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         <div class="navtalk-avatar-list" data-columns="<?php echo esc_attr($columns); ?>">
             <?php foreach ($avatars as $avatar): ?>
                 <?php
+                $thumbnail_url = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
                 $avatar_info = [
                     'name' => $avatar['name'],
-                    'url' => $avatar['url'],
+                    'url' => $thumbnail_url,
                     'status' => isset($avatar['status']) ? $avatar['status'] : 'Unknown'
                 ];
                 

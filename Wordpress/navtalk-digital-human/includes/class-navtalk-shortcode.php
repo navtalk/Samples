@@ -41,8 +41,8 @@ class NavTalk_Shortcode {
             'modal_overlay_color' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
             'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
             // New avatar card layout parameters
-            'layout' => 'bottom', // overlay or bottom
-            'show_title' => 'true',
+            'layout' => 'overlay', // overlay or bottom
+            'show_title' => 'false',
             'show_status' => 'false',
             'status_position' => 'corner', // corner or info
             'show_call_button' => 'true',
@@ -53,6 +53,10 @@ class NavTalk_Shortcode {
             'download_icon' => '', // Custom download button icon URL
             'inline_mode' => 'true', // true = inline video in card, false = modal popup
             'button_style' => '', // Custom CSS styles for call button
+            // Session configuration parameters
+            'voice' => '', // Voice configuration
+            'prompt' => '', // Custom prompt
+            'tools' => '', // Tools configuration (JSON string)
         ], $atts, 'navtalk_avatar');
         
         // Validate required attribute
@@ -130,7 +134,11 @@ class NavTalk_Shortcode {
             'modal_max_width' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,
             'modal_max_height' => NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT,
             'modal_overlay_color' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
-            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION
+            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
+            // Session configuration parameters
+            'voice' => '',
+            'prompt' => '',
+            'tools' => '',
         ], $atts, 'navtalk_button');
         
         if (empty($atts['name'])) {
@@ -151,7 +159,8 @@ class NavTalk_Shortcode {
         }
         
         $avatar_name = esc_attr($avatar_info['name']);
-        $image_url = esc_url($api->get_full_image_url($avatar_info['url']));
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $button_text = esc_html($atts['text']);
         $style_class = 'navtalk-btn-' . esc_attr($atts['style']);
         $size_class = 'navtalk-btn-' . esc_attr($atts['size']);
@@ -172,7 +181,10 @@ class NavTalk_Shortcode {
                 data-modal-max-width="<?php echo esc_attr($atts['modal_max_width']); ?>"
                 data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                 data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
-                data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>">
+                data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
+                data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                data-config-tools="<?php echo esc_attr($atts['tools']); ?>">
             <?php if ($show_icon): ?>
                 <svg class="navtalk-btn-icon" width="20" height="20" viewBox="0 0 22 22" fill="currentColor">
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
@@ -202,7 +214,11 @@ class NavTalk_Shortcode {
             'modal_max_width' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,
             'modal_max_height' => NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT,
             'modal_overlay_color' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
-            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION
+            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
+            // Session configuration parameters
+            'voice' => '',
+            'prompt' => '',
+            'tools' => '',
         ], $atts, 'navtalk_floating');
         
         if (empty($atts['name'])) {
@@ -223,7 +239,9 @@ class NavTalk_Shortcode {
         }
         
         $avatar_name = esc_attr($avatar_info['name']);
-        $image_url = esc_url($api->get_full_image_url($avatar_info['url']));
+        // 向后兼容：优先使用 thumbnailUrl，如果不存在则使用 url
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $position_class = 'navtalk-floating-' . esc_attr($atts['position']);
         $size = esc_attr($atts['size']);
         $color = esc_attr($atts['color']);
@@ -249,6 +267,9 @@ class NavTalk_Shortcode {
                     data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
+                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                     style="background: <?php echo $color; ?>;">
                 <svg width="24" height="24" viewBox="0 0 22 22" fill="#fff">
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
@@ -276,7 +297,11 @@ class NavTalk_Shortcode {
             'modal_max_width' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,
             'modal_max_height' => NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT,
             'modal_overlay_color' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
-            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION
+            'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
+            // Session configuration parameters
+            'voice' => '',
+            'prompt' => '',
+            'tools' => '',
         ], $atts, 'navtalk_link');
         
         if (empty($atts['name'])) {
@@ -297,7 +322,8 @@ class NavTalk_Shortcode {
         }
         
         $avatar_name = esc_attr($avatar_info['name']);
-        $image_url = esc_url($api->get_full_image_url($avatar_info['url']));
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $link_text = !empty($content) ? do_shortcode($content) : 'Start Chat';
         $style_class = 'navtalk-link-' . esc_attr($atts['style']);
         
@@ -320,7 +346,10 @@ class NavTalk_Shortcode {
            data-modal-max-width="<?php echo esc_attr($atts['modal_max_width']); ?>"
            data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
            data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
-           data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>">
+           data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
+           data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+           data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+           data-config-tools="<?php echo esc_attr($atts['tools']); ?>">
             <?php echo $link_text; ?>
         </a>
         <?php
@@ -348,19 +377,23 @@ class NavTalk_Shortcode {
             'modal_overlay_color' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
             'call_button_position' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
             // New avatar card layout parameters for list items
-            'layout' => 'bottom',
+            'layout' => 'overlay',
             'show_title' => 'true',
             'show_status' => 'false',
             'status_position' => 'corner',
             'show_call_button' => 'true',
-            'show_download_button' => 'false',
+            'show_download_button' => 'true',
             'download_url' => '',
             'title_tag' => 'h6',
             'call_icon' => '', // Custom call button icon URL
             'download_icon' => '', // Custom download button icon URL
             'inline_mode' => 'false', // false = modal popup for list items
             'button_style' => '', // Custom CSS styles for call button
-            'width' => NavTalk_Config::DEFAULT_WIDTH
+            'width' => NavTalk_Config::DEFAULT_WIDTH,
+            // Session configuration parameters
+            'voice' => '',
+            'prompt' => '',
+            'tools' => '',
         ], $atts, 'navtalk_list');
         
         $license = get_option('navtalk_license', '');
@@ -493,13 +526,16 @@ class NavTalk_Shortcode {
         $display_name = esc_html($this->get_display_name($avatar_name));
         
         $api = new NavTalk_API();
-        $image_url = $api->get_full_image_url($avatar_info['url']);
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = $api->get_full_image_url($thumbnail_url);
         $image_url_escaped = esc_url($image_url);
         
         // Check for video URL
-        $video_url = isset($avatar_info['videoUrl']) ? $api->get_full_image_url($avatar_info['videoUrl']) : '';
-        $has_video = !empty($video_url);
-        
+        $has_video =  (bool)($avatar_info['videoFile'] ?? false);
+        if ($has_video) {
+            $video_url = $api->get_full_image_url($avatar_info['url']);
+        }
+
         $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
         
@@ -589,6 +625,9 @@ class NavTalk_Shortcode {
                                     data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
+                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>
@@ -622,12 +661,15 @@ class NavTalk_Shortcode {
         $display_name = esc_html($this->get_display_name($avatar_name));
         
         $api = new NavTalk_API();
-        $image_url = $api->get_full_image_url($avatar_info['url']);
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = $api->get_full_image_url($thumbnail_url);
         $image_url_escaped = esc_url($image_url);
         
         // Check for video URL
-        $video_url = isset($avatar_info['videoUrl']) ? $api->get_full_image_url($avatar_info['videoUrl']) : '';
-        $has_video = !empty($video_url);
+        $has_video =  (bool)($avatar_info['videoFile'] ?? false);
+        if ($has_video) {
+            $video_url = $api->get_full_image_url($avatar_info['url']);
+        }
         
         $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
@@ -724,6 +766,9 @@ class NavTalk_Shortcode {
                                     data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
+                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>

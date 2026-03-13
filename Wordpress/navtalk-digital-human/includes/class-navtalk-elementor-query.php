@@ -87,7 +87,7 @@ class NavTalk_Elementor_Query {
             // Store avatar data
             $post->avatar_data = $avatar;
             $post->avatar_name = $avatar['name'];
-            $post->avatar_image = $avatar['url'];
+            $post->avatar_image = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
             $post->avatar_status = isset($avatar['status']) ? $avatar['status'] : 'Unknown';
             $post->is_available = (strtoupper($post->avatar_status) === 'SUCCESS');
             

@@ -378,7 +378,8 @@ class NavTalk_Admin {
      */
     private function render_avatar_card_admin($avatar) {
         $api = new NavTalk_API();
-        $image_url = $api->get_full_image_url($avatar['url']);
+        $thumbnail_url = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
+        $image_url = $api->get_full_image_url($thumbnail_url);
         $avatar_name = isset($avatar['name']) ? $avatar['name'] : '';
         $status = isset($avatar['status']) ? $avatar['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');

@@ -447,6 +447,9 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
             'modal_max_height' => $settings['modal_max_height'],
             'modal_overlay_color' => $settings['modal_overlay_color'],
             'call_button_position' => $settings['call_button_position'],
+            'voice' => isset($settings['config_voice']) ? $settings['config_voice'] : '',
+            'prompt' => isset($settings['config_prompt']) ? $settings['config_prompt'] : '',
+            'tools' => isset($settings['config_tools']) ? $settings['config_tools'] : '',
         ];
         
         // Use reflection to call private method

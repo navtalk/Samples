@@ -28,6 +28,7 @@
         REALTIME_INPUT_AUDIO_BUFFER_APPEND: "realtime.input_audio_buffer.append",
         REALTIME_INPUT_TEXT: "realtime.input_text",
         REALTIME_INPUT_IMAGE: "realtime.input_image",
+        REALTIME_INPUT_CONFIG: "realtime.input_config",
         UNKNOWN_TYPE: "unknow"
     });
     
@@ -48,6 +49,11 @@
             this.configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
             this.currentAvatarName = '';
             this.currentAvatarImg = '';
+            this.sessionConfig = {
+                voice: '',
+                prompt: '',
+                tools: []
+            };
             
             this.init();
         }
@@ -80,7 +86,10 @@
                     maxWidth: $(this).data('modal-max-width'),
                     maxHeight: $(this).data('modal-max-height'),
                     overlayColor: $(this).data('modal-overlay-color'),
-                    callButtonPosition: $(this).data('call-button-position')
+                    callButtonPosition: $(this).data('call-button-position'),
+                    voice: $(this).data('config-voice') || '',
+                    prompt: $(this).data('config-prompt') || '',
+                    tools: $(this).data('config-tools') || ''
                 };
                 
                 if (avatarName && avatarImg) {
@@ -131,6 +140,13 @@
         openChatModal(avatarName, avatarImg, connectImmediately = false, modalConfig = {}) {
             this.currentAvatarName = avatarName;
             this.currentAvatarImg = avatarImg;
+            
+            // Read session configuration
+            this.sessionConfig = {
+                voice: modalConfig.voice || '',
+                prompt: modalConfig.prompt || '',
+                tools: modalConfig.tools ? this.parseTools(modalConfig.tools) : []
+            };
             
             // Set modal dimensions using CSS custom properties
             const modalWidth = modalConfig.width || navtalkConfig.modalWidth;
@@ -423,7 +439,15 @@
                     break;
                     
                 case NavTalkMessageType.REALTIME_SESSION_CREATED:
-                    console.log("NavTalk: Session created, sending session update");
+                    console.log("NavTalk: Session created");
+                    
+                    // If there is configuration, send it first
+                    if (this.hasSessionConfig()) {
+                        console.log("NavTalk: Sending session config");
+                        this.sendSessionConfig();
+                    }
+                    
+                    // Then send session update
                     this.sendSessionUpdate();
                     break;
                     
@@ -766,6 +790,47 @@
         
         showError(message) {
             alert('NavTalk Error: ' + message);
+        }
+        
+        hasSessionConfig() {
+            return this.sessionConfig.voice !== '' || 
+                   this.sessionConfig.prompt !== '' || 
+                   this.sessionConfig.tools.length > 0;
+        }
+        
+        parseTools(toolsString) {
+            if (!toolsString || toolsString.trim() === '') {
+                return [];
+            }
+            
+            try {
+                const parsed = JSON.parse(toolsString);
+                return Array.isArray(parsed) ? parsed : [];
+            } catch (e) {
+                console.error('NavTalk: Failed to parse tools JSON:', e);
+                return [];
+            }
+        }
+        
+        sendSessionConfig() {
+            if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                return;
+            }
+            
+            const config = {
+                voice: this.sessionConfig.voice,
+                prompt: this.sessionConfig.prompt,
+                tools: this.sessionConfig.tools
+            };
+            
+            const configJson = JSON.stringify(config);
+            
+            this.socket.send(JSON.stringify({ 
+                type: NavTalkMessageType.REALTIME_INPUT_CONFIG, 
+                data: { content: configJson } 
+            }));
+            
+            console.log("NavTalk: Session config sent:", config);
         }
     }
     
