@@ -77,6 +77,26 @@ function run_navtalk_dh() {
 add_action('plugins_loaded', 'run_navtalk_dh');
 
 /**
+ * Enable shortcode parsing in Gutenberg HTML blocks
+ * 
+ * This allows users to use NavTalk shortcodes directly in Custom HTML blocks
+ * without needing to use do_shortcode() wrapper or separate Shortcode blocks.
+ * 
+ * @since 1.0.0
+ */
+function navtalk_enable_shortcode_in_html_block() {
+    add_filter('render_block', function($block_content, $block) {
+        // Check if this is a custom HTML block
+        if ($block['blockName'] === 'core/html') {
+            // Parse shortcodes in the HTML content
+            return do_shortcode($block_content);
+        }
+        return $block_content;
+    }, 10, 2);
+}
+add_action('init', 'navtalk_enable_shortcode_in_html_block');
+
+/**
  * Register Elementor Widgets
  */
 function navtalk_register_elementor_widgets($widgets_manager) {
