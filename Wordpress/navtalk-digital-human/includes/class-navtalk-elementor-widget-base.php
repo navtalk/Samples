@@ -450,6 +450,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
             'voice' => isset($settings['config_voice']) ? $settings['config_voice'] : '',
             'prompt' => isset($settings['config_prompt']) ? $settings['config_prompt'] : '',
             'tools' => isset($settings['config_tools']) ? $settings['config_tools'] : '',
+            'class' => isset($settings['_css_classes']) ? $settings['_css_classes'] : '',
         ];
         
         // Use reflection to call private method

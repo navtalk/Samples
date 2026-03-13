@@ -57,6 +57,8 @@ class NavTalk_Shortcode {
             'voice' => '', // Voice configuration
             'prompt' => '', // Custom prompt
             'tools' => '', // Tools configuration (JSON string)
+            // Custom CSS class
+            'class' => '', // Custom CSS class name
         ], $atts, 'navtalk_avatar');
         
         // Validate required attribute
@@ -139,6 +141,8 @@ class NavTalk_Shortcode {
             'voice' => '',
             'prompt' => '',
             'tools' => '',
+            // Custom CSS class
+            'class' => '',
         ], $atts, 'navtalk_button');
         
         if (empty($atts['name'])) {
@@ -171,7 +175,7 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <button class="navtalk-trigger-button <?php echo $style_class; ?> <?php echo $size_class; ?>" 
+        <button class="navtalk-trigger-button <?php echo $style_class; ?> <?php echo $size_class; ?> <?php echo esc_attr($atts['class']); ?>" 
                 <?php echo !$is_available ? 'disabled' : ''; ?>
                 data-avatar-name="<?php echo $avatar_name; ?>"
                 data-avatar-img="<?php echo $image_url; ?>"
@@ -219,6 +223,8 @@ class NavTalk_Shortcode {
             'voice' => '',
             'prompt' => '',
             'tools' => '',
+            // Custom CSS class
+            'class' => '',
         ], $atts, 'navtalk_floating');
         
         if (empty($atts['name'])) {
@@ -255,7 +261,7 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-floating-button <?php echo $position_class; ?>" 
+        <div class="navtalk-floating-button <?php echo $position_class; ?> <?php echo esc_attr($atts['class']); ?>" 
              style="width: <?php echo $size; ?>; height: <?php echo $size; ?>;">
             <button class="navtalk-trigger-button navtalk-floating-btn" 
                     data-avatar-name="<?php echo $avatar_name; ?>"
@@ -302,6 +308,8 @@ class NavTalk_Shortcode {
             'voice' => '',
             'prompt' => '',
             'tools' => '',
+            // Custom CSS class
+            'class' => '',
         ], $atts, 'navtalk_link');
         
         if (empty($atts['name'])) {
@@ -337,7 +345,7 @@ class NavTalk_Shortcode {
         ob_start();
         ?>
         <a href="#" 
-           class="navtalk-trigger-link <?php echo $style_class; ?>" 
+           class="navtalk-trigger-link <?php echo $style_class; ?> <?php echo esc_attr($atts['class']); ?>" 
            data-avatar-name="<?php echo $avatar_name; ?>"
            data-avatar-img="<?php echo $image_url; ?>"
            data-connect-immediately="true"
@@ -394,6 +402,8 @@ class NavTalk_Shortcode {
             'voice' => '',
             'prompt' => '',
             'tools' => '',
+            // Custom CSS class
+            'class' => '',
         ], $atts, 'navtalk_list');
         
         $license = get_option('navtalk_license', '');
@@ -450,7 +460,7 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-avatar-list <?php echo $style_class; ?>" data-columns="<?php echo $columns; ?>">
+        <div class="navtalk-avatar-list <?php echo $style_class; ?> <?php echo esc_attr($atts['class']); ?>" data-columns="<?php echo $columns; ?>">
             <?php foreach ($avatars as $avatar): ?>
                 <?php
                 // Use the layout rendering methods for each avatar in the list
@@ -556,7 +566,7 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?>" id="<?php echo $unique_id; ?>">
+        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo $unique_id; ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -691,7 +701,7 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?>" id="<?php echo $unique_id; ?>">
+        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo $unique_id; ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
