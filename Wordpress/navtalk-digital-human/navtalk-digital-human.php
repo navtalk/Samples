@@ -97,6 +97,17 @@ function navtalk_enable_shortcode_in_html_block() {
 add_action('init', 'navtalk_enable_shortcode_in_html_block');
 
 /**
+ * Enable shortcode parsing in all content areas
+ * 
+ * This ensures NavTalk shortcodes work in all content types including
+ * HTML blocks, text widgets, and other content areas.
+ * Priority 11 ensures it runs after default WordPress content filters.
+ * 
+ * @since 1.0.0
+ */
+add_filter('the_content', 'do_shortcode', 11);
+
+/**
  * Register Elementor Widgets
  */
 function navtalk_register_elementor_widgets($widgets_manager) {

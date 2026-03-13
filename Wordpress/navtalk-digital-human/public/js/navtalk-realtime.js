@@ -49,6 +49,7 @@
             this.configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
             this.currentAvatarName = '';
             this.currentAvatarImg = '';
+            this.currentLoadingOverlay = null;
             this.sessionConfig = {
                 voice: '',
                 prompt: '',
@@ -235,6 +236,26 @@
             // Hide static image
             $staticImg.hide().addClass('hidden');
             
+            // Show loading overlay for inline mode
+            const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
+            console.log('NavTalk: Showing inline loading overlay, found:', $loadingOverlay.length, 'for avatar:', avatarName);
+            if ($loadingOverlay.length) {
+                $loadingOverlay.show().css('display', 'flex');
+                console.log('NavTalk: Inline loading overlay displayed');
+                
+                // Set timeout to auto-hide loading overlay after 10 seconds
+                setTimeout(() => {
+                    if ($loadingOverlay.is(':visible')) {
+                        console.warn('NavTalk: Loading overlay timeout - auto hiding after 10s');
+                        $loadingOverlay.fadeOut(300);
+                    }
+                }, 10000);
+            } else {
+                console.warn('NavTalk: Inline loading overlay not found in container');
+            }
+            this.currentLoadingOverlay = $loadingOverlay;
+            this.currentInlineContainer = $container;
+            
             // Show realtime call video
             $video.show().addClass('active');
             
@@ -252,6 +273,14 @@
             
             // Update button state
             $button.removeClass('active');
+            
+            // Hide loading overlay if still visible
+            const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
+            if ($loadingOverlay.length) {
+                console.log('NavTalk: Hiding inline loading overlay on stop');
+                $loadingOverlay.hide();
+            }
+            this.currentLoadingOverlay = null;
             
             // Stop recording
             this.stopRecording();
@@ -328,6 +357,13 @@
             const button = $('#btnRealtime');
             button.removeClass('active');
             
+            // Hide loading overlay if still visible
+            if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                console.log('NavTalk: Hiding loading overlay on stop');
+                this.currentLoadingOverlay.hide();
+            }
+            this.currentLoadingOverlay = null;
+            
             // Stop recording
             this.stopRecording();
             
@@ -380,6 +416,23 @@
             const websocketUrl = `${navtalkConfig.websocketUrl}?license=${navtalkConfig.license}&name=${this.currentAvatarName}`;
             
             console.log('NavTalk: Connecting to WebSocket...', websocketUrl);
+            
+            // Show loading overlay for modal mode
+            const $loadingOverlay = $('#navtalk-modal-loading-overlay');
+            console.log('NavTalk: Showing modal loading overlay, found:', $loadingOverlay.length);
+            if ($loadingOverlay.length) {
+                $loadingOverlay.show().css('display', 'flex');
+                console.log('NavTalk: Modal loading overlay displayed');
+                
+                // Set timeout to auto-hide loading overlay after 10 seconds
+                setTimeout(() => {
+                    if ($loadingOverlay.is(':visible')) {
+                        console.warn('NavTalk: Loading overlay timeout - auto hiding after 10s');
+                        $loadingOverlay.fadeOut(300);
+                    }
+                }, 10000);
+            }
+            this.currentLoadingOverlay = $loadingOverlay;
             
             this.socket = new WebSocket(websocketUrl);
             this.socket.binaryType = 'arraybuffer';
@@ -579,13 +632,36 @@
                 
                 if (remoteVideo) {
                     remoteVideo.srcObject = event.streams[0];
+                    
+                    // Hide loading overlay when video actually starts playing
+                    const hideLoadingOnPlay = () => {
+                        console.log('NavTalk: Video playing, hiding loading overlay');
+                        if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                            this.currentLoadingOverlay.fadeOut(300, function() {
+                                console.log('NavTalk: Loading overlay hidden after video play');
+                            });
+                        }
+                        remoteVideo.removeEventListener('playing', hideLoadingOnPlay);
+                    };
+                    
+                    remoteVideo.addEventListener('playing', hideLoadingOnPlay);
+                    
                     setTimeout(() => {
                         remoteVideo.play().catch(err => {
                             console.error('NavTalk: Video play error:', err);
+                            // Try to hide loading overlay even if video fails to play
+                            if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                                console.log('NavTalk: Hiding loading overlay due to play error');
+                                this.currentLoadingOverlay.fadeOut(300);
+                            }
                         });
                     }, 1000);
                 } else {
                     console.error('NavTalk: No video element found');
+                    // Hide loading overlay if no video element
+                    if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                        this.currentLoadingOverlay.fadeOut(300);
+                    }
                 }
             };
             

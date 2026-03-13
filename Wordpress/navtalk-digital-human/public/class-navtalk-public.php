@@ -94,6 +94,16 @@ class NavTalk_Public {
                             <video id="character-avatar-video"
                                    poster=""
                                    style="position: absolute; top: 50%; left: 50%; width: 100%; height: 100%; object-fit: cover;object-position: 50% 5% !important;transform: translate(-50%, -50%); display: none; background: #000;"></video>
+                            
+                            <!-- Loading overlay - Transition animation during connection -->
+                            <div id="navtalk-modal-loading-overlay" class="navtalk-connection-loading-overlay" style="display: none;">
+                                <div class="navtalk-loading-spinner">
+                                    <div class="navtalk-spinner-ring"></div>
+                                    <div class="navtalk-spinner-ring"></div>
+                                    <div class="navtalk-spinner-ring"></div>
+                                </div>
+                                <div class="navtalk-loading-pulse"></div>
+                            </div>
                         </div>
                     </div>
                     

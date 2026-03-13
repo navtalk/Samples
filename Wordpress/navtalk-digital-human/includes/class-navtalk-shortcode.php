@@ -602,6 +602,16 @@ class NavTalk_Shortcode {
                         <video class="navtalk-avatar-inline-video"
                                poster="<?php echo $image_url_escaped; ?>"
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                        
+                        <!-- Loading overlay for inline mode -->
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo $avatar_name; ?>" style="display: none;">
+                            <div class="navtalk-loading-spinner">
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                            </div>
+                            <div class="navtalk-loading-pulse"></div>
+                        </div>
                     <?php endif; ?>
                     
                     <!-- Status Badge (corner) -->
@@ -736,6 +746,16 @@ class NavTalk_Shortcode {
                         <video class="navtalk-avatar-inline-video"
                                poster="<?php echo $image_url_escaped; ?>"
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                        
+                        <!-- Loading overlay for inline mode -->
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo $avatar_name; ?>" style="display: none;">
+                            <div class="navtalk-loading-spinner">
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                            </div>
+                            <div class="navtalk-loading-pulse"></div>
+                        </div>
                     <?php endif; ?>
                     
                     <!-- Status Badge (corner) -->
