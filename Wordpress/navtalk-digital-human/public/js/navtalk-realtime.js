@@ -50,6 +50,10 @@
             this.currentAvatarName = '';
             this.currentAvatarImg = '';
             this.currentLoadingOverlay = null;
+            this.callStartAudio = '';
+            this.callEndAudio = '';
+            this.defaultCallStartAudio = navtalkConfig.pluginUrl + 'public/audio/call-start.mp3';
+            this.defaultCallEndAudio = navtalkConfig.pluginUrl + 'public/audio/call-end.mp3';
             this.sessionConfig = {
                 voice: '',
                 prompt: '',
@@ -90,7 +94,9 @@
                     callButtonPosition: $(this).data('call-button-position'),
                     voice: $(this).data('config-voice') || '',
                     prompt: $(this).data('config-prompt') || '',
-                    tools: $(this).data('config-tools') || ''
+                    tools: $(this).data('config-tools') || '',
+                    callStartAudio: $(this).data('call-start-audio') || '',
+                    callEndAudio: $(this).data('call-end-audio') || ''
                 };
                 
                 if (avatarName && avatarImg) {
@@ -105,6 +111,14 @@
                 const avatarName = $button.data('avatar-name');
                 const avatarImg = $button.data('avatar-img');
                 const containerId = $button.data('container-id');
+                
+                // Get audio configuration
+                const callStartAudio = $button.data('call-start-audio') || '';
+                const callEndAudio = $button.data('call-end-audio') || '';
+                
+                // Store audio configuration for inline mode
+                self.callStartAudio = callStartAudio;
+                self.callEndAudio = callEndAudio;
                 
                 if (avatarName && containerId) {
                     self.toggleInlineCall($button, avatarName, avatarImg, containerId);
@@ -148,6 +162,10 @@
                 prompt: modalConfig.prompt || '',
                 tools: modalConfig.tools ? this.parseTools(modalConfig.tools) : []
             };
+            
+            // Store audio configuration
+            this.callStartAudio = modalConfig.callStartAudio || '';
+            this.callEndAudio = modalConfig.callEndAudio || '';
             
             // Set modal dimensions using CSS custom properties
             const modalWidth = modalConfig.width || navtalkConfig.modalWidth;
@@ -224,6 +242,9 @@
         async startInlineCall($button, avatarName, avatarImg, $container, $staticImg, $video) {
             console.log('NavTalk: Starting inline call for', avatarName);
             
+            // Play call start audio
+            this.playCallAudio('start');
+            
             // Update button state
             $button.addClass('active');
             
@@ -270,6 +291,9 @@
         
         stopInlineCall($button, $container, $staticImg, $video) {
             console.log('NavTalk: Stopping inline call');
+            
+            // Play call end audio
+            this.playCallAudio('end');
             
             // Update button state
             $button.removeClass('active');
@@ -337,6 +361,9 @@
         async startCall() {
             console.log('NavTalk: Starting call...');
             
+            // Play call start audio
+            this.playCallAudio('start');
+            
             const button = $('#btnRealtime');
             button.addClass('active');
             
@@ -353,6 +380,9 @@
         
         async stopCall() {
             console.log('NavTalk: Stopping call...');
+            
+            // Play call end audio
+            this.playCallAudio('end');
             
             const button = $('#btnRealtime');
             button.removeClass('active');
@@ -907,6 +937,29 @@
             }));
             
             console.log("NavTalk: Session config sent:", config);
+        }
+        
+        playCallAudio(audioType) {
+            try {
+                let audioUrl = '';
+                
+                if (audioType === 'start') {
+                    audioUrl = this.callStartAudio || this.defaultCallStartAudio;
+                } else if (audioType === 'end') {
+                    audioUrl = this.callEndAudio || this.defaultCallEndAudio;
+                }
+                
+                if (audioUrl) {
+                    console.log('NavTalk: Playing', audioType, 'audio:', audioUrl);
+                    const audio = new Audio(audioUrl);
+                    audio.volume = 0.5;
+                    audio.play().catch(err => {
+                        console.warn('NavTalk: Failed to play', audioType, 'audio:', err);
+                    });
+                }
+            } catch (err) {
+                console.error('NavTalk: Error playing call audio:', err);
+            }
         }
     }
     

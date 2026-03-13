@@ -420,7 +420,7 @@
 }
 
 .navtalk-trigger-button:hover:not(:disabled) {
-    transform: translateY(-2px);
+    /*transform: translateY(-2px);*/
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
 }
 
@@ -718,8 +718,8 @@
 }
 
 .btn-character-call.active {
-    background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
-    box-shadow: 0 10px 20px rgba(231, 76, 60, 0.4) !important;
+    background: linear-gradient(135deg, rgb(255, 94, 98) 0%, rgb(255, 153, 102) 100%) !important;
+    box-shadow: rgba(255, 94, 98, 0.4) 0 10px 20px !important;
     animation: pulse-red 1.5s ease-in-out infinite;
 }
 
@@ -787,19 +787,20 @@
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 50%;
-    width: 40px;
-    height: 40px;
+    width: 60px;
+    height: 60px;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
     transition: all 0.3s ease;
     backdrop-filter: blur(5px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%) !important;
+    box-shadow: rgba(118, 75, 162, 0.3) 0 10px 20px !important;
 }
 
 .ah-btn:hover {
-    transform: translateY(-2px);
+    /*transform: translateY(-2px);*/
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
@@ -998,10 +999,6 @@
     .ah-character-avatar {
         background: #1e1e1e;
     }
-    
-    .ah-btn {
-        background: rgba(30, 30, 30, 0.5);
-    }
 }
 
 /* ==========================================================================
@@ -1108,4 +1105,15 @@
         transform: translate(-50%, -50%) scale(0.9);
         opacity: 0.8;
     }
+}
+
+/* 覆盖 WordPress 默认的焦点样式 */
+.navtalk-trigger-button:focus,
+.navtalk-floating-btn:focus,
+.navtalk-icon-button:focus,
+.navtalk-call-btn:focus,
+.btn-character-call:focus,
+.navtalk-trigger-link:focus,
+.navtalk-modal-close:focus {
+    outline-width:0;
 }

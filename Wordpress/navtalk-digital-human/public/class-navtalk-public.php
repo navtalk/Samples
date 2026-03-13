@@ -48,6 +48,7 @@ class NavTalk_Public {
             'apiUrl' => NavTalk_Config::API_URL,
             'sessionTimeout' => NavTalk_Config::SESSION_TIMEOUT,
             'hasLicense' => !empty($license),
+            'pluginUrl' => NAVTALK_PLUGIN_URL,
             'modalWidth' => NavTalk_Config::DEFAULT_MODAL_WIDTH,
             'modalHeight' => NavTalk_Config::DEFAULT_MODAL_HEIGHT,
             'modalMaxWidth' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,

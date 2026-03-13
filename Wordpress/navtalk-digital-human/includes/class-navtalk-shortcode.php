@@ -59,6 +59,9 @@ class NavTalk_Shortcode {
             'tools' => '', // Tools configuration (JSON string)
             // Custom CSS class
             'class' => '', // Custom CSS class name
+            // Call audio configuration
+            'call_start_audio' => '', // Call start audio URL
+            'call_end_audio' => '', // Call end audio URL
         ], $atts, 'navtalk_avatar');
         
         // Validate required attribute
@@ -143,6 +146,9 @@ class NavTalk_Shortcode {
             'tools' => '',
             // Custom CSS class
             'class' => '',
+            // Call audio configuration
+            'call_start_audio' => '',
+            'call_end_audio' => '',
         ], $atts, 'navtalk_button');
         
         if (empty($atts['name'])) {
@@ -188,7 +194,9 @@ class NavTalk_Shortcode {
                 data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
                 data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                 data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
-                data-config-tools="<?php echo esc_attr($atts['tools']); ?>">
+                data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>">
             <?php if ($show_icon): ?>
                 <svg class="navtalk-btn-icon" width="20" height="20" viewBox="0 0 22 22" fill="currentColor">
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
@@ -225,6 +233,9 @@ class NavTalk_Shortcode {
             'tools' => '',
             // Custom CSS class
             'class' => '',
+            // Call audio configuration
+            'call_start_audio' => '',
+            'call_end_audio' => '',
         ], $atts, 'navtalk_floating');
         
         if (empty($atts['name'])) {
@@ -276,6 +287,8 @@ class NavTalk_Shortcode {
                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                     data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                     style="background: <?php echo $color; ?>;">
                 <svg width="24" height="24" viewBox="0 0 22 22" fill="#fff">
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
@@ -310,6 +323,9 @@ class NavTalk_Shortcode {
             'tools' => '',
             // Custom CSS class
             'class' => '',
+            // Call audio configuration
+            'call_start_audio' => '',
+            'call_end_audio' => '',
         ], $atts, 'navtalk_link');
         
         if (empty($atts['name'])) {
@@ -357,7 +373,9 @@ class NavTalk_Shortcode {
            data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
            data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
            data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
-           data-config-tools="<?php echo esc_attr($atts['tools']); ?>">
+           data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+           data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+           data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>">
             <?php echo $link_text; ?>
         </a>
         <?php
@@ -404,6 +422,9 @@ class NavTalk_Shortcode {
             'tools' => '',
             // Custom CSS class
             'class' => '',
+            // Call audio configuration
+            'call_start_audio' => '',
+            'call_end_audio' => '',
         ], $atts, 'navtalk_list');
         
         $license = get_option('navtalk_license', '');
@@ -648,6 +669,8 @@ class NavTalk_Shortcode {
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>
@@ -799,6 +822,8 @@ class NavTalk_Shortcode {
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>

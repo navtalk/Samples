@@ -195,6 +195,37 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         
         $this->end_controls_section();
         
+        // Add audio settings controls
+        $this->start_controls_section(
+            'audio_settings_section',
+            [
+                'label' => __('Call Audio Settings', 'navtalk-dh'),
+                'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
+            ]
+        );
+        
+        $this->add_control(
+            'call_start_audio',
+            [
+                'label' => __('Call Start Audio URL', 'navtalk-dh'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => '',
+                'description' => __('Custom audio URL for call start (leave empty for default)', 'navtalk-dh'),
+            ]
+        );
+        
+        $this->add_control(
+            'call_end_audio',
+            [
+                'label' => __('Call End Audio URL', 'navtalk-dh'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'default' => '',
+                'description' => __('Custom audio URL for call end (leave empty for default)', 'navtalk-dh'),
+            ]
+        );
+        
+        $this->end_controls_section();
+        
         // Add modal controls
         $this->add_modal_controls();
         

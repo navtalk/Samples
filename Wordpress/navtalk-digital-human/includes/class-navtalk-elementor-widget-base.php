@@ -450,6 +450,8 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
             'voice' => isset($settings['config_voice']) ? $settings['config_voice'] : '',
             'prompt' => isset($settings['config_prompt']) ? $settings['config_prompt'] : '',
             'tools' => isset($settings['config_tools']) ? $settings['config_tools'] : '',
+            'call_start_audio' => isset($settings['call_start_audio']) ? $settings['call_start_audio'] : '',
+            'call_end_audio' => isset($settings['call_end_audio']) ? $settings['call_end_audio'] : '',
             'class' => isset($settings['_css_classes']) ? $settings['_css_classes'] : '',
         ];
         
