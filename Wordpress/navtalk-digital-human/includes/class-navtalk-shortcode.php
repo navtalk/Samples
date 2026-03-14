@@ -64,6 +64,14 @@ class NavTalk_Shortcode {
             'call_end_audio' => '', // Call end audio URL
         ], $atts, 'navtalk_avatar');
         
+        // Convert angle brackets to square brackets in tools parameter
+        if (!empty($atts['tools'])) {
+            error_log('NavTalk: Before conversion: ' . $atts['tools']);
+            $atts['tools'] = str_replace('<', '[', $atts['tools']);
+            $atts['tools'] = str_replace('>', ']', $atts['tools']);
+            error_log('NavTalk: After conversion: ' . $atts['tools']);
+        }
+        
         // Validate required attribute
         if (empty($atts['name'])) {
             return $this->render_error('Avatar name is required. Usage: [navtalk_avatar name="navtalk.Ethan"]');
@@ -151,6 +159,12 @@ class NavTalk_Shortcode {
             'call_end_audio' => '',
         ], $atts, 'navtalk_button');
         
+        // Convert angle brackets to square brackets in tools parameter
+        if (!empty($atts['tools'])) {
+            $atts['tools'] = str_replace('<', '[', $atts['tools']);
+            $atts['tools'] = str_replace('>', ']', $atts['tools']);
+        }
+        
         if (empty($atts['name'])) {
             return $this->render_error('Avatar name is required. Usage: [navtalk_button name="navtalk.Ethan"]');
         }
@@ -237,6 +251,12 @@ class NavTalk_Shortcode {
             'call_start_audio' => '',
             'call_end_audio' => '',
         ], $atts, 'navtalk_floating');
+        
+        // Convert angle brackets to square brackets in tools parameter
+        if (!empty($atts['tools'])) {
+            $atts['tools'] = str_replace('<', '[', $atts['tools']);
+            $atts['tools'] = str_replace('>', ']', $atts['tools']);
+        }
         
         if (empty($atts['name'])) {
             return $this->render_error('Avatar name is required. Usage: [navtalk_floating name="navtalk.Ethan"]');
@@ -327,6 +347,12 @@ class NavTalk_Shortcode {
             'call_start_audio' => '',
             'call_end_audio' => '',
         ], $atts, 'navtalk_link');
+        
+        // Convert angle brackets to square brackets in tools parameter
+        if (!empty($atts['tools'])) {
+            $atts['tools'] = str_replace('<', '[', $atts['tools']);
+            $atts['tools'] = str_replace('>', ']', $atts['tools']);
+        }
         
         if (empty($atts['name'])) {
             return $this->render_error('Avatar name is required.');
@@ -426,6 +452,12 @@ class NavTalk_Shortcode {
             'call_start_audio' => '',
             'call_end_audio' => '',
         ], $atts, 'navtalk_list');
+        
+        // Convert angle brackets to square brackets in tools parameter
+        if (!empty($atts['tools'])) {
+            $atts['tools'] = str_replace('<', '[', $atts['tools']);
+            $atts['tools'] = str_replace('>', ']', $atts['tools']);
+        }
         
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
@@ -655,6 +687,11 @@ class NavTalk_Shortcode {
                                     data-avatar-img="<?php echo $image_url_escaped; ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
                                     data-container-id="<?php echo $unique_id; ?>"
+                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php if (!empty($atts['button_style'])): ?>
                                     style="<?php echo esc_attr($atts['button_style']); ?>"
                                     <?php endif; ?>
@@ -666,11 +703,6 @@ class NavTalk_Shortcode {
                                     data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
-                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
-                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
-                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
-                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
-                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>
@@ -808,6 +840,11 @@ class NavTalk_Shortcode {
                                     data-avatar-img="<?php echo $image_url_escaped; ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
                                     data-container-id="<?php echo $unique_id; ?>"
+                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
+                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
+                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
+                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
+                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php if (!empty($atts['button_style'])): ?>
                                     style="<?php echo esc_attr($atts['button_style']); ?>"
                                     <?php endif; ?>
@@ -819,11 +856,6 @@ class NavTalk_Shortcode {
                                     data-modal-max-height="<?php echo esc_attr($atts['modal_max_height']); ?>"
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
-                                    data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
-                                    data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
-                                    data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
-                                    data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
-                                    data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
                                     <?php endif; ?>>
                                 <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
                             </button>

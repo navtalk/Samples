@@ -99,6 +99,13 @@
                     callEndAudio: $(this).data('call-end-audio') || ''
                 };
                 
+                console.log('NavTalk Modal: Raw config data:', {
+                    voice: $(this).data('config-voice'),
+                    prompt: $(this).data('config-prompt'),
+                    tools: $(this).data('config-tools')
+                });
+                console.log('NavTalk Modal: Modal config object:', modalConfig);
+                
                 if (avatarName && avatarImg) {
                     self.openChatModal(avatarName, avatarImg, connectImmediately === true || connectImmediately === 'true', modalConfig);
                 }
@@ -111,6 +118,26 @@
                 const avatarName = $button.data('avatar-name');
                 const avatarImg = $button.data('avatar-img');
                 const containerId = $button.data('container-id');
+                
+                // Get session configuration from data attributes
+                const voice = $button.data('config-voice') || '';
+                const prompt = $button.data('config-prompt') || '';
+                const tools = $button.data('config-tools') || '';
+                
+                console.log('NavTalk Inline: Raw config data:', {
+                    voice: $button.data('config-voice'),
+                    prompt: $button.data('config-prompt'),
+                    tools: $button.data('config-tools')
+                });
+                
+                // Store session configuration for inline mode
+                self.sessionConfig = {
+                    voice: voice,
+                    prompt: prompt,
+                    tools: tools ? self.parseTools(tools) : []
+                };
+                
+                console.log('NavTalk Inline: Parsed session config:', self.sessionConfig);
                 
                 // Get audio configuration
                 const callStartAudio = $button.data('call-start-audio') || '';
@@ -156,12 +183,17 @@
             this.currentAvatarName = avatarName;
             this.currentAvatarImg = avatarImg;
             
+            console.log('NavTalk: openChatModal called with modalConfig:', modalConfig);
+            
             // Read session configuration
             this.sessionConfig = {
                 voice: modalConfig.voice || '',
                 prompt: modalConfig.prompt || '',
-                tools: modalConfig.tools ? this.parseTools(modalConfig.tools) : []
+                tools: (modalConfig.tools && modalConfig.tools !== 'undefined') ? this.parseTools(modalConfig.tools) : []
             };
+            
+            console.log('NavTalk: Session config initialized:', this.sessionConfig);
+            console.log('NavTalk: hasSessionConfig():', this.hasSessionConfig());
             
             // Store audio configuration
             this.callStartAudio = modalConfig.callStartAudio || '';
@@ -484,6 +516,7 @@
             
             this.socket.onopen = function() {
                 console.log("NavTalk: WebSocket connection established");
+
             };
             
             this.socket.onerror = function(error) {
@@ -523,14 +556,21 @@
                     
                 case NavTalkMessageType.REALTIME_SESSION_CREATED:
                     console.log("NavTalk: Session created");
-                    
+                    console.log("NavTalk: Current sessionConfig:", this.sessionConfig);
+
                     // If there is configuration, send it first
-                    if (this.hasSessionConfig()) {
-                        console.log("NavTalk: Sending session config");
+                    const hasConfig = this.hasSessionConfig();
+                    console.log("NavTalk: Has session config:", hasConfig);
+
+                    if (hasConfig) {
+                        console.log("NavTalk: Sending session config...");
                         this.sendSessionConfig();
+                    } else {
+                        console.log("NavTalk: No session config to send");
                     }
-                    
+
                     // Then send session update
+                    console.log("NavTalk: Sending session update");
                     this.sendSessionUpdate();
                     break;
                     
@@ -622,6 +662,10 @@
                 case NavTalkMessageType.REALTIME_RESPONSE_AUDIO_DONE:
                     console.log("NavTalk: Audio response complete");
                     this.isPlaying = false;
+                    break;
+                    
+                case NavTalkMessageType.REALTIME_RESPONSE_FUNCTION_CALL_ARGUMENTS_DONE:
+                    this.handleFunctionCall(navData);
                     break;
                     
                 default:
@@ -899,44 +943,93 @@
         }
         
         hasSessionConfig() {
-            return this.sessionConfig.voice !== '' || 
+            // 防御性检查：确保 sessionConfig 存在
+            if (!this.sessionConfig) {
+                console.warn('NavTalk: sessionConfig is undefined');
+                return false;
+            }
+            
+            const hasConfig = this.sessionConfig.voice !== '' || 
                    this.sessionConfig.prompt !== '' || 
-                   this.sessionConfig.tools.length > 0;
+                   (this.sessionConfig.tools && this.sessionConfig.tools.length > 0);
+            
+            console.log('NavTalk: hasSessionConfig check:', {
+                voice: this.sessionConfig.voice,
+                prompt: this.sessionConfig.prompt,
+                toolsLength: this.sessionConfig.tools ? this.sessionConfig.tools.length : 0,
+                result: hasConfig
+            });
+            
+            return hasConfig;
         }
         
         parseTools(toolsString) {
+            console.log('NavTalk: parseTools called with:', toolsString);
+            
             if (!toolsString || toolsString.trim() === '') {
+                console.log('NavTalk: parseTools - empty string, returning []');
                 return [];
             }
             
+            // Convert angle brackets to square brackets (fallback if PHP conversion failed)
+            let processedString = toolsString;
+            if (toolsString.includes('<') || toolsString.includes('>')) {
+                console.log('NavTalk: Found angle brackets, converting to square brackets');
+                processedString = toolsString.replace(/</g, '[').replace(/>/g, ']');
+                console.log('NavTalk: Converted string:', processedString);
+            }
+            
             try {
-                const parsed = JSON.parse(toolsString);
-                return Array.isArray(parsed) ? parsed : [];
+                const parsed = JSON.parse(processedString);
+                console.log('NavTalk: parseTools - parsed successfully:', parsed);
+                const result = Array.isArray(parsed) ? parsed : [];
+                console.log('NavTalk: parseTools - returning:', result);
+                return result;
             } catch (e) {
                 console.error('NavTalk: Failed to parse tools JSON:', e);
+                console.error('NavTalk: Original string was:', toolsString);
+                console.error('NavTalk: Processed string was:', processedString);
                 return [];
             }
         }
         
         sendSessionConfig() {
+            console.log('NavTalk: sendSessionConfig called');
+            console.log('NavTalk: Socket state:', this.socket ? this.socket.readyState : 'null');
+            console.log('NavTalk: WebSocket.OPEN =', WebSocket.OPEN);
+            
             if (!this.socket || this.socket.readyState !== WebSocket.OPEN) {
+                console.warn('NavTalk: Cannot send config - socket not ready');
+                return;
+            }
+            
+            // 防御性检查：确保 sessionConfig 存在
+            if (!this.sessionConfig) {
+                console.warn('NavTalk: sessionConfig is undefined, cannot send');
                 return;
             }
             
             const config = {
-                voice: this.sessionConfig.voice,
-                prompt: this.sessionConfig.prompt,
-                tools: this.sessionConfig.tools
+                voice: this.sessionConfig.voice || '',
+                prompt: this.sessionConfig.prompt || '',
+                tools: this.sessionConfig.tools || []
             };
             
             const configJson = JSON.stringify(config);
             
-            this.socket.send(JSON.stringify({ 
+            console.log('NavTalk: Sending session config:', config);
+            console.log('NavTalk: Config JSON:', configJson);
+            
+            const message = { 
                 type: NavTalkMessageType.REALTIME_INPUT_CONFIG, 
                 data: { content: configJson } 
-            }));
+            };
             
-            console.log("NavTalk: Session config sent:", config);
+            console.log('NavTalk: Full message to send:', message);
+            
+            this.socket.send(JSON.stringify(message));
+            
+            console.log("NavTalk: Session config sent successfully");
         }
         
         playCallAudio(audioType) {
@@ -959,6 +1052,46 @@
                 }
             } catch (err) {
                 console.error('NavTalk: Error playing call audio:', err);
+            }
+        }
+        
+        handleFunctionCall(data) {
+            console.log("Received function call event: ", data);
+            
+            switch (data.function_name) {
+                case "end_call":
+                case "end_conversation":
+                    console.log("Received end conversation function call");
+                    this.handleEndConversation();
+                    break;
+                default:
+                    this.tryCallGlobalFunction(data);
+                    break;
+            }
+        }
+        
+        handleEndConversation() {
+            console.log("Handling end conversation...");
+            
+            if (this.currentInlineContainer && this.currentInlineContainer.length > 0) {
+                this.stopInlineCall();
+            } else {
+                this.stopCall();
+            }
+        }
+        
+        tryCallGlobalFunction(data) {
+            const functionName = data.function_name;
+            
+            if (typeof window[functionName] === 'function') {
+                console.log(`Calling global function: ${functionName}`);
+                try {
+                    window[functionName](data);
+                } catch (err) {
+                    console.error(`Error calling global function ${functionName}:`, err);
+                }
+            } else {
+                console.warn(`Global function ${functionName} not found on window object`);
             }
         }
     }
