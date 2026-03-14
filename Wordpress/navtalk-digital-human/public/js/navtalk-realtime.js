@@ -59,6 +59,11 @@
                 prompt: '',
                 tools: []
             };
+            // Store inline call elements
+            this.currentInlineButton = null;
+            this.currentInlineStaticImg = null;
+            this.currentInlineVideo = null;
+            this.currentInlineVideoElement = null; // Native DOM element for addEventListener
             
             this.init();
         }
@@ -309,13 +314,18 @@
             this.currentLoadingOverlay = $loadingOverlay;
             this.currentInlineContainer = $container;
             
+            // Store inline call elements for later use
+            this.currentInlineButton = $button;
+            this.currentInlineStaticImg = $staticImg;
+            this.currentInlineVideo = $video;
+            this.currentInlineVideoElement = $video[0]; // Store native DOM element for addEventListener
+            
             // Show realtime call video
             $video.show().addClass('active');
             
             // Store current avatar info
             this.currentAvatarName = avatarName;
             this.currentAvatarImg = avatarImg;
-            this.currentInlineVideo = $video[0]; // Store video element reference
             
             // Start WebSocket connection
             await this.startWebSocket();
@@ -323,6 +333,19 @@
         
         stopInlineCall($button, $container, $staticImg, $video) {
             console.log('NavTalk: Stopping inline call');
+            
+            // Use stored elements if parameters not provided
+            $button = $button || this.currentInlineButton;
+            $container = $container || this.currentInlineContainer;
+            $staticImg = $staticImg || this.currentInlineStaticImg;
+            $video = $video || this.currentInlineVideo;
+            
+            // Validate we have required elements
+            if (!$button || !$container || !$staticImg || !$video) {
+                console.error('NavTalk: Missing required elements for stopInlineCall');
+                console.log('NavTalk: button:', $button, 'container:', $container, 'staticImg:', $staticImg, 'video:', $video);
+                return;
+            }
             
             // Play call end audio
             this.playCallAudio('end');
@@ -358,8 +381,12 @@
             // Clear video source
             $video[0].srcObject = null;
             
-            // Clear reference
+            // Clear references
+            this.currentInlineContainer = null;
+            this.currentInlineButton = null;
+            this.currentInlineStaticImg = null;
             this.currentInlineVideo = null;
+            this.currentInlineVideoElement = null;
             
             // Show preview video or static image
             const $previewVideo = $container.find('.navtalk-avatar-preview-video');
@@ -696,8 +723,8 @@
             this.peerConnection.ontrack = (event) => {
                 console.log("NavTalk: Track received");
                 
-                // Determine which video element to use (inline or modal)
-                const remoteVideo = this.currentInlineVideo || document.getElementById('character-avatar-video');
+                // Determine which video element to use (inline or modal) - use native DOM element
+                const remoteVideo = this.currentInlineVideoElement || document.getElementById('character-avatar-video');
                 
                 if (remoteVideo) {
                     remoteVideo.srcObject = event.streams[0];
@@ -843,14 +870,35 @@
         }
         
         stopRecording() {
+            console.log('NavTalk: Stopping recording...');
+            
+            // Disconnect and clear audio processor
             if (this.audioProcessor) {
                 this.audioProcessor.disconnect();
                 this.audioProcessor = null;
+                console.log('NavTalk: Audio processor disconnected');
             }
+            
+            // Stop all audio stream tracks
             if (this.audioStream) {
-                this.audioStream.getTracks().forEach(track => track.stop());
+                this.audioStream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('NavTalk: Audio track stopped:', track.kind);
+                });
                 this.audioStream = null;
             }
+            
+            // Close and clear audio context
+            if (this.audioContext) {
+                this.audioContext.close().then(() => {
+                    console.log('NavTalk: Audio context closed');
+                }).catch(err => {
+                    console.error('NavTalk: Error closing audio context:', err);
+                });
+                this.audioContext = null;
+            }
+            
+            console.log('NavTalk: Recording stopped');
         }
         
         sendAudioMessage(chunk) {
