@@ -320,6 +320,9 @@
             this.currentInlineVideo = $video;
             this.currentInlineVideoElement = $video[0]; // Store native DOM element for addEventListener
             
+            // Store loading overlay reference on video element for reliable access during play event
+            $video.data('loadingOverlay', $loadingOverlay);
+            
             // Show realtime call video
             $video.show().addClass('active');
             
@@ -378,8 +381,8 @@
             // Hide realtime call video
             $video.hide().removeClass('active');
             
-            // Clear video source
-            $video[0].srcObject = null;
+            // Stop and clear video source
+            this.stopMediaStream($video[0]);
             
             // Clear references
             this.currentInlineContainer = null;
@@ -489,7 +492,7 @@
                 
                 const remoteVideo = document.getElementById('character-avatar-video');
                 if (remoteVideo) {
-                    remoteVideo.srcObject = null;
+                    this.stopMediaStream(remoteVideo);
                     remoteVideo.removeAttribute('src');
                     remoteVideo.load();
                 }
@@ -522,6 +525,12 @@
                 }, 10000);
             }
             this.currentLoadingOverlay = $loadingOverlay;
+            
+            // Store loading overlay reference on modal video element for reliable access
+            const $modalVideo = $('#character-avatar-video');
+            if ($modalVideo.length) {
+                $modalVideo.data('loadingOverlay', $loadingOverlay);
+            }
             
             this.socket = new WebSocket(websocketUrl);
             this.socket.binaryType = 'arraybuffer';
@@ -732,11 +741,23 @@
                     // Hide loading overlay when video actually starts playing
                     const hideLoadingOnPlay = () => {
                         console.log('NavTalk: Video playing, hiding loading overlay');
-                        if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
-                            this.currentLoadingOverlay.fadeOut(300, function() {
-                                console.log('NavTalk: Loading overlay hidden after video play');
-                            });
+                        
+                        // Try to get loading overlay from video element data (reliable reference)
+                        const $videoElement = $(remoteVideo);
+                        const $loadingOverlay = $videoElement.data('loadingOverlay');
+                        
+                        if ($loadingOverlay && $loadingOverlay.length && $loadingOverlay.is(':visible')) {
+                            console.log('NavTalk: Hiding loading overlay via video element data');
+                            $loadingOverlay.hide();
+                            console.log('NavTalk: Loading overlay hidden after video play');
+                        } else if (this.currentLoadingOverlay && this.currentLoadingOverlay.length && this.currentLoadingOverlay.is(':visible')) {
+                            console.log('NavTalk: Fallback to currentLoadingOverlay');
+                            this.currentLoadingOverlay.hide();
+                            console.log('NavTalk: Loading overlay hidden via fallback');
+                        } else {
+                            console.log('NavTalk: Loading overlay already hidden or not found');
                         }
+                        
                         remoteVideo.removeEventListener('playing', hideLoadingOnPlay);
                     };
                     
@@ -746,9 +767,15 @@
                         remoteVideo.play().catch(err => {
                             console.error('NavTalk: Video play error:', err);
                             // Try to hide loading overlay even if video fails to play
-                            if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                            const $videoElement = $(remoteVideo);
+                            const $loadingOverlay = $videoElement.data('loadingOverlay');
+                            
+                            if ($loadingOverlay && $loadingOverlay.length) {
                                 console.log('NavTalk: Hiding loading overlay due to play error');
-                                this.currentLoadingOverlay.fadeOut(300);
+                                $loadingOverlay.hide();
+                            } else if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                                console.log('NavTalk: Hiding loading overlay (fallback) due to play error');
+                                this.currentLoadingOverlay.hide();
                             }
                         });
                     }, 1000);
@@ -756,7 +783,7 @@
                     console.error('NavTalk: No video element found');
                     // Hide loading overlay if no video element
                     if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
-                        this.currentLoadingOverlay.fadeOut(300);
+                        this.currentLoadingOverlay.hide();
                     }
                 }
             };
@@ -899,6 +926,27 @@
             }
             
             console.log('NavTalk: Recording stopped');
+        }
+        
+        stopMediaStream(videoElement) {
+            if (!videoElement) return;
+            
+            console.log('NavTalk: Stopping media stream for video element');
+            
+            // Get the MediaStream from the video element
+            const stream = videoElement.srcObject;
+            
+            if (stream) {
+                // Stop all tracks (both audio and video)
+                stream.getTracks().forEach(track => {
+                    track.stop();
+                    console.log('NavTalk: Stopped track:', track.kind, track.id);
+                });
+                
+                // Clear the srcObject
+                videoElement.srcObject = null;
+                console.log('NavTalk: Media stream stopped and cleared');
+            }
         }
         
         sendAudioMessage(chunk) {
