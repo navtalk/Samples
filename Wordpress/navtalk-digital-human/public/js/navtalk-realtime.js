@@ -960,7 +960,21 @@
         
         parseTools(toolsString) {
             console.log('NavTalk: parseTools called with:', toolsString);
+            console.log('NavTalk: parseTools - input type:', typeof toolsString);
             
+            // If already an array, return it directly
+            if (Array.isArray(toolsString)) {
+                console.log('NavTalk: parseTools - input is already an array, returning directly');
+                return toolsString;
+            }
+            
+            // If not a string, return empty array
+            if (typeof toolsString !== 'string') {
+                console.warn('NavTalk: parseTools - input is not a string or array, type:', typeof toolsString);
+                return [];
+            }
+            
+            // String processing
             if (!toolsString || toolsString.trim() === '') {
                 console.log('NavTalk: parseTools - empty string, returning []');
                 return [];
