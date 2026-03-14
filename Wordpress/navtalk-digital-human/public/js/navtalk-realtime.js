@@ -516,7 +516,14 @@
             
             this.socket.onopen = function() {
                 console.log("NavTalk: WebSocket connection established");
-
+                
+                // Send session configuration immediately after connection
+                if (self.hasSessionConfig()) {
+                    console.log("NavTalk: Sending session config in onopen");
+                    self.sendSessionConfig();
+                } else {
+                    console.log("NavTalk: No session config to send in onopen");
+                }
             };
             
             this.socket.onerror = function(error) {
@@ -556,20 +563,8 @@
                     
                 case NavTalkMessageType.REALTIME_SESSION_CREATED:
                     console.log("NavTalk: Session created");
-                    console.log("NavTalk: Current sessionConfig:", this.sessionConfig);
-
-                    // If there is configuration, send it first
-                    const hasConfig = this.hasSessionConfig();
-                    console.log("NavTalk: Has session config:", hasConfig);
-
-                    if (hasConfig) {
-                        console.log("NavTalk: Sending session config...");
-                        this.sendSessionConfig();
-                    } else {
-                        console.log("NavTalk: No session config to send");
-                    }
-
-                    // Then send session update
+                    
+                    // Send session update
                     console.log("NavTalk: Sending session update");
                     this.sendSessionUpdate();
                     break;
