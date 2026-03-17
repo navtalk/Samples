@@ -43,11 +43,17 @@ const NavTalkMessageType = Object.freeze({
 
 // ❗You need to manually modify the following variables.
 // ✒️ api key
-const LICENSE = "sk_navtalk_your_key"
+const LICENSE = "sk_navtalk_pbxJGVOTi7XYtzFaVQ2kSlgezTF426sI"
 
-// ✒️ character name. Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
+// ✒️ character name OR avatar ID
+// Option 1: Use character name (will query by name)
+// Currently supported characters include: navtalk.Ethan, navtalk.Leo, navtalk.Emma, navtalk.Sophia, navtalk.Mia, navtalk.Chloe, navtalk.Zoe, navtalk.Ava
 // You can check the specific images on the official website: https://console.navtalk.ai/login#/playground/realtime_digital_human.
 const CHARACTER_NAME = "navtalk.Zoe"
+// Option 2: Use avatar ID for precise lookup (recommended if you have the ID)
+// const AVATAR_ID = "your-avatar-id-here"; // Get from avatar list API
+
+// Note: avatarId has higher priority than name
 
 // Note: model, voice, and prompt configurations are managed through the console, not in client code
 
@@ -168,7 +174,11 @@ async function initDigtalHumanRealtimeButton() {
 
     async function startWebSocket() {
         // Retrieve license information from Chrome storage
-        const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&name=${CHARACTER_NAME}`;
+        // Build connection with avatarId (if available) or name
+        const connectionParam = typeof AVATAR_ID !== 'undefined' && AVATAR_ID
+          ? `avatarId=${encodeURIComponent(AVATAR_ID)}`
+          : `name=${encodeURIComponent(CHARACTER_NAME)}`;
+        const websocketUrlWithParams = `${baseUrl}?license=${LICENSE}&${connectionParam}`;
 
         // Initialize the WebSocket connection
         socket = new WebSocket(websocketUrlWithParams);
