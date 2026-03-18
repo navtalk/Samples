@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 /**
  * NavTalk Admin Class
  * 
@@ -826,35 +826,41 @@ class NavTalk_Admin {
 
 /**
  * AJAX handler for testing API connection
+ * Use output buffering to prevent BOM/whitespace from included files breaking JSON response.
  */
 add_action('wp_ajax_navtalk_test_connection', function() {
+    ob_start();
+
     check_ajax_referer('navtalk_test', 'nonce', false);
-    
+
     if (!current_user_can('manage_options')) {
+        ob_end_clean();
         wp_send_json_error(['message' => 'Permission denied']);
         return;
     }
-    
+
     // Temporarily set license for testing
     $test_license = isset($_POST['license']) ? sanitize_text_field($_POST['license']) : '';
-    
+
     if (empty($test_license)) {
+        ob_end_clean();
         wp_send_json_error(['message' => 'License key is empty']);
         return;
     }
-    
+
     // Update option temporarily for test
     $original_license = get_option('navtalk_license');
     update_option('navtalk_license', $test_license);
-    
+
     $api = new NavTalk_API();
     $result = $api->test_connection();
-    
+
     // Restore original license if test failed
     if (!$result['success']) {
         update_option('navtalk_license', $original_license);
     }
-    
+
+    ob_end_clean();
     if ($result['success']) {
         wp_send_json_success($result);
     } else {
