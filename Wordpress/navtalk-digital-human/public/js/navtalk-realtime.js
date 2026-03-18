@@ -1,4 +1,4 @@
-/**
+﻿/**
  * NavTalk Real-time Communication Script
  * Handles WebSocket, WebRTC, and audio processing for digital human conversations
  */
@@ -588,6 +588,39 @@
                 case NavTalkMessageType.CONNECTED_CLOSE:
                     const errorMessage = data.message || "Unknown error";
                     console.error(`NavTalk: Connection error: ${errorMessage}`);
+                    
+                    // If in call, cleanup resources but keep UI open
+                    if (this.socket || this.peerConnection) {
+                        console.log('NavTalk: Cleaning up resources due to connection error');
+                        
+                        // Hide loading overlay
+                        if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
+                            console.log('NavTalk: Hiding loading overlay due to connection error');
+                            this.currentLoadingOverlay.hide();
+                        }
+                        this.currentLoadingOverlay = null;
+                        
+                        // Stop recording
+                        this.stopRecording();
+                        
+                        // Close WebSocket
+                        if (this.socket) {
+                            this.socket.close();
+                            this.socket = null;
+                        }
+                        
+                        // Clean up WebRTC resources
+                        if (this.peerConnection) {
+                            this.peerConnection.close();
+                            this.peerConnection = null;
+                        }
+                        
+                        // Clear audio queue
+                        this.audioQueue = [];
+                        this.isPlaying = false;
+                        
+                        console.log('NavTalk: Resources cleaned up, UI remains open for retry');
+                    }
                     break;
                     
                 case NavTalkMessageType.CONNECTED_SUCCESS:
@@ -1034,7 +1067,7 @@
         }
         
         hasSessionConfig() {
-            // 防御性检查：确保 sessionConfig 存在
+            // Defensive check: ensure sessionConfig exists
             if (!this.sessionConfig) {
                 console.warn('NavTalk: sessionConfig is undefined');
                 return false;
@@ -1108,7 +1141,7 @@
                 return;
             }
             
-            // 防御性检查：确保 sessionConfig 存在
+            // Defensive check: ensure sessionConfig exists
             if (!this.sessionConfig) {
                 console.warn('NavTalk: sessionConfig is undefined, cannot send');
                 return;

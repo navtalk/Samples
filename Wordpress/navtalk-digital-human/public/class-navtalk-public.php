@@ -30,11 +30,28 @@ class NavTalk_Public {
             NAVTALK_VERSION
         );
         
+        // Enqueue widget styles
+        wp_enqueue_style(
+            'navtalk-widget-style',
+            NAVTALK_PLUGIN_URL . 'public/css/navtalk-widget.css',
+            [],
+            NAVTALK_VERSION
+        );
+        
         // Enqueue script
         wp_enqueue_script(
             'navtalk-realtime',
             NAVTALK_PLUGIN_URL . 'public/js/navtalk-realtime.js',
             ['jquery'],
+            NAVTALK_VERSION,
+            true
+        );
+        
+        // Enqueue widget script
+        wp_enqueue_script(
+            'navtalk-widget',
+            NAVTALK_PLUGIN_URL . 'public/js/navtalk-widget.js',
+            ['jquery', 'navtalk-realtime'],
             NAVTALK_VERSION,
             true
         );

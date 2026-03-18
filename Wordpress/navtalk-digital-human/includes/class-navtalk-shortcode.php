@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 /**
  * NavTalk Shortcode Class
  * 
@@ -19,6 +19,204 @@ class NavTalk_Shortcode {
         add_shortcode('navtalk_floating', [$this, 'render_floating']);
         add_shortcode('navtalk_link', [$this, 'render_link']);
         add_shortcode('navtalk_list', [$this, 'render_avatar_list']);
+        add_action('wp_footer', [$this, 'output_global_floating'], 998);
+    }
+
+    /**
+     * Output global digital human assistant in footer (floating widget)
+     * Controlled by global settings and per-page display options
+     */
+    public function output_global_floating() {
+        // Check global enable switch
+        if (get_option('navtalk_floating_enabled', '0') !== '1') {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo '<!-- NavTalk: Global floating widget not displayed - Global digital human assistant not enabled -->';
+            }
+            return;
+        }
+
+        $avatar_name = get_option('navtalk_floating_avatar', '');
+        if (empty($avatar_name)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo '<!-- NavTalk: Global floating widget not displayed - No avatar selected -->';
+            }
+            return;
+        }
+
+        // Check per-page/post level display option
+        if (is_singular()) {
+            $post_id = get_queried_object_id();
+            $show = get_post_meta($post_id, '_navtalk_show_floating', true);
+            if ($show === 'hide') {
+                if (defined('WP_DEBUG') && WP_DEBUG) {
+                    echo '<!-- NavTalk: Global floating widget not displayed - Disabled on this page -->';
+                }
+                return;
+            }
+        }
+
+        // License key is required
+        $license = get_option('navtalk_license', '');
+        if (empty($license)) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo '<!-- NavTalk: Global floating widget not displayed - License key not configured -->';
+            }
+            return;
+        }
+
+        // Get avatar information from API
+        $api = new NavTalk_API();
+        $avatar_info = $api->get_avatar_info($avatar_name);
+        
+        if (isset($avatar_info['error']) && $avatar_info['error']) {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo '<!-- NavTalk: Global floating widget not displayed - Failed to fetch avatar info: ' . esc_html($avatar_info['message']) . ' -->';
+            }
+            return;
+        }
+        
+        $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
+        if (strtoupper($status) !== 'SUCCESS') {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                echo '<!-- NavTalk: Global floating widget not displayed - Selected avatar unavailable (status: ' . esc_html($status) . ') -->';
+            }
+            return;
+        }
+
+        // Get configuration options
+        $position = get_option('navtalk_floating_position', 'bottom-right');
+        $show_toggle = get_option('navtalk_show_toggle_button', '1') === '1';
+        $button_size = get_option('navtalk_floating_button_size', '60px');
+        $button_color = get_option('navtalk_floating_button_color', '#667eea');
+        $custom_style = get_option('navtalk_floating_custom_style', '');
+        $prompt = get_option('navtalk_floating_prompt', '');
+        $voice = get_option('navtalk_floating_voice', '');
+        $model = get_option('navtalk_floating_model', '');
+        $js_callbacks = get_option('navtalk_floating_js_callbacks', '');
+
+        // Get image/video URLs
+        $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
+        $image_url = $api->get_full_image_url($thumbnail_url);
+        
+        // Check if avatar has video preview
+        $has_video = (bool)($avatar_info['videoFile'] ?? false);
+        if ($has_video) {
+            $video_url = $api->get_full_image_url($avatar_info['url']);
+        }
+        
+        // Generate unique container ID
+        $unique_id = 'ntw-widget-root';
+        
+        // Output custom CSS if provided
+        if (!empty($custom_style)) {
+            echo '<style id="ntw-custom-style">' . esc_html($custom_style) . '</style>';
+        }
+        
+        // Output custom JS callbacks if provided
+        if (!empty($js_callbacks)) {
+            echo '<script id="ntw-custom-callbacks">' . $js_callbacks . '</script>';
+        }
+        
+        ?>
+        <!-- NavTalk Global Floating Widget -->
+        <div id="<?php echo esc_attr($unique_id); ?>" 
+             class="ntw-container <?php echo esc_attr($position); ?> navtalk-inline-mode" 
+             data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+             data-avatar-img="<?php echo esc_url($image_url); ?>"
+             data-prompt="<?php echo esc_attr($prompt); ?>"
+             data-voice="<?php echo esc_attr($voice); ?>"
+             data-model="<?php echo esc_attr($model); ?>">
+            
+            <div class="ntw-panel-body">
+                <div class="ntw-character-box">
+                    <div class="ntw-character-avatar">
+                        <?php if ($has_video): ?>
+                            <!-- Avatar preview video (auto-loop) -->
+                            <video class="navtalk-avatar-preview-video ntw-preview-video"
+                                   src="<?php echo esc_url($video_url); ?>"
+                                   poster="<?php echo esc_url($image_url); ?>"
+                                   autoplay
+                                   loop
+                                   muted
+                                   playsinline></video>
+                        <?php else: ?>
+                            <!-- Static image if no video available -->
+                            <img class="navtalk-avatar-static-img" 
+                                 src="<?php echo esc_url($image_url); ?>" 
+                                 alt="Digital Human">
+                        <?php endif; ?>
+                        
+                        <!-- Inline realtime call video element (hidden by default) -->
+                        <video class="navtalk-avatar-inline-video"
+                               id="ntw-avatar-video"
+                               poster="<?php echo esc_url($image_url); ?>"
+                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                        
+                        <!-- Loading overlay for inline mode -->
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" 
+                             data-avatar="<?php echo esc_attr($avatar_name); ?>" 
+                             style="display: none;">
+                            <div class="navtalk-loading-spinner">
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                                <div class="navtalk-spinner-ring"></div>
+                            </div>
+                            <div class="navtalk-loading-pulse"></div>
+                        </div>
+                        
+                        <!-- Call button overlay -->
+                        <button class="navtalk-icon-button navtalk-call-btn navtalk-inline-call ntw-call-button"
+                                data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                data-avatar-img="<?php echo esc_url($image_url); ?>"
+                                data-inline-mode="true"
+                                data-container-id="<?php echo esc_attr($unique_id); ?>"
+                                data-config-voice="<?php echo esc_attr($voice); ?>"
+                                data-config-prompt="<?php echo esc_attr($prompt); ?>"
+                                data-config-tools=""
+                                style="width: <?php echo esc_attr($button_size); ?>; height: <?php echo esc_attr($button_size); ?>; background-color: <?php echo esc_attr($button_color); ?>;">
+                            <?php echo $this->get_phone_icon(); ?>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <?php if ($show_toggle): ?>
+            <!-- Toggle button to show/hide widget -->
+            <button class="ntw-toggle-btn" 
+                    id="ntw-toggle-widget" 
+                    aria-expanded="true" 
+                    aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'navtalk-dh'); ?>">
+                <span class="ntw-toggle-icon"></span>
+                <span class="ntw-toggle-text"></span>
+            </button>
+            <?php endif; ?>
+        </div>
+        
+        <!-- Inline script to prevent flash of expanded state on page load -->
+        <script>
+        (function() {
+            try {
+                var savedState = localStorage.getItem('navtalk_widget_state');
+                if (savedState === 'collapsed') {
+                    var widget = document.getElementById('ntw-widget-root');
+                    var toggleBtn = document.getElementById('ntw-toggle-widget');
+                    if (widget) {
+                        widget.classList.add('ntw-collapsed');
+                    }
+                    if (toggleBtn) {
+                        toggleBtn.setAttribute('aria-expanded', 'false');
+                        var toggleText = toggleBtn.querySelector('.ntw-toggle-text');
+                        if (toggleText) {
+                            toggleText.textContent = 'Show';
+                        }
+                    }
+                }
+            } catch (e) {
+                // Silently fail if localStorage is not available
+            }
+        })();
+        </script>
+        <?php
     }
     
     /**
@@ -276,7 +474,7 @@ class NavTalk_Shortcode {
         }
         
         $avatar_name = esc_attr($avatar_info['name']);
-        // 向后兼容：优先使用 thumbnailUrl，如果不存在则使用 url
+        // Backward compatibility: Use thumbnailUrl if available, otherwise use url
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $position_class = 'navtalk-floating-' . esc_attr($atts['position']);

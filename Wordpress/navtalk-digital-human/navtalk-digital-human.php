@@ -32,7 +32,20 @@ define('NAVTALK_PLUGIN_URL', plugin_dir_url(__FILE__));
 function activate_navtalk_dh() {
     // Add default options
     add_option('navtalk_license', '');
-    
+    // Global digital human assistant (floating) default options
+    add_option('navtalk_floating_enabled', '0');
+    add_option('navtalk_floating_avatar', '');
+    add_option('navtalk_floating_position', 'bottom-right');
+    add_option('navtalk_floating_button_size', '60px');
+    add_option('navtalk_floating_button_color', '#667eea');
+    add_option('navtalk_floating_custom_style', '');
+    // New: Toggle button and advanced configuration
+    add_option('navtalk_show_toggle_button', '1');
+    add_option('navtalk_floating_prompt', '');
+    add_option('navtalk_floating_voice', '');
+    add_option('navtalk_floating_model', '');
+    add_option('navtalk_floating_js_callbacks', '');
+
     // Flush rewrite rules
     flush_rewrite_rules();
 }
