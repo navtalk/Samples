@@ -87,7 +87,7 @@ Yes, you can use as many avatars as your NavTalk plan allows.
 
 = How do I add an avatar to my page? =
 
-Use the shortcode: [navtalk_avatar name="navtalk.Ethan"] or use Elementor widgets.
+Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor widgets.
 
 = What shortcodes are available? =
 

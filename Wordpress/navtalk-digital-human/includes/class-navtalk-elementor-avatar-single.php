@@ -63,7 +63,7 @@ class NavTalk_Elementor_Avatar_Single extends NavTalk_Elementor_Widget_Base {
             );
         } else {
             $this->add_control(
-                'avatar_name',
+                'avatar_id',
                 [
                     'label' => __('Select Avatar', 'navtalk-digital-human'),
                     'type' => \Elementor\Controls_Manager::SELECT,
@@ -265,25 +265,25 @@ class NavTalk_Elementor_Avatar_Single extends NavTalk_Elementor_Widget_Base {
     protected function render() {
         $settings = $this->get_settings_for_display();
         
-        // Check for avatar name
-        if (empty($settings['avatar_name'])) {
+        // Check for avatar ID
+        if (empty($settings['avatar_id'])) {
             $this->render_error(__('Please select an avatar from the widget settings.', 'navtalk-digital-human'));
             return;
         }
-        
+
         // Get license
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             $this->render_error(__('NavTalk license key is not configured. Please configure it in Settings > NavTalk Digital Human.', 'navtalk-digital-human'));
             return;
         }
-        
+
         // Get avatar information
-        $avatar_info = $this->get_avatar_info($settings['avatar_name']);
-        
+        $avatar_info = $this->get_avatar_info($settings['avatar_id']);
+
         if (!$avatar_info) {
-            /* translators: %s: Avatar name */
-            $this->render_error(sprintf(__('Failed to load avatar: %s', 'navtalk-digital-human'), $settings['avatar_name']));
+            /* translators: %s: Avatar ID */
+            $this->render_error(sprintf(__('Failed to load avatar: %s', 'navtalk-digital-human'), $settings['avatar_id']));
             return;
         }
         
@@ -297,7 +297,7 @@ class NavTalk_Elementor_Avatar_Single extends NavTalk_Elementor_Widget_Base {
     protected function content_template() {
         ?>
         <#
-        if (!settings.avatar_name) {
+        if (!settings.avatar_id) {
             #>
             <div class="navtalk-error" style="padding: 15px; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33; margin: 10px 0;">
                 <strong><?php echo esc_html(__('NavTalk Error:', 'navtalk-digital-human')); ?></strong> <?php echo esc_html(__('Please select an avatar', 'navtalk-digital-human')); ?>
@@ -306,7 +306,7 @@ class NavTalk_Elementor_Avatar_Single extends NavTalk_Elementor_Widget_Base {
         } else {
             #>
             <div class="navtalk-avatar-card" style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-                <p><?php echo esc_html(__('Avatar:', 'navtalk-digital-human')); ?> <strong>{{ settings.avatar_name }}</strong></p>
+                <p><?php echo esc_html(__('Avatar:', 'navtalk-digital-human')); ?> <strong>{{ settings.avatar_id }}</strong></p>
                 <small><?php echo esc_html(__('Preview is not available in editor', 'navtalk-digital-human')); ?></small>
             </div>
             <#

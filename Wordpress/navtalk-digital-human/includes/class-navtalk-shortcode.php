@@ -35,8 +35,8 @@ class NavTalk_Shortcode {
             return;
         }
 
-        $avatar_name = get_option('navtalk_floating_avatar', '');
-        if (empty($avatar_name)) {
+        $avatar_id = get_option('navtalk_floating_avatar', '');
+        if (empty($avatar_id)) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
                 echo '<!-- NavTalk: Global floating widget not displayed - No avatar selected -->';
             }
@@ -66,7 +66,7 @@ class NavTalk_Shortcode {
 
         // Get avatar information from API
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($avatar_name);
+        $avatar_info = $api->get_avatar_info($avatar_id);
         
         if (isset($avatar_info['error']) && $avatar_info['error']) {
             if (defined('WP_DEBUG') && WP_DEBUG) {
@@ -118,11 +118,12 @@ class NavTalk_Shortcode {
             echo '<script id="ntw-custom-callbacks">' . $js_callbacks . '</script>';
         }
         
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : $avatar_id);
         ?>
         <!-- NavTalk Global Floating Widget -->
-        <div id="<?php echo esc_attr($unique_id); ?>" 
-             class="ntw-container <?php echo esc_attr($position); ?> navtalk-inline-mode" 
-             data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+        <div id="<?php echo esc_attr($unique_id); ?>"
+             class="ntw-container <?php echo esc_attr($position); ?> navtalk-inline-mode"
+             data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
              data-avatar-img="<?php echo esc_url($image_url); ?>"
              data-prompt="<?php echo esc_attr($prompt); ?>"
              data-voice="<?php echo esc_attr($voice); ?>"
@@ -154,8 +155,8 @@ class NavTalk_Shortcode {
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
                         
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" 
-                             data-avatar="<?php echo esc_attr($avatar_name); ?>" 
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay"
+                             data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                              style="display: none;">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
@@ -167,7 +168,7 @@ class NavTalk_Shortcode {
                         
                         <!-- Call button overlay -->
                         <button class="navtalk-icon-button navtalk-call-btn navtalk-inline-call ntw-call-button"
-                                data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                 data-avatar-img="<?php echo esc_url($image_url); ?>"
                                 data-inline-mode="true"
                                 data-container-id="<?php echo esc_attr($unique_id); ?>"
@@ -219,7 +220,7 @@ class NavTalk_Shortcode {
         </script>
         <?php
     }
-    
+
     /**
      * Render avatar shortcode
      * 
@@ -229,7 +230,7 @@ class NavTalk_Shortcode {
     public function render_avatar($atts) {
         // Parse shortcode attributes
         $atts = shortcode_atts([
-            'name' => '',
+            'avatarid' => '', // WordPress lowercases shortcode attribute names
             'width' => NavTalk_Config::DEFAULT_WIDTH,
             'height' => NavTalk_Config::DEFAULT_HEIGHT,
             'button_text' => NavTalk_Config::DEFAULT_BUTTON_TEXT,
@@ -262,27 +263,31 @@ class NavTalk_Shortcode {
             'call_start_audio' => '', // Call start audio URL
             'call_end_audio' => '', // Call end audio URL
         ], $atts, 'navtalk_avatar');
-        
+
+        // Normalize avatarId (WordPress lowercases shortcode attribute names to 'avatarid')
+        $atts['avatarId'] =  $atts['avatarid'];
+
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
             $atts['tools'] = str_replace('<', '[', $atts['tools']);
             $atts['tools'] = str_replace('>', ']', $atts['tools']);
         }
-        
+
+
         // Validate required attribute
-        if (empty($atts['name'])) {
-            return $this->render_error('Avatar name is required. Usage: [navtalk_avatar name="navtalk.Ethan"]');
+        if (empty($atts['avatarId'])) {
+            return $this->render_error('Avatar ID is required. Usage: [navtalk_avatar avatarId="your-avatar-id"]');
         }
-        
+
         // Get license
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             return $this->render_error('NavTalk license key is not configured. Please configure it in Settings > NavTalk Digital Human.');
         }
-        
+
         // Get avatar information from API
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($atts['name']);
+        $avatar_info = $api->get_avatar_info($atts['avatarId']);
         
         // Check for API errors
         if (isset($avatar_info['error']) && $avatar_info['error']) {
@@ -335,7 +340,8 @@ class NavTalk_Shortcode {
      */
     public function render_button($atts) {
         $atts = shortcode_atts([
-            'name' => '',
+            'avatarId' => '',
+            'avatarid' => '', // WordPress lowercases shortcode attribute names
             'text' => 'Start Chat',
             'style' => 'primary', // primary, secondary, outline
             'size' => 'medium', // small, medium, large
@@ -357,30 +363,33 @@ class NavTalk_Shortcode {
             'call_end_audio' => '',
         ], $atts, 'navtalk_button');
         
+        // Normalize avatarId
+        $atts['avatarId'] =  $atts['avatarid'];
+
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
             $atts['tools'] = str_replace('<', '[', $atts['tools']);
             $atts['tools'] = str_replace('>', ']', $atts['tools']);
         }
         
-        if (empty($atts['name'])) {
-            return $this->render_error('Avatar name is required. Usage: [navtalk_button name="navtalk.Ethan"]');
+        if (empty($atts['avatarId'])) {
+            return $this->render_error('Avatar ID is required. Usage: [navtalk_button avatarId="your-avatar-id"]');
         }
-        
+
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             return $this->render_error('NavTalk license key is not configured.');
         }
-        
+
         // Get avatar info
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($atts['name']);
-        
+        $avatar_info = $api->get_avatar_info($atts['avatarId']);
+
         if (isset($avatar_info['error']) && $avatar_info['error']) {
             return $this->render_error($avatar_info['message']);
         }
-        
-        $avatar_name = esc_attr($avatar_info['name']);
+
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $button_text = esc_html($atts['text']);
@@ -395,7 +404,7 @@ class NavTalk_Shortcode {
         ?>
         <button class="navtalk-trigger-button <?php echo esc_attr($style_class); ?> <?php echo esc_attr($size_class); ?> <?php echo esc_attr($atts['class']); ?>"
                 <?php echo !$is_available ? ' disabled' : ''; ?>
-                data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                 data-avatar-img="<?php echo esc_url($image_url); ?>"
                 data-connect-immediately="true"
                 data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
@@ -429,7 +438,8 @@ class NavTalk_Shortcode {
      */
     public function render_floating($atts) {
         $atts = shortcode_atts([
-            'name' => '',
+            'avatarId' => '',
+            'avatarid' => '', // WordPress lowercases shortcode attribute names
             'position' => 'bottom-right', // bottom-right, bottom-left, top-right, top-left
             'color' => '#667eea',
             'size' => '60px',
@@ -449,31 +459,34 @@ class NavTalk_Shortcode {
             'call_start_audio' => '',
             'call_end_audio' => '',
         ], $atts, 'navtalk_floating');
-        
+
+        // Normalize avatarId
+        $atts['avatarId'] =  $atts['avatarid'];
+
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
             $atts['tools'] = str_replace('<', '[', $atts['tools']);
             $atts['tools'] = str_replace('>', ']', $atts['tools']);
         }
         
-        if (empty($atts['name'])) {
-            return $this->render_error('Avatar name is required. Usage: [navtalk_floating name="navtalk.Ethan"]');
+        if (empty($atts['avatarId'])) {
+            return $this->render_error('Avatar ID is required. Usage: [navtalk_floating avatarId="your-avatar-id"]');
         }
-        
+
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             return '';
         }
-        
+
         // Get avatar info
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($atts['name']);
-        
+        $avatar_info = $api->get_avatar_info($atts['avatarId']);
+
         if (isset($avatar_info['error']) && $avatar_info['error']) {
             return '';
         }
-        
-        $avatar_name = esc_attr($avatar_info['name']);
+
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
         // Backward compatibility: Use thumbnailUrl if available, otherwise use url
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = esc_url($api->get_full_image_url($thumbnail_url));
@@ -493,7 +506,7 @@ class NavTalk_Shortcode {
         <div class="navtalk-floating-button <?php echo esc_attr($position_class); ?> <?php echo esc_attr($atts['class']); ?>"
              style="width: <?php echo esc_attr($size); ?>; height: <?php echo esc_attr($size); ?>;">
             <button class="navtalk-trigger-button navtalk-floating-btn"
-                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                    data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                     data-avatar-img="<?php echo esc_url($image_url); ?>"
                     data-connect-immediately="true"
                     data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
@@ -527,7 +540,7 @@ class NavTalk_Shortcode {
      */
     public function render_link($atts, $content = null) {
         $atts = shortcode_atts([
-            'name' => '',
+            'avatarid' => '', // WordPress lowercases shortcode attribute names
             'style' => 'default', // default, button, underline
             'modal_width' => NavTalk_Config::DEFAULT_MODAL_WIDTH,
             'modal_height' => NavTalk_Config::DEFAULT_MODAL_HEIGHT,
@@ -546,30 +559,33 @@ class NavTalk_Shortcode {
             'call_end_audio' => '',
         ], $atts, 'navtalk_link');
         
+        // Normalize avatarId
+        $atts['avatarId'] = $atts['avatarid'];
+
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
             $atts['tools'] = str_replace('<', '[', $atts['tools']);
             $atts['tools'] = str_replace('>', ']', $atts['tools']);
         }
         
-        if (empty($atts['name'])) {
-            return $this->render_error('Avatar name is required.');
+        if (empty($atts['avatarId'])) {
+            return $this->render_error('Avatar ID is required. Usage: [navtalk_link avatarId="your-avatar-id"]');
         }
-        
+
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             return $content;
         }
-        
+
         // Get avatar info
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($atts['name']);
-        
+        $avatar_info = $api->get_avatar_info($atts['avatarId']);
+
         if (isset($avatar_info['error']) && $avatar_info['error']) {
             return $content;
         }
-        
-        $avatar_name = esc_attr($avatar_info['name']);
+
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = esc_url($api->get_full_image_url($thumbnail_url));
         $link_text = !empty($content) ? do_shortcode($content) : 'Start Chat';
@@ -586,7 +602,7 @@ class NavTalk_Shortcode {
         ?>
         <a href="#"
            class="navtalk-trigger-link <?php echo esc_attr($style_class); ?> <?php echo esc_attr($atts['class']); ?>"
-           data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+           data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
            data-avatar-img="<?php echo esc_url($image_url); ?>"
            data-connect-immediately="true"
            data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
@@ -618,7 +634,8 @@ class NavTalk_Shortcode {
             'columns' => '3',
             'style' => 'grid', // grid, list, carousel
             'filter' => 'all', // all, available, custom
-            'names' => '', // comma-separated avatar names
+            'avatarIds' => '', // comma-separated avatar IDs
+            'avatarids' => '', // WordPress lowercases shortcode attribute names
             'limit' => '20',
             'modal_width' => NavTalk_Config::DEFAULT_MODAL_WIDTH,
             'modal_height' => NavTalk_Config::DEFAULT_MODAL_HEIGHT,
@@ -650,6 +667,11 @@ class NavTalk_Shortcode {
             'call_start_audio' => '',
             'call_end_audio' => '',
         ], $atts, 'navtalk_list');
+        
+        // Normalize avatarIds
+        $atts['avatarIds'] = isset($atts['avatarIds']) && $atts['avatarIds'] !== '' 
+            ? $atts['avatarIds'] 
+            : (isset($atts['avatarids']) ? $atts['avatarids'] : '');
         
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
@@ -688,10 +710,11 @@ class NavTalk_Shortcode {
             $avatars = array_filter($avatars, function($avatar) {
                 return isset($avatar['status']) && $avatar['status'] === 'SUCCESS';
             });
-        } elseif ($atts['filter'] === 'custom' && !empty($atts['names'])) {
-            $custom_names = array_map('trim', explode(',', $atts['names']));
-            $avatars = array_filter($avatars, function($avatar) use ($custom_names) {
-                return in_array($avatar['name'], $custom_names);
+        } elseif ($atts['filter'] === 'custom' && !empty($atts['avatarIds'])) {
+            $custom_ids = array_map('trim', explode(',', $atts['avatarIds']));
+            $avatars = array_filter($avatars, function($avatar) use ($custom_ids) {
+                $aid = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+                return '' !== $aid && in_array((string) $aid, $custom_ids, true);
             });
         }
         
@@ -785,8 +808,9 @@ class NavTalk_Shortcode {
      * @return string HTML output
      */
     private function render_overlay_layout($avatar_info, $atts) {
-        $avatar_name = esc_attr($avatar_info['name']);
-        $display_name = esc_html($this->get_display_name($avatar_name));
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
+        $avatar_name_for_display = isset($avatar_info['name']) ? $avatar_info['name'] : '';
+        $display_name = esc_html($this->get_display_name($avatar_name_for_display));
         
         $api = new NavTalk_API();
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
@@ -857,7 +881,7 @@ class NavTalk_Shortcode {
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
 
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo esc_attr($avatar_name); ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>" style="display: none;">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -883,7 +907,7 @@ class NavTalk_Shortcode {
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
                             <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
-                                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                    data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                     data-avatar-img="<?php echo esc_url($image_url); ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
                                     data-container-id="<?php echo esc_attr($unique_id); ?>"
@@ -943,8 +967,9 @@ class NavTalk_Shortcode {
      * @return string HTML output
      */
     private function render_bottom_layout($avatar_info, $atts) {
-        $avatar_name = esc_attr($avatar_info['name']);
-        $display_name = esc_html($this->get_display_name($avatar_name));
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
+        $avatar_name_for_display = isset($avatar_info['name']) ? $avatar_info['name'] : '';
+        $display_name = esc_html($this->get_display_name($avatar_name_for_display));
 
         $api = new NavTalk_API();
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
@@ -1014,7 +1039,7 @@ class NavTalk_Shortcode {
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
 
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo esc_attr($avatar_name); ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>" style="display: none;">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -1047,7 +1072,7 @@ class NavTalk_Shortcode {
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
                             <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
-                                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                    data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                     data-avatar-img="<?php echo esc_url($image_url); ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
                                     data-container-id="<?php echo esc_attr($unique_id); ?>"

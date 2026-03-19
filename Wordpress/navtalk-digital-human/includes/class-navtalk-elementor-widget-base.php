@@ -52,31 +52,36 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         
         $options = [];
         foreach ($data['data'] as $avatar) {
-            $display_name = $this->get_display_name($avatar['name']);
-            $options[$avatar['name']] = $display_name;
+            $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+            $name = isset($avatar['name']) ? $avatar['name'] : '';
+            if ('' === (string) $avatar_id) {
+                continue;
+            }
+            $display_name = $this->get_display_name($name);
+            $options[(string) $avatar_id] = $display_name;
         }
-        
+
         return $options;
     }
     
     /**
      * Get avatar information
-     * 
-     * @param string $name Avatar name
+     *
+     * @param string|int $avatar_id Avatar ID (avatarId or id from API)
      * @return array|null
      */
-    protected function get_avatar_info($name) {
-        if (empty($name)) {
+    protected function get_avatar_info($avatar_id) {
+        if ('' === (string) $avatar_id) {
             return null;
         }
-        
+
         $api = new NavTalk_API();
-        $avatar_info = $api->get_avatar_info($name);
-        
+        $avatar_info = $api->get_avatar_info($avatar_id);
+
         if (isset($avatar_info['error']) && $avatar_info['error']) {
             return null;
         }
-        
+
         return $avatar_info;
     }
     
@@ -426,9 +431,11 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         // Generate button style CSS from Elementor settings
         $button_style = $this->generate_button_style_css($settings);
         
+        $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
+
         // Convert Elementor settings to shortcode attributes format
         $atts = [
-            'name' => $avatar_info['name'],
+            'avatarId' => $avatar_id_value,
             'layout' => $settings['layout'],
             'show_title' => $settings['show_title'] ? 'true' : 'false',
             'show_status' => $settings['show_status'] ? 'true' : 'false',

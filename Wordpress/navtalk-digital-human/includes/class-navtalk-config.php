@@ -16,7 +16,7 @@ class NavTalk_Config {
      * 
      * @var string
      */
-    const API_URL = 'https://api.navtalk.ai';
+    const API_URL = 'https://qaapi.navtalk.ai';
     
     /**
      * NavTalk WebSocket URL for real-time communication
@@ -24,12 +24,12 @@ class NavTalk_Config {
      * 
      * @var string
      */
-    const WEBSOCKET_URL = 'wss://transfer.navtalk.ai/wss/v2/realtime-chat';
+    const WEBSOCKET_URL = 'wss://qatransfer.navtalk.ai/wss/v2/realtime-chat';
     
     /**
-     * Available avatar names
-     * These are the system avatars provided by NavTalk
-     * 
+     * Available avatar names (legacy / display reference)
+     * Real-time calls use avatar ID (avatarId) from API; this list is for reference only.
+     *
      * @var array
      */
     const AVAILABLE_AVATARS = [
@@ -110,8 +110,8 @@ class NavTalk_Config {
     }
     
     /**
-     * Check if avatar name is valid
-     * 
+     * Check if avatar name is valid (legacy; real-time calls use avatar ID from API)
+     *
      * @param string $avatar_name
      * @return bool
      */

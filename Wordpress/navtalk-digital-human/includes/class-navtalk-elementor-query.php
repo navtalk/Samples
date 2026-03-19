@@ -72,25 +72,26 @@ class NavTalk_Elementor_Query {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
-        if (!isset($data['data']['avatars'])) {
+        if (empty($data['data']) || !is_array($data['data'])) {
             return [];
         }
-        
+
         // Convert avatars to WP_Post-like objects for Elementor compatibility
         $avatars = [];
-        foreach ($data['data']['avatars'] as $avatar) {
+        foreach ($data['data'] as $avatar) {
             $post = new stdClass();
-            $post->ID = uniqid('avatar_',true);
+            $post->ID = uniqid('avatar_', true);
             $post->post_type = 'navtalk_avatar';
-            $post->post_title = $this->get_display_name($avatar['name']);
-            
-            // Store avatar data
+            $name = isset($avatar['name']) ? $avatar['name'] : '';
+            $post->post_title = $this->get_display_name($name);
+
             $post->avatar_data = $avatar;
-            $post->avatar_name = $avatar['name'];
+            $post->avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+            $post->avatar_name = $name;
             $post->avatar_image = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
             $post->avatar_status = isset($avatar['status']) ? $avatar['status'] : 'Unknown';
             $post->is_available = (strtoupper($post->avatar_status) === 'SUCCESS');
-            
+
             $avatars[] = $post;
         }
         

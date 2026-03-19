@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NavTalk Digital Human
  * Plugin URI: https://navtalk.ai
- * Description: Integrate NavTalk real-time digital human conversation into WordPress. Simply configure your license key and use [navtalk_avatar name="navtalk.Ethan"] shortcode to embed avatars.
+ * Description: Integrate NavTalk real-time digital human conversation into WordPress. Simply configure your license key and use [navtalk_avatar avatarId="your-avatar-id"] shortcode to embed avatars.
  * Version: 1.0.0
  * Author: NavTalk
  * Author URI: https://navtalk.ai

@@ -423,15 +423,16 @@ class NavTalk_Admin {
         <select name="navtalk_floating_avatar" id="navtalk_floating_avatar" class="regular-text">
             <option value=""><?php esc_html_e('— Please Select —', 'navtalk-digital-human'); ?></option>
             <?php foreach ($avatars as $avatar) :
+                $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
                 $name = isset($avatar['name']) ? $avatar['name'] : '';
                 $status = isset($avatar['status']) ? $avatar['status'] : '';
                 $available = (strtoupper($status) === 'SUCCESS');
                 $parts = explode('.', $name);
                 $display = isset($parts[1]) ? $parts[1] : $name;
-                if (empty($name)) continue;
+                if ('' === (string) $avatar_id) continue;
             ?>
-                <option value="<?php echo esc_attr($name); ?>" <?php selected($current, $name); ?>>
-                    <?php echo esc_html($display); ?><?php echo $available ? '' : ' (' . esc_html__('Unavailable', 'navtalk-digital-human') . ')'; ?>
+                <option value="<?php echo esc_attr($avatar_id); ?>" <?php selected($current, $avatar_id); ?>>
+                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo $available ? '' : ' (' . esc_html__('Unavailable', 'navtalk-digital-human') . ')'; ?>
                 </option>
             <?php endforeach; ?>
         </select>
@@ -668,10 +669,10 @@ class NavTalk_Admin {
                 <p>You can also use shortcodes directly in posts, pages, or widgets:</p>
                 
                 <h3 style="font-size: 14px; margin-top: 15px;">Single Avatar</h3>
-                <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">[navtalk_avatar name="navtalk.Ethan"]</code>
+                <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">[navtalk_avatar avatarId="your-avatar-id"]</code>
                 
                 <h3 style="font-size: 14px; margin-top: 15px;">Button Only</h3>
-                <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">[navtalk_button name="navtalk.Emma" text="Chat Now"]</code>
+                <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">[navtalk_button avatarId="your-avatar-id" text="Chat Now"]</code>
                 
                 <h3 style="font-size: 14px; margin-top: 15px;">Avatar List</h3>
                 <code style="display: block; padding: 10px; background: #fff; border: 1px solid #ddd; border-radius: 4px; font-size: 12px;">[navtalk_list]</code>
@@ -729,17 +730,18 @@ class NavTalk_Admin {
         $api = new NavTalk_API();
         $thumbnail_url = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
         $image_url = $api->get_full_image_url($thumbnail_url);
+        $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
         $avatar_name = isset($avatar['name']) ? $avatar['name'] : '';
         $status = isset($avatar['status']) ? $avatar['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
-        
+
         // Extract display name
         $parts = explode('.', $avatar_name);
         $display_name = isset($parts[1]) ? $parts[1] : $avatar_name;
-        
+
         // Generate shortcodes
-        $shortcode_avatar = '[navtalk_avatar name="' . esc_attr($avatar_name) . '"]';
-        $shortcode_button = '[navtalk_button name="' . esc_attr($avatar_name) . '" text="Chat Now"]';
+        $shortcode_avatar = '[navtalk_avatar avatarId="' . esc_attr($avatar_id) . '"]';
+        $shortcode_button = '[navtalk_button avatarId="' . esc_attr($avatar_id) . '" text="Chat Now"]';
         $shortcode_list = '[navtalk_list]';
         
         ?>

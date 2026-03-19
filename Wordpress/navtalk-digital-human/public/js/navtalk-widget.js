@@ -114,32 +114,32 @@
          * Initialize digital human avatar connection
          */
         initAvatar() {
-            const avatarName = this.$container.data('avatar-name');
+            const avatarId = this.$container.data('avatar-id');
             const avatarImg = this.$container.data('avatar-img');
             const prompt = this.$container.data('prompt');
             const voice = this.$container.data('voice');
             const model = this.$container.data('model');
-            
+
             console.log('[NavTalk Widget] Avatar config:', {
-                avatarName,
+                avatarId,
                 prompt,
                 voice,
                 model
             });
-            
-            if (!avatarName) {
-                console.error('[NavTalk Widget] No avatar name specified');
+
+            if (!avatarId) {
+                console.error('[NavTalk Widget] No avatar ID specified');
                 return;
             }
-            
+
             // Show loading state
             this.$characterAvatar.addClass('loading');
-            
+
             // Set poster image
             if (avatarImg) {
                 this.$video.attr('poster', avatarImg);
             }
-            
+
             // Integrate existing navtalk-realtime.js logic
             // Check if navtalkConfig is available
             if (typeof navtalkConfig === 'undefined') {
@@ -147,14 +147,14 @@
                 this.$characterAvatar.removeClass('loading');
                 return;
             }
-            
+
             // Prepare configuration
             const config = {
-                avatarName: avatarName,
+                avatarId: avatarId,
                 license: navtalkConfig.license,
                 websocketUrl: navtalkConfig.websocketUrl
             };
-            
+
             // Add custom configuration
             if (prompt) {
                 config.prompt = prompt;
@@ -165,11 +165,11 @@
             if (model) {
                 config.model = model;
             }
-            
+
             // Trigger custom connection callback
             if (typeof window.navtalkOnConnect === 'function') {
                 try {
-                    window.navtalkOnConnect(avatarName, config);
+                    window.navtalkOnConnect(avatarId, config);
                 } catch (e) {
                     console.error('[NavTalk Widget] Error in navtalkOnConnect callback:', e);
                 }

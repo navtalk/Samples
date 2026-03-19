@@ -77,7 +77,7 @@ The plugin comes with pre-configured API and WebSocket URLs. If you need to chan
 Embed a single avatar with full card display:
 
 ```
-[navtalk_avatar name="navtalk.Ethan"]
+[navtalk_avatar avatarId="your-avatar-id"]
 ```
 
 ### 2. Button Only (Instant Connect)
@@ -85,11 +85,11 @@ Embed a single avatar with full card display:
 Display just a button that opens chat modal and connects immediately:
 
 ```
-[navtalk_button name="navtalk.Emma" text="Talk to Emma"]
+[navtalk_button avatarId="your-avatar-id" text="Talk to Emma"]
 ```
 
 **Parameters:**
-- `name` (required): Avatar name
+- `avatarId` (required): Avatar ID (from NavTalk API / avatar list)
 - `text` (optional): Button text, default: "Start Chat"
 - `style` (optional): `primary`, `secondary`, `outline`, default: `primary`
 - `size` (optional): `small`, `medium`, `large`, default: `medium`
@@ -97,8 +97,8 @@ Display just a button that opens chat modal and connects immediately:
 
 **Examples:**
 ```
-[navtalk_button name="navtalk.Sophia" text="开始对话" style="outline" size="large"]
-[navtalk_button name="navtalk.Leo" text="Chat Now" style="secondary" size="small" icon="false"]
+[navtalk_button avatarId="your-avatar-id" text="开始对话" style="outline" size="large"]
+[navtalk_button avatarId="your-avatar-id" text="Chat Now" style="secondary" size="small" icon="false"]
 ```
 
 ### 3. Floating Button
@@ -106,19 +106,19 @@ Display just a button that opens chat modal and connects immediately:
 Fixed position button at corner of screen (instant connect):
 
 ```
-[navtalk_floating name="navtalk.Mia"]
+[navtalk_floating avatarId="your-avatar-id"]
 ```
 
 **Parameters:**
-- `name` (required): Avatar name
+- `avatarId` (required): Avatar ID
 - `position` (optional): `bottom-right`, `bottom-left`, `top-right`, `top-left`, default: `bottom-right`
 - `color` (optional): Button color (hex), default: `#667eea`
 - `size` (optional): Button size, default: `60px`
 
 **Examples:**
 ```
-[navtalk_floating name="navtalk.Chloe" position="bottom-left" color="#ff5e62"]
-[navtalk_floating name="navtalk.Zoe" position="top-right" size="70px"]
+[navtalk_floating avatarId="your-avatar-id" position="bottom-left" color="#ff5e62"]
+[navtalk_floating avatarId="your-avatar-id" position="top-right" size="70px"]
 ```
 
 ### 4. Text Link
@@ -126,17 +126,17 @@ Fixed position button at corner of screen (instant connect):
 Inline text link that opens chat (instant connect):
 
 ```
-[navtalk_link name="navtalk.Ava"]Click here to chat[/navtalk_link]
+[navtalk_link avatarId="your-avatar-id"]Click here to chat[/navtalk_link]
 ```
 
 **Parameters:**
-- `name` (required): Avatar name
+- `avatarId` (required): Avatar ID
 - `style` (optional): `default`, `button`, `underline`, default: `default`
 
 **Examples:**
 ```
-[navtalk_link name="navtalk.Emma" style="button"]Start Conversation[/navtalk_link]
-[navtalk_link name="navtalk.Ethan" style="underline"]Talk to our AI assistant[/navtalk_link]
+[navtalk_link avatarId="your-avatar-id" style="button"]Start Conversation[/navtalk_link]
+[navtalk_link avatarId="your-avatar-id" style="underline"]Talk to our AI assistant[/navtalk_link]
 ```
 
 ### 5. Avatar List (WordPress Integration)
@@ -151,7 +151,7 @@ Display a grid of all available avatars from your account:
 - `columns` (optional): Number of columns, default: `3`
 - `style` (optional): `grid` or `list`, default: `grid`
 - `filter` (optional): `all`, `available`, `custom`, default: `all`
-- `names` (optional): Comma-separated avatar names (when filter="custom")
+- `avatarIds` (optional): Comma-separated avatar IDs (when filter="custom")
 - `limit` (optional): Maximum number of avatars to display, default: `20`
 
 **Examples:**
@@ -163,7 +163,7 @@ All available avatars in 4 columns:
 
 Specific avatars only:
 ```
-[navtalk_list filter="custom" names="navtalk.Ethan, navtalk.Emma, navtalk.Sophia" columns="3"]
+[navtalk_list filter="custom" avatarIds="id1, id2, id3" columns="3"]
 ```
 
 Limited to first 6 avatars:
@@ -173,16 +173,7 @@ Limited to first 6 avatars:
 
 ### Available Avatars
 
-The following avatars are available by default:
-
-- `navtalk.Ethan`
-- `navtalk.Leo`
-- `navtalk.Emma`
-- `navtalk.Sophia`
-- `navtalk.Mia`
-- `navtalk.Chloe`
-- `navtalk.Zoe`
-- `navtalk.Ava`
+Avatars and their IDs are provided by your NavTalk account. Use the avatar list in Settings > NavTalk Digital Human or the API to get each avatar’s ID for shortcodes.
 
 ### Shortcode Parameters
 
@@ -190,7 +181,7 @@ Customize the avatar display with these parameters:
 
 | Parameter | Description | Default | Example |
 |-----------|-------------|---------|---------|
-| `name` | Avatar name (required) | - | `navtalk.Ethan` |
+| `avatarId` | Avatar ID (required for real-time call) | - | From API / avatar list |
 | `width` | Card width | `300px` | `400px` |
 | `height` | Card height | `400px` | `500px` |
 | `button_text` | Button label | `Start Chat` | `Talk to Me` |
@@ -199,22 +190,22 @@ Customize the avatar display with these parameters:
 
 **Single avatar card:**
 ```
-[navtalk_avatar name="navtalk.Ethan"]
+[navtalk_avatar avatarId="your-avatar-id"]
 ```
 
 **Button that connects immediately:**
 ```
-[navtalk_button name="navtalk.Emma" text="Start Chat" style="primary"]
+[navtalk_button avatarId="your-avatar-id" text="Start Chat" style="primary"]
 ```
 
 **Floating button in corner:**
 ```
-[navtalk_floating name="navtalk.Sophia" position="bottom-right"]
+[navtalk_floating avatarId="your-avatar-id" position="bottom-right"]
 ```
 
 **Text link:**
 ```
-[navtalk_link name="navtalk.Leo"]Click to chat with Leo[/navtalk_link]
+[navtalk_link avatarId="your-avatar-id"]Click to chat[/navtalk_link]
 ```
 
 **Grid of all available avatars:**
@@ -225,9 +216,9 @@ Customize the avatar display with these parameters:
 **Multiple avatars in a row (using custom HTML):**
 ```html
 <div style="display: flex; gap: 20px; flex-wrap: wrap;">
-    [navtalk_avatar name="navtalk.Ethan"]
-    [navtalk_avatar name="navtalk.Emma"]
-    [navtalk_avatar name="navtalk.Sophia"]
+    [navtalk_avatar avatarId="avatar-id-1"]
+    [navtalk_avatar avatarId="avatar-id-2"]
+    [navtalk_avatar avatarId="avatar-id-3"]
 </div>
 ```
 
@@ -235,16 +226,16 @@ Customize the avatar display with these parameters:
 ```html
 <h2>Talk to Our AI Team</h2>
 <p>Choose an AI assistant: 
-   [navtalk_link name="navtalk.Ethan"]Ethan[/navtalk_link] | 
-   [navtalk_link name="navtalk.Emma"]Emma[/navtalk_link] | 
-   [navtalk_link name="navtalk.Sophia"]Sophia[/navtalk_link]
+   [navtalk_link avatarId="id1"]Ethan[/navtalk_link] | 
+   [navtalk_link avatarId="id2"]Emma[/navtalk_link] | 
+   [navtalk_link avatarId="id3"]Sophia[/navtalk_link]
 </p>
 
 <div style="margin-top: 20px;">
-    [navtalk_button name="navtalk.Leo" text="Quick Chat" style="outline"]
+    [navtalk_button avatarId="your-avatar-id" text="Quick Chat" style="outline"]
 </div>
 
-[navtalk_floating name="navtalk.Mia"]
+[navtalk_floating avatarId="your-avatar-id"]
 ```
 
 ## User Experience
@@ -305,7 +296,7 @@ Customize the avatar display with these parameters:
 
 **Problem**: Avatar shows error message
 - **Solution**:
-  - Check that the avatar name is spelled correctly
+  - Check that the avatar ID (avatarId) is correct
   - Verify the avatar exists in your NavTalk account
   - Check browser console for errors
 
@@ -413,7 +404,7 @@ Developed by NavTalk Team
 A: Avatar cards show full card UI and require clicking the call button after opening modal. Buttons connect immediately when clicked.
 
 **Q: Do I need to create avatars manually?**
-A: No, the system avatars (navtalk.Ethan, navtalk.Emma, etc.) are provided by NavTalk and ready to use.
+A: Avatars and their IDs come from your NavTalk account; use Settings > NavTalk Digital Human or the API to get avatar IDs for shortcodes.
 
 **Q: Can I use custom avatars?**
 A: Yes, you can create custom avatars in your NavTalk account and use them with this plugin.

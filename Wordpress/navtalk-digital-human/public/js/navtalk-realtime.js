@@ -1,4 +1,4 @@
-﻿/**
+/**
  * NavTalk Real-time Communication Script
  * Handles WebSocket, WebRTC, and audio processing for digital human conversations
  */
@@ -47,7 +47,7 @@
             this.markdownBuffer = new Map();
             this.pendingUserMessageSpan = null;
             this.configuration = { iceServers: [{ urls: 'stun:stun.l.google.com:19302' }] };
-            this.currentAvatarName = '';
+            this.currentAvatarId = '';
             this.currentAvatarImg = '';
             this.currentLoadingOverlay = null;
             this.callStartAudio = '';
@@ -85,7 +85,7 @@
             // Handle modal mode (list items, buttons, links)
             $(document).on('click', '.navtalk-start-chat, .navtalk-trigger-button, .navtalk-trigger-link', function(e) {
                 e.preventDefault();
-                const avatarName = $(this).data('avatar-name');
+                const avatarId = $(this).data('avatar-id');
                 const avatarImg = $(this).data('avatar-img');
                 const connectImmediately = $(this).data('connect-immediately');
                 
@@ -111,8 +111,8 @@
                 });
                 console.log('NavTalk Modal: Modal config object:', modalConfig);
                 
-                if (avatarName && avatarImg) {
-                    self.openChatModal(avatarName, avatarImg, connectImmediately === true || connectImmediately === 'true', modalConfig);
+                if (avatarId && avatarImg) {
+                    self.openChatModal(avatarId, avatarImg, connectImmediately === true || connectImmediately === 'true', modalConfig);
                 }
             });
             
@@ -120,7 +120,7 @@
             $(document).on('click', '.navtalk-inline-call', function(e) {
                 e.preventDefault();
                 const $button = $(this);
-                const avatarName = $button.data('avatar-name');
+                const avatarId = $button.data('avatar-id');
                 const avatarImg = $button.data('avatar-img');
                 const containerId = $button.data('container-id');
                 
@@ -152,8 +152,8 @@
                 self.callStartAudio = callStartAudio;
                 self.callEndAudio = callEndAudio;
                 
-                if (avatarName && containerId) {
-                    self.toggleInlineCall($button, avatarName, avatarImg, containerId);
+                if (avatarId && containerId) {
+                    self.toggleInlineCall($button, avatarId, avatarImg, containerId);
                 }
             });
             
@@ -184,8 +184,8 @@
             });
         }
         
-        openChatModal(avatarName, avatarImg, connectImmediately = false, modalConfig = {}) {
-            this.currentAvatarName = avatarName;
+        openChatModal(avatarId, avatarImg, connectImmediately = false, modalConfig = {}) {
+            this.currentAvatarId = avatarId;
             this.currentAvatarImg = avatarImg;
             
             console.log('NavTalk: openChatModal called with modalConfig:', modalConfig);
@@ -239,7 +239,7 @@
             // Clear previous chat and hide it by default
             $('.ah-character-chat').empty().hide();
             
-            console.log('NavTalk: Opening chat for', avatarName);
+            console.log('NavTalk: Opening chat for avatarId', avatarId);
             
             // If connect immediately is enabled, start the call automatically
             if (connectImmediately) {
@@ -262,7 +262,7 @@
             console.log('NavTalk: Chat modal closed');
         }
         
-        toggleInlineCall($button, avatarName, avatarImg, containerId) {
+        toggleInlineCall($button, avatarId, avatarImg, containerId) {
             const $container = $('#' + containerId);
             const $staticImg = $container.find('.navtalk-avatar-static-img');
             const $video = $container.find('.navtalk-avatar-inline-video');
@@ -272,12 +272,12 @@
                 this.stopInlineCall($button, $container, $staticImg, $video);
             } else {
                 // Start call
-                this.startInlineCall($button, avatarName, avatarImg, $container, $staticImg, $video);
+                this.startInlineCall($button, avatarId, avatarImg, $container, $staticImg, $video);
             }
         }
         
-        async startInlineCall($button, avatarName, avatarImg, $container, $staticImg, $video) {
-            console.log('NavTalk: Starting inline call for', avatarName);
+        async startInlineCall($button, avatarId, avatarImg, $container, $staticImg, $video) {
+            console.log('NavTalk: Starting inline call for avatarId', avatarId);
             
             // Play call start audio
             this.playCallAudio('start');
@@ -296,7 +296,7 @@
             
             // Show loading overlay for inline mode
             const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
-            console.log('NavTalk: Showing inline loading overlay, found:', $loadingOverlay.length, 'for avatar:', avatarName);
+            console.log('NavTalk: Showing inline loading overlay, found:', $loadingOverlay.length, 'for avatarId:', avatarId);
             if ($loadingOverlay.length) {
                 $loadingOverlay.show().css('display', 'flex');
                 console.log('NavTalk: Inline loading overlay displayed');
@@ -327,13 +327,13 @@
             $video.show().addClass('active');
             
             // Store current avatar info
-            this.currentAvatarName = avatarName;
+            this.currentAvatarId = avatarId;
             this.currentAvatarImg = avatarImg;
-            
+
             // Start WebSocket connection
             await this.startWebSocket();
         }
-        
+
         stopInlineCall($button, $container, $staticImg, $video) {
             console.log('NavTalk: Stopping inline call');
             
@@ -505,7 +505,7 @@
         }
         
         async startWebSocket() {
-            const websocketUrl = `${navtalkConfig.websocketUrl}?license=${navtalkConfig.license}&name=${this.currentAvatarName}`;
+            const websocketUrl = `${navtalkConfig.websocketUrl}?license=${navtalkConfig.license}&avatarId=${this.currentAvatarId}`;
             
             console.log('NavTalk: Connecting to WebSocket...', websocketUrl);
             

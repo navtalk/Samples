@@ -33,22 +33,30 @@ class NavTalk_API {
     }
     
     /**
-     * Get avatar information by name
-     * 
-     * @param string $avatar_name Avatar name (e.g., "navtalk.Ethan")
-     * @return array|false Avatar data or false on failure
+     * Get avatar information by avatar ID
+     *
+     * @param string|int $avatar_id Avatar ID (from API id or avatarId field)
+     * @return array Avatar data or error array on failure
      */
-    public function get_avatar_info($avatar_name) {
+    public function get_avatar_info($avatar_id) {
         if (empty($this->license)) {
             return [
                 'error' => true,
                 'message' => 'License key is not configured. Please go to Settings > NavTalk Digital Human to configure.'
             ];
         }
-        
+
+        $avatar_id = (string) $avatar_id;
+        if ('' === $avatar_id) {
+            return [
+                'error' => true,
+                'message' => 'Avatar ID is required.'
+            ];
+        }
+
         // Get all avatars from API
         $url = NavTalk_Config::get_api_endpoint('/api/open/v1/avatar/list');
-        
+
         $response = wp_remote_get($url, [
             'headers' => [
                 'license' => $this->license,
@@ -57,7 +65,7 @@ class NavTalk_API {
             'timeout' => 15,
             'sslverify' => true
         ]);
-        
+
         // Check for errors
         if (is_wp_error($response)) {
             return [
@@ -65,11 +73,11 @@ class NavTalk_API {
                 'message' => 'API request failed: ' . $response->get_error_message()
             ];
         }
-        
+
         $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
-        
+
         // Check response code
         if ($status_code !== 200) {
             return [
@@ -77,7 +85,7 @@ class NavTalk_API {
                 'message' => 'API returned error: ' . $status_code
             ];
         }
-        
+
         // Check if response is valid
         if (!isset($data['code']) || $data['code'] !== 200) {
             return [
@@ -85,7 +93,7 @@ class NavTalk_API {
                 'message' => isset($data['message']) ? $data['message'] : 'Invalid API response'
             ];
         }
-        
+
         // Check if data exists
         if (empty($data['data']) || !is_array($data['data'])) {
             return [
@@ -93,18 +101,26 @@ class NavTalk_API {
                 'message' => 'No avatars found in your account'
             ];
         }
-        
-        // Find matching avatar
+
+        // Find matching avatar by id or avatarId
         foreach ($data['data'] as $avatar) {
-            if (isset($avatar['name']) && $avatar['name'] === $avatar_name) {
+            $aid = isset($avatar['avatarId']) ? (string) $avatar['avatarId'] : (isset($avatar['id']) ? (string) $avatar['id'] : '');
+            if ('' !== $aid && $aid === $avatar_id) {
+                // Ensure id/avatarId present for frontend
+                if (!isset($avatar['avatarId']) && isset($avatar['id'])) {
+                    $avatar['avatarId'] = $avatar['id'];
+                }
+                if (!isset($avatar['id']) && isset($avatar['avatarId'])) {
+                    $avatar['id'] = $avatar['avatarId'];
+                }
                 return $avatar;
             }
         }
-        
+
         // Avatar not found
         return [
             'error' => true,
-            'message' => 'Avatar "' . esc_html($avatar_name) . '" not found. Please check the avatar name or create it in your NavTalk account.'
+            'message' => 'Avatar with ID "' . esc_html($avatar_id) . '" not found. Please check the avatar ID or create it in your NavTalk account.'
         ];
     }
     
