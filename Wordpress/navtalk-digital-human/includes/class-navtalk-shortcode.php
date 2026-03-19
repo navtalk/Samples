@@ -114,6 +114,7 @@ class NavTalk_Shortcode {
         
         // Output custom JS callbacks if provided
         if (!empty($js_callbacks)) {
+            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Admin-configured JavaScript callbacks, output as-is
             echo '<script id="ntw-custom-callbacks">' . $js_callbacks . '</script>';
         }
         
@@ -174,7 +175,7 @@ class NavTalk_Shortcode {
                                 data-config-prompt="<?php echo esc_attr($prompt); ?>"
                                 data-config-tools=""
                                 style="width: <?php echo esc_attr($button_size); ?>; height: <?php echo esc_attr($button_size); ?>; background-color: <?php echo esc_attr($button_color); ?>;">
-                            <?php echo $this->get_phone_icon(); ?>
+                            <?php echo wp_kses($this->get_phone_icon(), self::allowed_icon_html()); ?>
                         </button>
                     </div>
                 </div>
@@ -185,7 +186,7 @@ class NavTalk_Shortcode {
             <button class="ntw-toggle-btn" 
                     id="ntw-toggle-widget" 
                     aria-expanded="true" 
-                    aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'navtalk-dh'); ?>">
+                    aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'navtalk-digital-human'); ?>">
                 <span class="ntw-toggle-icon"></span>
                 <span class="ntw-toggle-text"></span>
             </button>
@@ -321,8 +322,9 @@ class NavTalk_Shortcode {
     private function render_error($message) {
         return sprintf(
             '<div class="navtalk-error" style="padding: 15px; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33; margin: 10px 0;">
-                <strong>NavTalk Error:</strong> %s
+                <strong>%s</strong> %s
             </div>',
+            esc_html(__('NavTalk Error:', 'navtalk-digital-human')),
             esc_html($message)
         );
     }
@@ -393,10 +395,10 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <button class="navtalk-trigger-button <?php echo $style_class; ?> <?php echo $size_class; ?> <?php echo esc_attr($atts['class']); ?>" 
-                <?php echo !$is_available ? 'disabled' : ''; ?>
-                data-avatar-name="<?php echo $avatar_name; ?>"
-                data-avatar-img="<?php echo $image_url; ?>"
+        <button class="navtalk-trigger-button <?php echo esc_attr($style_class); ?> <?php echo esc_attr($size_class); ?> <?php echo esc_attr($atts['class']); ?>"
+                <?php echo !$is_available ? ' disabled' : ''; ?>
+                data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                data-avatar-img="<?php echo esc_url($image_url); ?>"
                 data-connect-immediately="true"
                 data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
                 data-modal-height="<?php echo esc_attr($atts['modal_height']); ?>"
@@ -414,7 +416,7 @@ class NavTalk_Shortcode {
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
                 </svg>
             <?php endif; ?>
-            <span><?php echo $button_text; ?></span>
+            <span><?php echo esc_html($button_text); ?></span>
         </button>
         <?php
         
@@ -490,11 +492,11 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-floating-button <?php echo $position_class; ?> <?php echo esc_attr($atts['class']); ?>" 
-             style="width: <?php echo $size; ?>; height: <?php echo $size; ?>;">
-            <button class="navtalk-trigger-button navtalk-floating-btn" 
-                    data-avatar-name="<?php echo $avatar_name; ?>"
-                    data-avatar-img="<?php echo $image_url; ?>"
+        <div class="navtalk-floating-button <?php echo esc_attr($position_class); ?> <?php echo esc_attr($atts['class']); ?>"
+             style="width: <?php echo esc_attr($size); ?>; height: <?php echo esc_attr($size); ?>;">
+            <button class="navtalk-trigger-button navtalk-floating-btn"
+                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                    data-avatar-img="<?php echo esc_url($image_url); ?>"
                     data-connect-immediately="true"
                     data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
                     data-modal-height="<?php echo esc_attr($atts['modal_height']); ?>"
@@ -507,7 +509,7 @@ class NavTalk_Shortcode {
                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                     data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
                     data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
-                    style="background: <?php echo $color; ?>;">
+                    style="background: <?php echo esc_attr($color); ?>;">
                 <svg width="24" height="24" viewBox="0 0 22 22" fill="#fff">
                     <path d="M20.0001 15.58C17.0001 13.176 16.1281 14.378 14.8186 15.689C13.8371 16.672 11.4371 14.651 9.41862 12.575C7.34612 10.4995 5.32862 8.04101 6.31012 7.16701C7.67362 5.80201 8.81912 4.98201 6.41912 1.97751C4.01912 -1.02649 2.38262 1.26751 1.07412 2.57851C-0.453385 4.10851 0.964616 9.78901 6.58262 15.4155C12.2006 20.9875 17.8731 22.4625 19.4006 20.933C20.7096 19.622 23.0551 17.983 20.0006 15.5795L20.0001 15.58Z" />
                 </svg>
@@ -579,15 +581,15 @@ class NavTalk_Shortcode {
         $is_available = (strtoupper($status) === 'SUCCESS');
         
         if (!$is_available) {
-            return '<span class="navtalk-link-disabled">' . $link_text . ' (Unavailable)</span>';
+            return '<span class="navtalk-link-disabled">' . wp_kses_post($link_text) . ' (' . esc_html__('Unavailable', 'navtalk-digital-human') . ')</span>';
         }
-        
+
         ob_start();
         ?>
-        <a href="#" 
-           class="navtalk-trigger-link <?php echo $style_class; ?> <?php echo esc_attr($atts['class']); ?>" 
-           data-avatar-name="<?php echo $avatar_name; ?>"
-           data-avatar-img="<?php echo $image_url; ?>"
+        <a href="#"
+           class="navtalk-trigger-link <?php echo esc_attr($style_class); ?> <?php echo esc_attr($atts['class']); ?>"
+           data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+           data-avatar-img="<?php echo esc_url($image_url); ?>"
            data-connect-immediately="true"
            data-modal-width="<?php echo esc_attr($atts['modal_width']); ?>"
            data-modal-height="<?php echo esc_attr($atts['modal_height']); ?>"
@@ -600,7 +602,7 @@ class NavTalk_Shortcode {
            data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
            data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
            data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>">
-            <?php echo $link_text; ?>
+            <?php echo wp_kses_post($link_text); ?>
         </a>
         <?php
         
@@ -711,13 +713,15 @@ class NavTalk_Shortcode {
         
         ob_start();
         ?>
-        <div class="navtalk-avatar-list <?php echo $style_class; ?> <?php echo esc_attr($atts['class']); ?>" data-columns="<?php echo $columns; ?>">
+        <div class="navtalk-avatar-list <?php echo esc_attr($style_class); ?> <?php echo esc_attr($atts['class']); ?>" data-columns="<?php echo esc_attr($columns); ?>">
             <?php foreach ($avatars as $avatar): ?>
                 <?php
                 // Use the layout rendering methods for each avatar in the list
                 if ($layout === 'overlay') {
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_overlay_layout method
                     echo $this->render_overlay_layout($avatar, $atts);
                 } else {
+                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_bottom_layout method
                     echo $this->render_bottom_layout($avatar, $atts);
                 }
                 ?>
@@ -789,8 +793,7 @@ class NavTalk_Shortcode {
         $api = new NavTalk_API();
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = $api->get_full_image_url($thumbnail_url);
-        $image_url_escaped = esc_url($image_url);
-        
+
         // Check for video URL
         $has_video =  (bool)($avatar_info['videoFile'] ?? false);
         if ($has_video) {
@@ -799,25 +802,26 @@ class NavTalk_Shortcode {
 
         $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
-        
+
         // Parse boolean parameters
         $show_title = ($atts['show_title'] === 'true');
         $show_status = ($atts['show_status'] === 'true');
         $show_call_button = ($atts['show_call_button'] === 'true') && $is_available;
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
-        $title_tag = esc_attr($atts['title_tag']);
-        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : $image_url;
+        $allowed_title_tags = ['h2', 'h3', 'h4', 'h5', 'h6'];
+        $title_tag = in_array(strtolower((string) $atts['title_tag']), $allowed_title_tags, true) ? strtolower((string) $atts['title_tag']) : 'h6';
+        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
         $inline_mode = ($atts['inline_mode'] === 'true');
-        
+
         $width = esc_attr($atts['width'] ?? NavTalk_Config::DEFAULT_WIDTH);
-        
+
         // Generate unique ID for this avatar instance
         $unique_id = 'navtalk-' . uniqid();
-        
+
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo $unique_id; ?>">
+        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -825,7 +829,7 @@ class NavTalk_Shortcode {
                         <!-- Avatar has video: render video element -->
                         <video class="navtalk-avatar-preview-video"
                                src="<?php echo esc_url($video_url); ?>"
-                               poster="<?php echo $image_url_escaped; ?>"
+                               poster="<?php echo esc_url($image_url); ?>"
                                muted
                                playsinline
                                <?php if ($inline_mode): ?>
@@ -837,25 +841,25 @@ class NavTalk_Shortcode {
                         </video>
                     <?php elseif (!empty($image_url)): ?>
                         <!-- No video: render static image -->
-                        <img class="navtalk-avatar-static-img" 
-                             src="<?php echo $image_url_escaped; ?>" 
-                             alt="<?php echo $display_name; ?>">
+                        <img class="navtalk-avatar-static-img"
+                             src="<?php echo esc_url($image_url); ?>"
+                             alt="<?php echo esc_attr($display_name); ?>">
                     <?php else: ?>
                         <div class="navtalk-avatar-placeholder">
                             <span>🎭</span>
-                            <p><?php echo $display_name; ?></p>
+                            <p><?php echo esc_html($display_name); ?></p>
                         </div>
                     <?php endif; ?>
-                    
-                    
+
+
                     <?php if ($inline_mode): ?>
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
-                               poster="<?php echo $image_url_escaped; ?>"
+                               poster="<?php echo esc_url($image_url); ?>"
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                        
+
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo $avatar_name; ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo esc_attr($avatar_name); ?>" style="display: none;">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -864,27 +868,27 @@ class NavTalk_Shortcode {
                             <div class="navtalk-loading-pulse"></div>
                         </div>
                     <?php endif; ?>
-                    
+
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
                         <span class="navtalk-status-badge <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>"></span>
                     <?php endif; ?>
                 </div>
-                
+
                 <!-- Overlay Info -->
                 <div class="navtalk-avatar-overlay">
                     <?php if ($show_title): ?>
-                        <<?php echo $title_tag; ?> class="navtalk-avatar-title"><?php echo $display_name; ?></<?php echo $title_tag; ?>>
+                        <<?php echo esc_attr($title_tag); ?> class="navtalk-avatar-title"><?php echo esc_html($display_name); ?></<?php echo esc_attr($title_tag); ?>>
                     <?php endif; ?>
-                    
+
                     <!-- Button Group -->
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
                             <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
-                                    data-avatar-name="<?php echo $avatar_name; ?>"
-                                    data-avatar-img="<?php echo $image_url_escaped; ?>"
+                                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                    data-avatar-img="<?php echo esc_url($image_url); ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
-                                    data-container-id="<?php echo $unique_id; ?>"
+                                    data-container-id="<?php echo esc_attr($unique_id); ?>"
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
@@ -902,15 +906,15 @@ class NavTalk_Shortcode {
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
                                     <?php endif; ?>>
-                                <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
+                                <?php echo wp_kses($this->get_phone_icon($atts['call_icon'] ?? ''), self::allowed_icon_html()); ?>
                             </button>
                         <?php endif; ?>
-                        
+
                         <?php if ($show_download_button): ?>
-                            <a class="navtalk-icon-button navtalk-download-btn" 
-                               href="<?php echo $download_url; ?>" 
+                            <a class="navtalk-icon-button navtalk-download-btn"
+                               href="<?php echo esc_url($download_url); ?>"
                                download>
-                                <?php echo $this->get_download_icon($atts['download_icon'] ?? ''); ?>
+                                <?php echo wp_kses($this->get_download_icon($atts['download_icon'] ?? ''), self::allowed_icon_html()); ?>
                             </a>
                         <?php endif; ?>
                     </div>
@@ -918,10 +922,21 @@ class NavTalk_Shortcode {
             </div>
         </div>
         <?php
-        
+
         return ob_get_clean();
     }
-    
+
+    /**
+     * Allowed HTML for icon output (SVG/img) for wp_kses
+     */
+    private static function allowed_icon_html() {
+        return [
+            'svg'   => ['class' => true, 'xmlns' => true, 'viewBox' => true, 'width' => true, 'height' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'aria-hidden' => true],
+            'path'  => ['d' => true],
+            'img'   => ['src' => true, 'alt' => true, 'class' => true, 'width' => true, 'height' => true, 'aria-hidden' => true],
+        ];
+    }
+
     /**
      * Render bottom layout for avatar card
      * 
@@ -932,39 +947,39 @@ class NavTalk_Shortcode {
     private function render_bottom_layout($avatar_info, $atts) {
         $avatar_name = esc_attr($avatar_info['name']);
         $display_name = esc_html($this->get_display_name($avatar_name));
-        
+
         $api = new NavTalk_API();
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
         $image_url = $api->get_full_image_url($thumbnail_url);
-        $image_url_escaped = esc_url($image_url);
-        
+
         // Check for video URL
         $has_video =  (bool)($avatar_info['videoFile'] ?? false);
         if ($has_video) {
             $video_url = $api->get_full_image_url($avatar_info['url']);
         }
-        
+
         $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
-        
+
         // Parse boolean parameters
         $show_title = ($atts['show_title'] === 'true');
         $show_status = ($atts['show_status'] === 'true');
         $show_call_button = ($atts['show_call_button'] === 'true') && $is_available;
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
-        $title_tag = esc_attr($atts['title_tag']);
-        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : $image_url;
+        $allowed_title_tags = ['h2', 'h3', 'h4', 'h5', 'h6'];
+        $title_tag = in_array(strtolower((string) $atts['title_tag']), $allowed_title_tags, true) ? strtolower((string) $atts['title_tag']) : 'h6';
+        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
         $inline_mode = ($atts['inline_mode'] === 'true');
-        
+
         $width = esc_attr($atts['width'] ?? NavTalk_Config::DEFAULT_WIDTH);
-        
+
         // Generate unique ID for this avatar instance
         $unique_id = 'navtalk-' . uniqid();
-        
+
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo $unique_id; ?>">
+        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -972,7 +987,7 @@ class NavTalk_Shortcode {
                         <!-- Avatar has video: render video element -->
                         <video class="navtalk-avatar-preview-video"
                                src="<?php echo esc_url($video_url); ?>"
-                               poster="<?php echo $image_url_escaped; ?>"
+                               poster="<?php echo esc_url($image_url); ?>"
                                muted
                                playsinline
                                <?php if ($inline_mode): ?>
@@ -984,24 +999,24 @@ class NavTalk_Shortcode {
                         </video>
                     <?php elseif (!empty($image_url)): ?>
                         <!-- No video: render static image -->
-                        <img class="navtalk-avatar-static-img" 
-                             src="<?php echo $image_url_escaped; ?>" 
-                             alt="<?php echo $display_name; ?>">
+                        <img class="navtalk-avatar-static-img"
+                             src="<?php echo esc_url($image_url); ?>"
+                             alt="<?php echo esc_attr($display_name); ?>">
                     <?php else: ?>
                         <div class="navtalk-avatar-placeholder">
                             <span>🎭</span>
-                            <p><?php echo $display_name; ?></p>
+                            <p><?php echo esc_html($display_name); ?></p>
                         </div>
                     <?php endif; ?>
-                    
+
                     <?php if ($inline_mode): ?>
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
-                               poster="<?php echo $image_url_escaped; ?>"
+                               poster="<?php echo esc_url($image_url); ?>"
                                style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
-                        
+
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo $avatar_name; ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar="<?php echo esc_attr($avatar_name); ?>" style="display: none;">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -1010,34 +1025,34 @@ class NavTalk_Shortcode {
                             <div class="navtalk-loading-pulse"></div>
                         </div>
                     <?php endif; ?>
-                    
+
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
                         <span class="navtalk-status-badge <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>"></span>
                     <?php endif; ?>
                 </div>
-                
+
                 <!-- Info Section (below image) -->
                 <div class="navtalk-avatar-info">
                     <?php if ($show_title): ?>
-                        <<?php echo $title_tag; ?> class="navtalk-avatar-title"><?php echo $display_name; ?></<?php echo $title_tag; ?>>
+                        <<?php echo esc_attr($title_tag); ?> class="navtalk-avatar-title"><?php echo esc_html($display_name); ?></<?php echo esc_attr($title_tag); ?>>
                     <?php endif; ?>
-                    
+
                     <?php if ($show_status && $status_position === 'info'): ?>
                         <p class="navtalk-avatar-status <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>">
                             <span class="status-indicator"></span>
-                            <?php echo $is_available ? 'Available' : 'Unavailable'; ?>
+                            <?php echo esc_html($is_available ? __('Available', 'navtalk-digital-human') : __('Unavailable', 'navtalk-digital-human')); ?>
                         </p>
                     <?php endif; ?>
-                    
+
                     <!-- Button Group -->
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
                             <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
-                                    data-avatar-name="<?php echo $avatar_name; ?>"
-                                    data-avatar-img="<?php echo $image_url_escaped; ?>"
+                                    data-avatar-name="<?php echo esc_attr($avatar_name); ?>"
+                                    data-avatar-img="<?php echo esc_url($image_url); ?>"
                                     data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
-                                    data-container-id="<?php echo $unique_id; ?>"
+                                    data-container-id="<?php echo esc_attr($unique_id); ?>"
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-prompt="<?php echo esc_attr($atts['prompt']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
@@ -1055,15 +1070,15 @@ class NavTalk_Shortcode {
                                     data-modal-overlay-color="<?php echo esc_attr($atts['modal_overlay_color']); ?>"
                                     data-call-button-position="<?php echo esc_attr($atts['call_button_position']); ?>"
                                     <?php endif; ?>>
-                                <?php echo $this->get_phone_icon($atts['call_icon'] ?? ''); ?>
+                                <?php echo wp_kses($this->get_phone_icon($atts['call_icon'] ?? ''), self::allowed_icon_html()); ?>
                             </button>
                         <?php endif; ?>
-                        
+
                         <?php if ($show_download_button): ?>
-                            <a class="navtalk-icon-button navtalk-download-btn" 
-                               href="<?php echo $download_url; ?>" 
+                            <a class="navtalk-icon-button navtalk-download-btn"
+                               href="<?php echo esc_url($download_url); ?>"
                                download>
-                                <?php echo $this->get_download_icon($atts['download_icon'] ?? ''); ?>
+                                <?php echo wp_kses($this->get_download_icon($atts['download_icon'] ?? ''), self::allowed_icon_html()); ?>
                             </a>
                         <?php endif; ?>
                     </div>
@@ -1071,7 +1086,7 @@ class NavTalk_Shortcode {
             </div>
         </div>
         <?php
-        
+
         return ob_get_clean();
     }
 }

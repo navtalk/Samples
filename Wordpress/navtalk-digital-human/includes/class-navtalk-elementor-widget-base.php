@@ -28,7 +28,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
     protected function get_avatar_options() {
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
-            return ['_error' => __('License not configured', 'navtalk-dh')];
+            return ['_error' => __('License not configured', 'navtalk-digital-human')];
         }
         
         $api = new NavTalk_API();
@@ -40,14 +40,14 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         ]);
         
         if (is_wp_error($response)) {
-            return ['_error' => __('Failed to fetch avatars', 'navtalk-dh')];
+            return ['_error' => __('Failed to fetch avatars', 'navtalk-digital-human')];
         }
         
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
         if (!isset($data['data']) || empty($data['data'])) {
-            return ['_error' => __('No avatars found', 'navtalk-dh')];
+            return ['_error' => __('No avatars found', 'navtalk-digital-human')];
         }
         
         $options = [];
@@ -100,7 +100,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->start_controls_section(
             $section_id,
             [
-                'label' => __('Modal Settings', 'navtalk-dh'),
+                'label' => __('Modal Settings', 'navtalk-digital-human'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -108,47 +108,47 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'modal_width',
             [
-                'label' => __('Modal Width', 'navtalk-dh'),
+                'label' => __('Modal Width', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => NavTalk_Config::DEFAULT_MODAL_WIDTH,
-                'description' => __('e.g., 80vw, 1200px', 'navtalk-dh'),
+                'description' => __('e.g., 80vw, 1200px', 'navtalk-digital-human'),
             ]
         );
         
         $this->add_control(
             'modal_height',
             [
-                'label' => __('Modal Height', 'navtalk-dh'),
+                'label' => __('Modal Height', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => NavTalk_Config::DEFAULT_MODAL_HEIGHT,
-                'description' => __('e.g., 80vh, 800px', 'navtalk-dh'),
+                'description' => __('e.g., 80vh, 800px', 'navtalk-digital-human'),
             ]
         );
         
         $this->add_control(
             'modal_max_width',
             [
-                'label' => __('Modal Max Width', 'navtalk-dh'),
+                'label' => __('Modal Max Width', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,
-                'description' => __('e.g., 1400px, 90vw', 'navtalk-dh'),
+                'description' => __('e.g., 1400px, 90vw', 'navtalk-digital-human'),
             ]
         );
         
         $this->add_control(
             'modal_max_height',
             [
-                'label' => __('Modal Max Height', 'navtalk-dh'),
+                'label' => __('Modal Max Height', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT,
-                'description' => __('e.g., 900px, 90vh', 'navtalk-dh'),
+                'description' => __('e.g., 900px, 90vh', 'navtalk-digital-human'),
             ]
         );
         
         $this->add_control(
             'modal_overlay_color',
             [
-                'label' => __('Modal Overlay Color', 'navtalk-dh'),
+                'label' => __('Modal Overlay Color', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
             ]
@@ -157,12 +157,12 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'call_button_position',
             [
-                'label' => __('Call Button Position', 'navtalk-dh'),
+                'label' => __('Call Button Position', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
-                    'center-bottom' => __('Center Bottom', 'navtalk-dh'),
-                    'bottom-left' => __('Bottom Left', 'navtalk-dh'),
-                    'bottom-right' => __('Bottom Right', 'navtalk-dh'),
+                    'center-bottom' => __('Center Bottom', 'navtalk-digital-human'),
+                    'bottom-left' => __('Bottom Left', 'navtalk-digital-human'),
+                    'bottom-right' => __('Bottom Right', 'navtalk-digital-human'),
                 ],
                 'default' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
             ]
@@ -180,7 +180,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->start_controls_section(
             $section_id,
             [
-                'label' => __('Button Icons', 'navtalk-dh'),
+                'label' => __('Button Icons', 'navtalk-digital-human'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -188,10 +188,10 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'call_icon',
             [
-                'label' => __('Call Button Icon URL', 'navtalk-dh'),
+                'label' => __('Call Button Icon URL', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Leave empty to use default phone icon. Enter full URL to custom SVG/PNG image.', 'navtalk-dh'),
+                'description' => __('Leave empty to use default phone icon. Enter full URL to custom SVG/PNG image.', 'navtalk-digital-human'),
                 'label_block' => true,
             ]
         );
@@ -199,10 +199,10 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'download_icon',
             [
-                'label' => __('Download Button Icon URL', 'navtalk-dh'),
+                'label' => __('Download Button Icon URL', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Leave empty to use default download icon. Enter full URL to custom SVG/PNG image.', 'navtalk-dh'),
+                'description' => __('Leave empty to use default download icon. Enter full URL to custom SVG/PNG image.', 'navtalk-digital-human'),
                 'label_block' => true,
             ]
         );
@@ -219,7 +219,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->start_controls_section(
             $section_id,
             [
-                'label' => __('Call Button Style', 'navtalk-dh'),
+                'label' => __('Call Button Style', 'navtalk-digital-human'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -227,13 +227,13 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_preset',
             [
-                'label' => __('Button Style Preset', 'navtalk-dh'),
+                'label' => __('Button Style Preset', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
-                    'default' => __('Default (Transparent)', 'navtalk-dh'),
-                    'gradient' => __('Gradient (Purple)', 'navtalk-dh'),
-                    'solid' => __('Solid Color', 'navtalk-dh'),
-                    'outline' => __('Outline', 'navtalk-dh'),
+                    'default' => __('Default (Transparent)', 'navtalk-digital-human'),
+                    'gradient' => __('Gradient (Purple)', 'navtalk-digital-human'),
+                    'solid' => __('Solid Color', 'navtalk-digital-human'),
+                    'outline' => __('Outline', 'navtalk-digital-human'),
                 ],
                 'default' => 'default',
             ]
@@ -242,7 +242,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_bg_color',
             [
-                'label' => __('Background Color', 'navtalk-dh'),
+                'label' => __('Background Color', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '',
                 'condition' => [
@@ -254,7 +254,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_text_color',
             [
-                'label' => __('Icon/Text Color', 'navtalk-dh'),
+                'label' => __('Icon/Text Color', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '',
             ]
@@ -263,7 +263,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_size',
             [
-                'label' => __('Button Size (px)', 'navtalk-dh'),
+                'label' => __('Button Size (px)', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 36,
                 'min' => 20,
@@ -274,7 +274,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_border_width',
             [
-                'label' => __('Border Width (px)', 'navtalk-dh'),
+                'label' => __('Border Width (px)', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'default' => 0,
                 'min' => 0,
@@ -285,7 +285,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_border_color',
             [
-                'label' => __('Border Color', 'navtalk-dh'),
+                'label' => __('Border Color', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '',
                 'condition' => [
@@ -297,18 +297,18 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_shadow',
             [
-                'label' => __('Box Shadow', 'navtalk-dh'),
+                'label' => __('Box Shadow', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
                 'placeholder' => '0 4px 8px rgba(0,0,0,0.2)',
-                'description' => __('CSS box-shadow value', 'navtalk-dh'),
+                'description' => __('CSS box-shadow value', 'navtalk-digital-human'),
             ]
         );
         
         $this->add_control(
             'button_hover_bg',
             [
-                'label' => __('Hover Background Color', 'navtalk-dh'),
+                'label' => __('Hover Background Color', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::COLOR,
                 'default' => '',
             ]
@@ -317,12 +317,12 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_animation',
             [
-                'label' => __('Animation Effect', 'navtalk-dh'),
+                'label' => __('Animation Effect', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
-                    'none' => __('None', 'navtalk-dh'),
-                    'pulse' => __('Pulse', 'navtalk-dh'),
-                    'bounce' => __('Bounce', 'navtalk-dh'),
+                    'none' => __('None', 'navtalk-digital-human'),
+                    'pulse' => __('Pulse', 'navtalk-digital-human'),
+                    'bounce' => __('Bounce', 'navtalk-digital-human'),
                 ],
                 'default' => 'none',
             ]
@@ -408,7 +408,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
     protected function render_error($message) {
         ?>
         <div class="navtalk-error" style="padding: 15px; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33; margin: 10px 0;">
-            <strong><?php echo __('NavTalk Error:', 'navtalk-dh'); ?></strong> <?php echo esc_html($message); ?>
+            <strong><?php echo esc_html(__('NavTalk Error:', 'navtalk-digital-human')); ?></strong> <?php echo esc_html($message); ?>
         </div>
         <?php
     }
@@ -460,6 +460,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $method = $reflection->getMethod('render_avatar_card');
         $method->setAccessible(true);
         
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_avatar_card method
         echo $method->invoke($shortcode, $avatar_info, $atts);
     }
 }

@@ -8,7 +8,7 @@
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: navtalk-dh
+ * Text Domain: navtalk-digital-human
  * Domain Path: /languages
  */
 
@@ -29,7 +29,7 @@ define('NAVTALK_PLUGIN_URL', plugin_dir_url(__FILE__));
 /**
  * The code that runs during plugin activation.
  */
-function activate_navtalk_dh() {
+function navtalk_digital_human_activate() {
     // Add default options
     add_option('navtalk_license', '');
     // Global digital human assistant (floating) default options
@@ -49,16 +49,16 @@ function activate_navtalk_dh() {
     // Flush rewrite rules
     flush_rewrite_rules();
 }
-register_activation_hook(__FILE__, 'activate_navtalk_dh');
+register_activation_hook(__FILE__, 'navtalk_digital_human_activate');
 
 /**
  * The code that runs during plugin deactivation.
  */
-function deactivate_navtalk_dh() {
+function navtalk_digital_human_deactivate() {
     // Flush rewrite rules
     flush_rewrite_rules();
 }
-register_deactivation_hook(__FILE__, 'deactivate_navtalk_dh');
+register_deactivation_hook(__FILE__, 'navtalk_digital_human_deactivate');
 
 /**
  * Load plugin classes
@@ -72,7 +72,9 @@ require_once NAVTALK_PLUGIN_DIR . 'public/class-navtalk-public.php';
 /**
  * Initialize the plugin
  */
-function run_navtalk_dh() {
+function navtalk_digital_human_init() {
+    load_plugin_textdomain('navtalk-digital-human', false, dirname(plugin_basename(__FILE__)) . '/languages');
+
     // Initialize admin
     if (is_admin()) {
         $admin = new NavTalk_Admin();
@@ -87,7 +89,7 @@ function run_navtalk_dh() {
     $shortcode = new NavTalk_Shortcode();
     $shortcode->init();
 }
-add_action('plugins_loaded', 'run_navtalk_dh');
+add_action('plugins_loaded', 'navtalk_digital_human_init');
 
 /**
  * Enable shortcode parsing in Gutenberg HTML blocks
@@ -147,7 +149,7 @@ function navtalk_add_elementor_widget_categories($elements_manager) {
     $elements_manager->add_category(
         'navtalk',
         [
-            'title' => __('NavTalk', 'navtalk-dh'),
+            'title' => __('NavTalk', 'navtalk-digital-human'),
             'icon' => 'fa fa-plug',
         ]
     );
