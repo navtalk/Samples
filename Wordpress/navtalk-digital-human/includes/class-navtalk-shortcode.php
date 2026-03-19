@@ -340,7 +340,6 @@ class NavTalk_Shortcode {
      */
     public function render_button($atts) {
         $atts = shortcode_atts([
-            'avatarId' => '',
             'avatarid' => '', // WordPress lowercases shortcode attribute names
             'text' => 'Start Chat',
             'style' => 'primary', // primary, secondary, outline
@@ -438,7 +437,6 @@ class NavTalk_Shortcode {
      */
     public function render_floating($atts) {
         $atts = shortcode_atts([
-            'avatarId' => '',
             'avatarid' => '', // WordPress lowercases shortcode attribute names
             'position' => 'bottom-right', // bottom-right, bottom-left, top-right, top-left
             'color' => '#667eea',
@@ -953,8 +951,8 @@ class NavTalk_Shortcode {
      */
     private static function allowed_icon_html() {
         return [
-            'svg'   => ['class' => true, 'xmlns' => true, 'viewBox' => true, 'width' => true, 'height' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'aria-hidden' => true],
-            'path'  => ['d' => true],
+            'svg'   => ['class' => true, 'xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'aria-hidden' => true],
+            'path'  => ['d' => true, 'fill' => true],
             'img'   => ['src' => true, 'alt' => true, 'class' => true, 'width' => true, 'height' => true, 'aria-hidden' => true],
         ];
     }

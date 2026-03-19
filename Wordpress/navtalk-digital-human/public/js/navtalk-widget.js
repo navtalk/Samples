@@ -37,6 +37,8 @@
                 this.$container.addClass('ntw-collapsed');
                 this.$toggleBtn.attr('aria-expanded', 'false');
                 this.$toggleBtn.find('.ntw-toggle-text').text('Show');
+            }else {
+                this.$toggleBtn.find('.ntw-toggle-text').text('Hide');
             }
             
             // Bind toggle button event

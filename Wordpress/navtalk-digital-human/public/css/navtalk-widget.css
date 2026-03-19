@@ -792,101 +792,112 @@ z-index: 99;
     pointer-events: none;
 }
 
-/* Call button overlay styles for floating widget */
-.ntw-call-button {
+/* Call button - positioned relative to popup container */
+#ntw-widget-root .navtalk-call-btn {
     position: absolute !important;
-    bottom: 20px !important;
+    bottom: 24px !important;
     left: 50% !important;
-    transform: translateX(-50%);
-    border-radius: 50%;
-    border: none;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    z-index: 5;
-    animation: ntw-call-button-pulse 2s ease-in-out infinite;
+    right: auto !important;
+    transform: translate(-50%, 0);
+    width: 66px !important;
+    height: 66px !important;
+    background: linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%) !important;
+    box-shadow: 0 22px 42px rgba(56, 189, 248, 0.35) !important;
+    z-index: 10 !important;
+    transition: transform 0.3s ease, box-shadow 0.3s ease !important;
+    animation: ntw-pulse-button-ani 2s ease-in-out infinite;
 }
 
-.ntw-call-button:hover {
-    transform: translateX(-50%) scale(1.1);
-    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.4);
+/* Pulse animation for call button - only when not active */
+@keyframes ntw-pulse-button-ani {
+    0%, 100% {
+        transform: translate(-50%, 0) scale(1);
+        box-shadow: 0 22px 42px rgba(56, 189, 248, 0.35);
+    }
+    50% {
+        transform: translate(-50%, 0) scale(1.08);
+        box-shadow: 0 28px 50px rgba(56, 189, 248, 0.5);
+    }
+}
+
+/* Pulse ring effect */
+#ntw-widget-root .navtalk-call-btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background: linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%);
+    opacity: 0.4;
+    transform: translate(-50%, -50%) scale(1);
+    animation: ntw-pulse-ring-ani 2s ease-out infinite;
+    z-index: -1;
+    pointer-events: none;
+}
+
+@keyframes ntw-pulse-ring-ani {
+    0% {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 0.4;
+    }
+    100% {
+        transform: translate(-50%, -50%) scale(1.6);
+        opacity: 0;
+    }
+}
+
+/* Button positioning in Elementor Popup */
+#ntw-widget-root .navtalk-call-btn {
+    position: absolute !important;
+    bottom: 30px !important;
+    left: 50% !important;
+    right: auto !important;
+    transform: translate(-50%, 0);
+}
+
+#ntw-widget-root .navtalk-call-btn:hover {
+    animation-play-state: paused;
+    transform: translate(-50%, -2px) scale(1.1) !important;
+    box-shadow: 0 30px 55px rgba(56, 189, 248, 0.5) !important;
+}
+
+/* Ensure hover works with animation */
+#ntw-widget-root .navtalk-call-btn:hover::before {
     animation-play-state: paused;
 }
 
-.ntw-call-button svg,
-.ntw-call-button .navtalk-phone-icon {
-    width: 50%;
-    height: 50%;
-    fill: currentColor;
-    color: white;
+/* Active state - Hang up state (red gradient) */
+#ntw-widget-root .navtalk-call-btn.active {
+    background: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%) !important;
+    box-shadow: 0 10px 20px rgba(255, 94, 98, 0.4) !important;
+    animation: none !important;
 }
 
-/* Pulse animation for call button */
-@keyframes ntw-call-button-pulse {
-    0%, 100% {
-        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
-    }
-    50% {
-        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
-    }
+/* Stop pulse ring when active */
+#ntw-widget-root .navtalk-call-btn.active::before {
+    display: none;
 }
 
-/* Preview video styles */
-.ntw-preview-video,
-.navtalk-avatar-preview-video {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
+/* Active state hover */
+#ntw-widget-root .navtalk-call-btn.active:hover {
+    background: linear-gradient(135deg, #ff4757 0%, #ff7675 100%) !important;
+    box-shadow: 0 15px 25px rgba(255, 94, 98, 0.5) !important;
 }
 
-/* Static image fallback */
-.navtalk-avatar-static-img {
-    position: absolute !important;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    z-index: 1;
-}
-
-/* Inline call video styles */
-.navtalk-avatar-inline-video {
-    z-index: 2 !important;
-}
-
-/* Loading overlay for inline mode */
-.navtalk-inline-loading-overlay {
-    z-index: 3 !important;
-}
-
-/* Hide call button when widget is collapsed */
-.ntw-container.ntw-collapsed .ntw-call-button {
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-}
-
-/* Active call state - red background for hang up */
-.ntw-call-button.active {
-    animation: none;
-    box-shadow: 0 8px 20px rgba(239, 68, 68, 0.5);
-}
-
-.ntw-call-button.active:hover {
-    box-shadow: 0 12px 28px rgba(239, 68, 68, 0.6);
-}
-
-/* Responsive adjustments for call button */
+/* Responsive adjustments - WordPress compatible */
 @media (max-width: 768px) {
-    .ntw-call-button {
-        bottom: 15px !important;
+
+    #ntw-widget-root .navtalk-call-btn {
+        width: 56px !important;
+        height: 56px !important;
+        bottom: 18px !important;
+        left: 50% !important;
+        right: auto !important;
+        transform: translate(-50%, 0);
     }
+
+
 }
+
