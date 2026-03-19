@@ -265,10 +265,8 @@ class NavTalk_Shortcode {
         
         // Convert angle brackets to square brackets in tools parameter
         if (!empty($atts['tools'])) {
-            error_log('NavTalk: Before conversion: ' . $atts['tools']);
             $atts['tools'] = str_replace('<', '[', $atts['tools']);
             $atts['tools'] = str_replace('>', ']', $atts['tools']);
-            error_log('NavTalk: After conversion: ' . $atts['tools']);
         }
         
         // Validate required attribute

@@ -73,8 +73,6 @@ require_once NAVTALK_PLUGIN_DIR . 'public/class-navtalk-public.php';
  * Initialize the plugin
  */
 function navtalk_digital_human_init() {
-    load_plugin_textdomain('navtalk-digital-human', false, dirname(plugin_basename(__FILE__)) . '/languages');
-
     // Initialize admin
     if (is_admin()) {
         $admin = new NavTalk_Admin();
