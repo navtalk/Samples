@@ -175,6 +175,16 @@ class NavTalk_Admin {
             },
             'default' => ''
         ]);
+        register_setting('navtalk_options_group', 'navtalk_auto_hangup_enabled', [
+            'type' => 'string',
+            'sanitize_callback' => function ($v) { return $v ? '1' : '0'; },
+            'default' => '0'
+        ]);
+        register_setting('navtalk_options_group', 'navtalk_auto_hangup_description', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => 'Call this function when the user says goodbye'
+        ]);
         
         add_settings_section(
             'navtalk_main_section',
@@ -271,6 +281,20 @@ class NavTalk_Admin {
             'navtalk_floating_js_callbacks',
             __('Custom JS Callbacks', 'navtalk-digital-human'),
             [$this, 'render_floating_js_callbacks_field'],
+            'navtalk-settings',
+            'navtalk_floating_section'
+        );
+        add_settings_field(
+            'navtalk_auto_hangup_enabled',
+            __('Enable Auto Hangup', 'navtalk-digital-human'),
+            [$this, 'render_auto_hangup_enabled_field'],
+            'navtalk-settings',
+            'navtalk_floating_section'
+        );
+        add_settings_field(
+            'navtalk_auto_hangup_description',
+            __('Auto Hangup Trigger Description', 'navtalk-digital-human'),
+            [$this, 'render_auto_hangup_description_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
@@ -530,6 +554,27 @@ class NavTalk_Admin {
             <code>window.navtalkOnToggle(isExpanded)</code> - <?php esc_html_e('Triggered on toggle show/hide', 'navtalk-digital-human'); ?><br>
             <code>window.navtalkOnConnect(avatarName, config)</code> - <?php esc_html_e('Triggered on connecting to digital human', 'navtalk-digital-human'); ?>
         </p>
+        <?php
+    }
+
+    public function render_auto_hangup_enabled_field() {
+        $enabled = get_option('navtalk_auto_hangup_enabled', '0');
+        ?>
+        <input type="hidden" name="navtalk_auto_hangup_enabled" value="0">
+        <label>
+            <input type="checkbox" name="navtalk_auto_hangup_enabled" value="1" <?php checked($enabled, '1'); ?>>
+            <?php esc_html_e('Enable auto hangup when user says goodbye(only OpenAIRealtime provider)', 'navtalk-digital-human'); ?>
+        </label>
+        <p class="description"><?php esc_html_e('When enabled, the AI will automatically end the conversation when the user says goodbye. The end_conversation function will be added to tools.', 'navtalk-digital-human'); ?></p>
+        <?php
+    }
+
+    public function render_auto_hangup_description_field() {
+        $description = get_option('navtalk_auto_hangup_description', 'Call this function when the user says goodbye');
+        ?>
+        <input type="text" name="navtalk_auto_hangup_description" id="navtalk_auto_hangup_description"
+               value="<?php echo esc_attr($description); ?>" class="large-text" placeholder="Call this function when the user says goodbye">
+        <p class="description"><?php esc_html_e('Description for the end_conversation tool. Customize to define when the AI should trigger hangup (e.g. "when user says 再见" or "when user says goodbye").', 'navtalk-digital-human'); ?></p>
         <?php
     }
     

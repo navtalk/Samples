@@ -136,10 +136,12 @@
                 });
                 
                 // Store session configuration for inline mode
+                let toolsArr = tools ? self.parseTools(tools) : [];
+                toolsArr = self.mergeEndConversationTool(toolsArr);
                 self.sessionConfig = {
                     voice: voice,
                     prompt: prompt,
-                    tools: tools ? self.parseTools(tools) : []
+                    tools: toolsArr
                 };
                 
                 console.log('NavTalk Inline: Parsed session config:', self.sessionConfig);
@@ -191,10 +193,12 @@
             console.log('NavTalk: openChatModal called with modalConfig:', modalConfig);
             
             // Read session configuration
+            let toolsArr = (modalConfig.tools && modalConfig.tools !== 'undefined') ? this.parseTools(modalConfig.tools) : [];
+            toolsArr = this.mergeEndConversationTool(toolsArr);
             this.sessionConfig = {
                 voice: modalConfig.voice || '',
                 prompt: modalConfig.prompt || '',
-                tools: (modalConfig.tools && modalConfig.tools !== 'undefined') ? this.parseTools(modalConfig.tools) : []
+                tools: toolsArr
             };
             
             console.log('NavTalk: Session config initialized:', this.sessionConfig);
@@ -1087,6 +1091,38 @@
             return hasConfig;
         }
         
+        getEndConversationTool() {
+            const desc = (typeof navtalkConfig !== 'undefined' && navtalkConfig.autoHangupDescription) || 'Call this function when the user says goodbye';
+            return {
+                type: 'function',
+                name: 'end_conversation',
+                description: desc,
+                parameters: {
+                    type: 'object',
+                    properties: {
+                        userInput: {
+                            type: 'string',
+                            description: 'the user input'
+                        }
+                    },
+                    required: ['userInput']
+                }
+            };
+        }
+        mergeEndConversationTool(toolsArr) {
+            if (!toolsArr || !Array.isArray(toolsArr)) {
+                toolsArr = [];
+            }
+            if (typeof navtalkConfig === 'undefined' || !navtalkConfig.autoHangupEnabled) {
+                return toolsArr;
+            }
+            const hasEndConv = toolsArr.some(t => t && t.name === 'end_conversation');
+            if (!hasEndConv) {
+                toolsArr = toolsArr.slice();
+                toolsArr.push(this.getEndConversationTool());
+            }
+            return toolsArr;
+        }
         parseTools(toolsString) {
             console.log('NavTalk: parseTools called with:', toolsString);
             console.log('NavTalk: parseTools - input type:', typeof toolsString);

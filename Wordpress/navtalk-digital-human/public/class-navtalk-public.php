@@ -71,7 +71,9 @@ class NavTalk_Public {
             'modalMaxWidth' => NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,
             'modalMaxHeight' => NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT,
             'modalOverlayColor' => NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR,
-            'callButtonPosition' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION
+            'callButtonPosition' => NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION,
+            'autoHangupEnabled' => get_option('navtalk_auto_hangup_enabled', '0') === '1',
+            'autoHangupDescription' => get_option('navtalk_auto_hangup_description', 'Call this function when the user says goodbye')
         ]);
     }
     
