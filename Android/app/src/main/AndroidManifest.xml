@@ -1,23 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-
-    <uses-feature
-        android:name="android.hardware.camera"
-        android:required="false" />
-
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
-    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
+    <!-- 网络权限 -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+    <!-- 麦克风权限 -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <!-- WebRTC必须的权限，否则setLocalDescription会崩溃 -->
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- WebRTC必须的权限-->
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <!-- 摄像头权限 -->
     <uses-permission android:name="android.permission.CAMERA" />
-    <uses-permission android:name="android.permission.RECORD_AUDIO" />
-    <uses-permission android:name="android.permission.CAPTURE_AUDIO_OUTPUT"
-        tools:ignore="ProtectedPermissions" />
 
 
     <application
@@ -25,32 +19,29 @@
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:fullBackupContent="@xml/backup_rules"
         android:icon="@mipmap/ic_launcher"
-        android:label="@string/app_name"
+        android:label="NavTalk"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.NavTalkDemo"
-        tools:targetApi="31">
-        <meta-data
-            android:name="ScopedStorage"
-            android:value="true" />
+        android:theme="@style/Theme.App">
+        <!-- 启动页 -->
         <activity
-            android:name=".VideoActivity"
-            android:exported="false" />
-        <activity
-            android:name=".RealtimeActivity"
+            android:name=".LaunchActivity"
             android:exported="true"
-            android:label="@string/title_activity_realtime"
-            android:theme="@style/Theme.NavTalkDemo" >
+            android:theme="@style/Theme.Launch">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <!-- 主页面 -->
         <activity
             android:name=".MainActivity"
-            android:exported="true">
-
-        </activity>
+            android:exported="false" />
+        <!-- 聊天页面 -->
+        <activity
+            android:name=".ChatActivity"
+            android:exported="false" />
     </application>
 
 </manifest>

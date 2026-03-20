@@ -1,9 +1,14 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.NavTalkDemo" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 应用默认主题 -->
+    <style name="Theme.App" parent="Theme.AppCompat.Light.NoActionBar" />
+    <!-- 启动页主题 -->
+    <style name="Theme.Launch" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- 1️⃣ 设置窗口背景，启动时就显示这个背景 -->
+        <item name="android:windowBackground">@drawable/launch_out</item>
+        <!-- 状态栏透明 -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
     </style>
-
-    <style name="Theme.NavTalkDemo" parent="Base.Theme.NavTalkDemo" />
+    <!-- 主页主题 -->
+    <style name="Theme.MainActivityPage" parent="Theme.AppCompat.Light.NoActionBar"/>
 </resources>

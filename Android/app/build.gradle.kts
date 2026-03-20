@@ -1,21 +1,23 @@
-import org.jetbrains.kotlin.storage.CacheResetOnProcessCanceled.enabled
-
 plugins {
     alias(libs.plugins.android.application)
-    alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
 }
 
 android {
-    namespace = "com.example.navtalkdemo"
-    compileSdk = 35
+    namespace = "com.navtalk.androidsample"
+    compileSdk {
+        version = release(36) {
+            minorApiLevel = 1
+        }
+    }
 
     defaultConfig {
-        applicationId = "com.example.navtalkdemo"
+        applicationId = "com.navtalk.androidsample"
         minSdk = 24
-        targetSdk = 35
+        targetSdk = 36
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.0.0"
+
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -32,55 +34,47 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    kotlinOptions {
-        jvmTarget = "11"
-    }
     buildFeatures {
         compose = true
-        viewBinding = true
     }
-
 }
 
 dependencies {
     implementation(libs.androidx.core.ktx)
-    implementation(libs.androidx.appcompat)
-    implementation(libs.material)
-    implementation(libs.androidx.activity)
-    implementation(libs.androidx.constraintlayout)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
     implementation(platform(libs.androidx.compose.bom))
-    implementation(libs.androidx.ui)
-    implementation(libs.androidx.ui.graphics)
-    implementation(libs.androidx.ui.tooling.preview)
-    implementation(libs.androidx.material3)
+    implementation(libs.androidx.compose.ui)
+    implementation(libs.androidx.compose.ui.graphics)
+    implementation(libs.androidx.compose.ui.tooling.preview)
+    implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.appcompat)
+    implementation(libs.androidx.activity)
+    implementation(libs.androidx.constraintlayout)
+    implementation(libs.material)
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
-    androidTestImplementation(libs.androidx.ui.test.junit4)
-    debugImplementation(libs.androidx.ui.tooling)
-    debugImplementation(libs.androidx.ui.test.manifest)
-    implementation(libs.google.webrtc)
-    //noinspection UseTomlInstead
-    implementation("com.squareup.okhttp3:okhttp:5.0.0-alpha.2")
-    //noinspection UseTomlInstead
-    implementation("com.google.code.gson:gson:2.10.1")
-    //noinspection UseTomlInstead
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.8.1")
-    //noinspection UseTomlInstead
-    implementation("com.github.bumptech.glide:glide:4.16.0")
-    annotationProcessor(libs.compiler)
-    implementation("androidx.recyclerview:recyclerview:1.3.2")
-    implementation(libs.androidx.appcompat.v131)
-    implementation(libs.androidx.constraintlayout.v211)
-    implementation("androidx.activity:activity-ktx:1.10.1")
-    implementation(libs.androidx.core.ktx.v160)
-    //noinspection GradleDependency
-    implementation("io.coil-kt:coil:2.6.0")  // Make sure Coil is included
-    implementation("org.java-websocket:Java-WebSocket:1.4.0")
-    implementation ("com.github.getActivity:XXPermissions:26.5")
-
-
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.tooling)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
+    //网络
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    //图片加载
+    implementation ("com.github.bumptech.glide:glide:4.11.0")
+    annotationProcessor ("com.github.bumptech.glide:compiler:4.11.0")
+    //提示语
+    implementation("com.github.GrenderG:Toasty:1.5.2")
+    //WebRTC
+    //implementation("com.mesibo.api:webrtc:1.0.5") //有问题--界面显示问题
+    //implementation("com.mesibo.api:webrtc:1.1.10")//有问题--重新Call问题
+    implementation("io.github.webrtc-sdk:android:137.7151.05")
+    //摄像头预览和截取帧画面相关
+    // CameraX 核心库
+    implementation("androidx.camera:camera-core:1.2.3")
+    implementation("androidx.camera:camera-camera2:1.2.3")
+    // CameraX 预览用例和生命周期绑定
+    implementation("androidx.camera:camera-lifecycle:1.2.3")
+    implementation("androidx.camera:camera-view:1.2.3")
 }
