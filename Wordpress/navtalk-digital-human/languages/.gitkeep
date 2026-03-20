@@ -1,9 +1,0 @@
-# Translation files will be placed in this directory
-#
-# Structure:
-# - navtalk-digital-human-{locale}.po
-# - navtalk-digital-human-{locale}.mo
-#
-# Example:
-# - navtalk-digital-human-zh_CN.po
-# - navtalk-digital-human-zh_CN.mo
