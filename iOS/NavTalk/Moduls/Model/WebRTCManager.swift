@@ -48,7 +48,7 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
         }
         //print("current_iceServers:\(current_iceServers)")
         let current_iceServers_array = parseIceServers(from: current_iceServers)
-        //print("current_iceServers_array:\(current_iceServers_array)")
+        print("current_iceServers_array:\(current_iceServers_array)")
         config.iceServers = current_iceServers_array
         config.iceTransportPolicy = .all
         config.rtcpMuxPolicy = .require

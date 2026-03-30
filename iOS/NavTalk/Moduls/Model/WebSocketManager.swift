@@ -20,7 +20,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     }
 
     //MARK: 2.Connect NavTalk WebSocket
-    var socket: WebSocket!
+    var socket: Starscream.WebSocket!
     //Avatar Image URL
     var avatar_image_url = ""
     //Avatar Provide Type Name
@@ -33,9 +33,21 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     let websocketUrl = "wss://transfer.navtalk.ai/wss/v2/realtime-chat"
     
     //Your Api Kye
-    let license = "Your Api Key"
-    //Your Avatar Name
-    let characterName = "Your Avatar Name"
+    let license = "********"
+    //Option 1: Connect using character name
+    let characterName = "****"
+    //Option 2: Connect using avatarId (recommended, higher priority)
+    let characterId = "********************"
+    /*
+     The WebSocket connection URL requires one mandatory parameter and supports two query methods:
+       license: Your API key (required)
+       name: The name of the digital human character (query method 1)
+       avatarId: Direct avatar ID for precise lookup (query method 2, higher priority)
+       Query Priority: If both avatarId and name are provided, avatarId takes precedence.
+       Multiple Avatars Warning: If using name query and multiple avatars share the same name, the system will:
+         Automatically select the most recently updated avatar
+         Send a conversation.connected.warning event with the selected avatarId immediately after the connection success event
+     */
 
     //Is or not save history chat message in local database
     var isOrNotSaveHistoryChatMessages = false
@@ -51,14 +63,26 @@ class WebSocketManager: NSObject, WebSocketDelegate{
             //(1).Get Full URL
             let encodedLicense = license.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
             let encodedCharacterName = characterName.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
-            guard let url = URL(string: "\(websocketUrl)?license=\(encodedLicense)&name=\(encodedCharacterName)") else { return }
+            let encodedCharacterId = characterId.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
             //2.Connect Socket
-            let request = URLRequest(url: url)
-            socket = WebSocket(request: request)
-            socket.delegate = self
-            socket.connect()
-            socket_status = .Connectting
-            NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
+            if (characterId.count > 0){
+                guard let url = URL(string: "\(websocketUrl)?license=\(encodedLicense)&avatarId=\(encodedCharacterId)") else { return }
+                let request = URLRequest(url: url)
+                socket = WebSocket(request: request)
+                socket.delegate = self
+                socket.connect()
+                socket_status = .Connectting
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
+            }else{
+                guard let url = URL(string: "\(websocketUrl)?license=\(encodedLicense)&name=\(encodedCharacterName)") else { return }
+                let request = URLRequest(url: url)
+                socket = WebSocket(request: request)
+                socket.delegate = self
+                socket.connect()
+                socket_status = .Connectting
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebSocketManager_socket_status_changed"), object: nil)
+            }
+          
         }else if socket_status == .Connected{
             MBProgressHUD.showTextWithTitleAndSubTitle(title: "The WebSocket is already connected, no need to connect again.", subTitle: "", view:  getCurrentVc().view)
         }else if socket_status == .Connectting{
@@ -168,6 +192,24 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     }
     //MARK: 6.Handle Function Call
     func handleFunctionCall(message: [String: Any]){
+        /*
+         ["data": {
+             arguments =     {
+                 userInput = "\U5173\U95ed\U5bf9\U8bdd";
+             };
+             "call_id" = "call_JZ0DWumfrsN5Kxgm";
+             "function_name" = "function_call_close_talk";
+         }, "raw_data": {
+             arguments = "{  \n  \"userInput\": \"\U5173\U95ed\U5bf9\U8bdd\"\n}";
+             "call_id" = "call_JZ0DWumfrsN5Kxgm";
+             "event_id" = "event_DIVB1JW5bGHAYIDBeVdoo";
+             "item_id" = "item_DIVB0UxgBhrlBwcyFyrbB";
+             name = "function_call_close_talk";
+             "output_index" = 0;
+             "response_id" = "resp_DIVB0YYUxlS7kL93EncQZ";
+             type = "response.function_call_arguments.done";
+         }, "type": realtime.response.function_call_arguments.done]
+         */
         print("Handle Function Call:\(message)")
         if let data = message["data"] as? [String: Any],
            let name = data["function_name"] as? String,
@@ -274,7 +316,7 @@ class WebSocketManager: NSObject, WebSocketDelegate{
                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "HaveOutputText"), object: dict)
             }
         }
-        //(9).type == response.function_call_arguments.done
+        //(9).type == realtime.response.function_call_arguments.don
         //Function call message
         if message_type == "realtime.response.function_call_arguments.done"{
             handleFunctionCall(message: message_dict)

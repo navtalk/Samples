@@ -104,7 +104,7 @@ class CameraCaptureManager: NSObject, AVCaptureVideoDataOutputSampleBufferDelega
                 if self.previewLayer == nil {
                     let layer = AVCaptureVideoPreviewLayer(session: self.captureSession)
                     layer.videoGravity = .resizeAspectFill
-                    layer.frame = self.showPreviewLayerView.bounds   // previewView 是你页面上的 UIView
+                    layer.frame = self.showPreviewLayerView.bounds   // previewView your page's show view
                     self.showPreviewLayerView.layer.insertSublayer(layer, at: 0)
                     self.previewLayer = layer
                 }

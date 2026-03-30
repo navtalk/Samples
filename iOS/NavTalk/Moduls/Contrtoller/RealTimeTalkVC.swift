@@ -218,7 +218,12 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     //MARK: 0.Fetch Avatar Detail Information By Api
     func fetchAvatarDetailInformation(){
-        let urlString = "https://api.navtalk.ai/api/open/v1/avatar/getByName?license=\(WebSocketManager.shared.license)&name=\(WebSocketManager.shared.characterName)"
+        var urlString = ""
+        if (WebSocketManager.shared.characterId.count > 0){
+            urlString = "https://api.navtalk.ai/api/open/v1/avatar/detail?avatarId=\(WebSocketManager.shared.characterId)"
+        }else{
+            urlString = "https://api.navtalk.ai/api/open/v1/avatar/getByName?name=\(WebSocketManager.shared.characterName)"
+        }
         guard let url = URL(string: urlString) else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
