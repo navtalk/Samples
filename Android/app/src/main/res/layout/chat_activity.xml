@@ -70,6 +70,18 @@
             />
     </FrameLayout>
 
+    <!-- 返回按钮 -->
+    <ImageView
+        android:id="@+id/backPageIcon"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:src="@drawable/navtalk_back"
+        app:layout_constraintStart_toStartOf="parent"
+        android:layout_marginStart="25dp"
+        app:layout_constraintTop_toTopOf="parent"
+        android:layout_marginTop="40dp"
+        />
+
     <!-- 通话状态控件 -->
     <FrameLayout
         android:id="@+id/callStatusView"

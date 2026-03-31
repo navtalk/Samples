@@ -49,8 +49,15 @@ object WebsocketManager{
 
         val encodedLicense = URLEncoder.encode(NavTalkManager.license, "UTF-8")
         val encodedCharacterName = URLEncoder.encode(NavTalkManager.characterName, "UTF-8")
+        val encodedCharacterId = URLEncoder.encode(NavTalkManager.characterId, "UTF-8")
+        var full_websocket_url = ""
+        if (NavTalkManager.characterId.length > 0){
+            full_websocket_url = "${websocketUrl}?license=${encodedLicense}&avatarId=${encodedCharacterId}"
+        }else{
+            full_websocket_url = "${websocketUrl}?license=${encodedLicense}&name=${encodedCharacterName}"
+        }
         val request = Request.Builder()
-            .url("${websocketUrl}?license=${encodedLicense}&name=${encodedCharacterName}")
+            .url(full_websocket_url)
             .build()
         webSocket = client.newWebSocket(request, object: WebSocketListener(){
             override fun onOpen(ws: WebSocket, response: Response) {

@@ -28,7 +28,9 @@ import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.navtalk.androidsample.SingleClass.SocketStatus
 import com.navtalk.androidsample.SingleClass.WebsocketManager
+import com.navtalk.androidsample.SingleClass.WebsocketManager.appContext
 import com.navtalk.androidsample.audio.RecordAudioManager
+import es.dmoral.toasty.Toasty
 import okhttp3.Call
 import okhttp3.Callback
 import okhttp3.OkHttpClient
@@ -97,11 +99,22 @@ class ChatActivity : AppCompatActivity() {
         setupMessagesListUI()
         val messagesListView: RecyclerView = findViewById(R.id.messagesListView)
         messagesListView.visibility = View.INVISIBLE
+
+        //返回按钮：
+        val backPageIcon: ImageView = findViewById(R.id.backPageIcon)
+        backPageIcon.setOnClickListener {
+            clickBackIcon()
+        }
     }
 
     //2.获取Avatar详情
     fun fetchAvatarDetailInformation(){
-        val urlString = "https://api.navtalk.ai/api/open/v1/avatar/getByName?license=${NavTalkManager.license}&name=${NavTalkManager.characterName}"
+        var urlString = ""
+        if (NavTalkManager.characterId.length > 0){
+            urlString = "https://api.navtalk.ai/api/open/v1/avatar/detail?license=${NavTalkManager.license}&avatarId=${NavTalkManager.characterId}"
+        }else{
+            urlString = "https://api.navtalk.ai/api/open/v1/avatar/getByName?license=${NavTalkManager.license}&name=${NavTalkManager.characterName}"
+        }
         println("NavTalk-->Fetch Avatar Detail Information--urlString: ${urlString}")
         val client = OkHttpClient()
         val request = Request.Builder()
@@ -567,5 +580,40 @@ class ChatActivity : AppCompatActivity() {
         messagesListView.adapter?.notifyDataSetChanged()
         // 滚动到底部
         messagesListView.scrollToPosition(WebsocketManager.allUserAndAIMessages.count() - 1)
+    }
+
+    //10.点击返回按钮:
+    fun clickBackIcon(){
+        if (WebsocketManager.socketStatus == SocketStatus.CONNECTED
+            || WebsocketManager.socketStatus == SocketStatus.CONNECTING
+            || WebRTCManager.webRTCStaus == WebRTCStatus.CONNECTED
+            || WebRTCManager.webRTCStaus == WebRTCStatus.CONNECTING
+        ){
+            //更新视图
+            val callStatusView: FrameLayout = findViewById(R.id.callStatusView)
+            callStatusView.isEnabled = false
+            callStatusView.alpha = 0.7f
+            val microphoneStatusView: FrameLayout = findViewById(R.id.microphoneStatusView)
+            microphoneStatusView.visibility = View.INVISIBLE
+            val cameraStatusView: FrameLayout = findViewById(R.id.cameraStatusView)
+            cameraStatusView.visibility = View.INVISIBLE
+            hiddenRTCRemoteVideoChangeShowStatus()
+            //停止相关业务:
+            //断开WebScoket
+            WebsocketManager.disconnectWebSocket()
+            //断开WebRTC
+            WebRTCManager.disconnectWebRTC()
+            //停止采集音频
+            RecordAudioManager.stopCaptureAudio()
+            //停止采集视频
+            if (CameraCaptureManager.currentCameraStatus == CameraStatus.OPENED){
+                CameraCaptureManager.release()
+            }
+            //返回上一页
+            finish()
+        }else{
+            //返回上一页
+            finish()
+        }
     }
 }
