@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.1
+Stable tag: 1.0.2
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -53,7 +53,7 @@ NavTalk Digital Human is a WordPress plugin that enables you to embed interactiv
 
 = Configuration =
 
-1. Get your license key from [NavTalk Console](https://console.navtalk.ai)
+1. Get your license key from [NavTalk Console](https://console.navtalk.ai/#/projects)
 2. Go to Settings > NavTalk Digital Human
 3. Enter your license key
 4. Click "Test Connection" (optional)
@@ -108,6 +108,12 @@ Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor w
 
 == Changelog ==
 
+= 1.0.2 =
+* Security and WordPress.org guidelines: removed admin-stored arbitrary JavaScript output; admin/settings scripts use `wp_add_inline_script`
+* Floating widget custom CSS and collapse-state script use `wp_add_inline_style` / `wp_add_inline_script` instead of raw tags in the footer
+* Shortcode output hardening for `navtalk_link` when license or API calls fail (escaped inner content)
+* Readme: expanded External services disclosure with data flow and Terms/Privacy links
+
 = 1.0.0 =
 * Initial release
 * Basic shortcode functionality ([navtalk_avatar])
@@ -130,6 +136,9 @@ Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor w
 
 == Upgrade Notice ==
 
+= 1.0.2 =
+Security and WordPress.org guideline updates. The settings field for arbitrary custom JavaScript has been removed; use a child theme or custom plugin to enqueue scripts if you need `window.navtalkOnInit` and related hooks.
+
 = 1.0.0 =
 Initial release of NavTalk Digital Human plugin.
 
@@ -142,13 +151,22 @@ For support, documentation, and updates, visit:
 
 == Privacy Policy ==
 
-This plugin does not collect or store any personal data on your WordPress site. All communications are directly between the user's browser and NavTalk's servers. Please review NavTalk's privacy policy for information about their data handling practices.
+This plugin does not collect or store visitor personal data in the WordPress database. The site administrator stores the NavTalk license key in WordPress options. When visitors use the digital human, audio, video, and chat-related data are processed by NavTalk's services as described below.
+
+== External services ==
+
+This plugin connects the visitor's browser and your WordPress site to NavTalk (operated by NavTalk / navtalk.ai) to load avatars and run real-time conversations.
+
+* HTTPS REST API (`https://api.navtalk.ai`): Used when the plugin or wp-admin requests avatar lists, avatar details, and connection tests. Requests send your license key in HTTP headers and may receive avatar metadata and media URLs.
+* WebSocket (`wss://transfer.navtalk.ai`): Used during an active session for real-time voice/video and messaging between the visitor's browser and NavTalk.
+* Media delivery: Avatar images and preview videos are loaded from URLs returned by the API (for example from NavTalk CDN hosts such as `https://cdn.navtalk.ai`). The browser requests those assets directly.
+
+Data sent to NavTalk includes at least your license key (from WordPress), session-related traffic over WebSocket (including voice/video where the user grants browser permissions), and any prompts or configuration you set in the plugin. What NavTalk logs or retains is governed by their policies.
+
+Official policies (review before use):
+* Terms of Service: https://navtalk.ai/policy/terms-of-service/
+* Privacy Policy: https://navtalk.ai/policy/privacy-policy/
 
 == Third Party Services ==
 
-This plugin connects to NavTalk's external services:
-* API: https://api.navtalk.ai - For avatar information and authentication
-* WebSocket: wss://transfer.navtalk.ai - For real-time communication
-* CDN: https://cdn.navtalk.ai - For avatar images and videos
-
-By using this plugin, you agree to NavTalk's Terms of Service and Privacy Policy.
+Same as "External services" above: the plugin depends on NavTalk API, WebSocket, and related media hosts. See that section for endpoints, data flow, and policy links.

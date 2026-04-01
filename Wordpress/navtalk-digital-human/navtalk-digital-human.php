@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NavTalk Digital Human
  * Description: Integrate NavTalk real-time digital human conversation into WordPress. Simply configure your license key and use [navtalk_avatar avatarId="your-avatar-id"] shortcode to embed avatars.
- * Version: 1.0.1
+ * Version: 1.0.2
  * Author: NavTalk
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('NAVTALK_VERSION', '1.0.1');
+define('NAVTALK_VERSION', '1.0.2');
 
 // Plugin directory path
 define('NAVTALK_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -43,7 +43,6 @@ function navtalk_digital_human_activate() {
     add_option('navtalk_floating_prompt', '');
     add_option('navtalk_floating_voice', '');
     add_option('navtalk_floating_model', '');
-    add_option('navtalk_floating_js_callbacks', '');
 
     // Flush rewrite rules
     flush_rewrite_rules();
@@ -86,6 +85,19 @@ function navtalk_digital_human_init() {
     $shortcode = new NavTalk_Shortcode();
     $shortcode->init();
 }
+/**
+ * One-time cleanup and version tracking (e.g. remove deprecated options).
+ */
+function navtalk_digital_human_maybe_upgrade() {
+    $stored = get_option('navtalk_installed_version', '');
+    if ($stored === NAVTALK_VERSION) {
+        return;
+    }
+    delete_option('navtalk_floating_js_callbacks');
+    update_option('navtalk_installed_version', NAVTALK_VERSION);
+}
+add_action('plugins_loaded', 'navtalk_digital_human_maybe_upgrade', 1);
+
 add_action('plugins_loaded', 'navtalk_digital_human_init');
 
 /**

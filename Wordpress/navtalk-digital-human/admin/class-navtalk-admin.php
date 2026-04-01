@@ -16,7 +16,7 @@ class NavTalk_Admin {
     public function init() {
         add_action('admin_menu', [$this, 'add_settings_page']);
         add_action('admin_init', [$this, 'register_settings']);
-        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_styles']);
+        add_action('admin_enqueue_scripts', [$this, 'enqueue_admin_assets']);
         add_action('add_meta_boxes', [$this, 'add_navtalk_meta_box']);
         add_action('save_post', [$this, 'save_navtalk_meta'], 10, 2);
         add_action('init', [$this, 'register_navtalk_post_meta']);
@@ -164,17 +164,6 @@ class NavTalk_Admin {
             'sanitize_callback' => 'sanitize_text_field',
             'default' => ''
         ]);
-        register_setting('navtalk_options_group', 'navtalk_floating_js_callbacks', [
-            'type' => 'string',
-            'sanitize_callback' => function($v) {
-                // Allow script tags but remove dangerous content
-                $allowed_tags = [
-                    'script' => ['type' => true],
-                ];
-                return wp_kses($v, $allowed_tags);
-            },
-            'default' => ''
-        ]);
         register_setting('navtalk_options_group', 'navtalk_auto_hangup_enabled', [
             'type' => 'string',
             'sanitize_callback' => function ($v) { return $v ? '1' : '0'; },
@@ -278,13 +267,6 @@ class NavTalk_Admin {
             'navtalk_floating_section'
         );
         add_settings_field(
-            'navtalk_floating_js_callbacks',
-            __('Custom JS Callbacks', 'navtalk-digital-human'),
-            [$this, 'render_floating_js_callbacks_field'],
-            'navtalk-settings',
-            'navtalk_floating_section'
-        );
-        add_settings_field(
             'navtalk_auto_hangup_enabled',
             __('Enable Auto Hangup', 'navtalk-digital-human'),
             [$this, 'render_auto_hangup_enabled_field'],
@@ -304,7 +286,11 @@ class NavTalk_Admin {
      * Render settings section description
      */
     public function render_section_callback() {
-        echo '<p>Configure your NavTalk API license key. Get your license key from <a href="https://console.navtalk.ai" target="_blank">NavTalk Console</a>.</p>';
+        echo '<p>';
+        esc_html_e('Configure your NavTalk API license key. Get your license key from ', 'navtalk-digital-human');
+        echo '<a href="' . esc_url('https://console.navtalk.ai') . '" target="_blank" rel="noopener noreferrer">';
+        esc_html_e('NavTalk Console', 'navtalk-digital-human');
+        echo '</a>.</p>';
     }
     
     /**
@@ -331,94 +317,6 @@ class NavTalk_Admin {
                 <span id="test-result" style="margin-left: 10px;"></span>
             </div>
         <?php endif; ?>
-        
-        <script>
-        jQuery(document).ready(function($) {
-            $('#test-connection').on('click', function() {
-                var button = $(this);
-                var result = $('#test-result');
-                
-                button.prop('disabled', true).text('Testing...');
-                result.html('');
-                
-                $.ajax({
-                    url: ajaxurl,
-                    type: 'POST',
-                    data: {
-                        action: 'navtalk_test_connection',
-                        license: $('#navtalk_license').val()
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            result.html('<span style="color: green;">✓ ' + response.data.message + '</span>');
-                        } else {
-                            result.html('<span style="color: red;">✗ ' + response.data.message + '</span>');
-                        }
-                    },
-                    error: function() {
-                        result.html('<span style="color: red;">✗ Connection test failed</span>');
-                    },
-                    complete: function() {
-                        button.prop('disabled', false).text('Test Connection');
-                    }
-                });
-            });
-            
-            // Copy shortcode to clipboard
-            $('.copy-shortcode').on('click', function() {
-                var button = $(this);
-                var shortcode = button.data('shortcode');
-                
-                // Use modern clipboard API if available
-                if (navigator.clipboard && navigator.clipboard.writeText) {
-                    navigator.clipboard.writeText(shortcode).then(function() {
-                        showCopySuccess(button);
-                    }).catch(function() {
-                        fallbackCopy(shortcode, button);
-                    });
-                } else {
-                    fallbackCopy(shortcode, button);
-                }
-            });
-            
-            // Fallback copy method for older browsers
-            function fallbackCopy(text, button) {
-                var temp = $('<textarea>');
-                $('body').append(temp);
-                temp.val(text).select();
-                
-                try {
-                    document.execCommand('copy');
-                    showCopySuccess(button);
-                } catch (err) {
-                    button.text('Failed').css('background-color', '#f44336');
-                    setTimeout(function() {
-                        button.text('Copy').css('background-color', '');
-                    }, 2000);
-                }
-                
-                temp.remove();
-            }
-            
-            // Show success feedback
-            function showCopySuccess(button) {
-                var originalText = button.text();
-                button.text('Copied!').css({
-                    'background-color': '#4caf50',
-                    'color': '#fff',
-                    'border-color': '#4caf50'
-                });
-                
-                setTimeout(function() {
-                    button.text(originalText).css({
-                        'background-color': '',
-                        'color': '',
-                        'border-color': ''
-                    });
-                }, 2000);
-            }
-        });
-        </script>
         <?php
     }
 
@@ -541,19 +439,6 @@ class NavTalk_Admin {
         <input type="text" name="navtalk_floating_model" id="navtalk_floating_model"
                value="<?php echo esc_attr($model); ?>" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use default model', 'navtalk-digital-human'); ?>">
         <p class="description"><?php esc_html_e('Configure the digital human model. Leave empty to use default configuration.', 'navtalk-digital-human'); ?></p>
-        <?php
-    }
-
-    public function render_floating_js_callbacks_field() {
-        $js_callbacks = get_option('navtalk_floating_js_callbacks', '');
-        ?>
-        <textarea name="navtalk_floating_js_callbacks" id="navtalk_floating_js_callbacks" rows="10" class="large-text code" placeholder="// Example:&#10;window.navtalkOnInit = function(widget) {&#10;    console.log('initialized');&#10;};"><?php echo esc_textarea($js_callbacks); ?></textarea>
-        <p class="description">
-            <?php esc_html_e('Add custom JavaScript callback functions. Available callbacks:', 'navtalk-digital-human'); ?><br>
-            <code>window.navtalkOnInit(widget)</code> - <?php esc_html_e('Triggered on initialization', 'navtalk-digital-human'); ?><br>
-            <code>window.navtalkOnToggle(isExpanded)</code> - <?php esc_html_e('Triggered on toggle show/hide', 'navtalk-digital-human'); ?><br>
-            <code>window.navtalkOnConnect(avatarName, config)</code> - <?php esc_html_e('Triggered on connecting to digital human', 'navtalk-digital-human'); ?>
-        </p>
         <?php
     }
 
@@ -856,19 +741,104 @@ class NavTalk_Admin {
     }
     
     /**
-     * Enqueue admin styles
+     * Enqueue admin styles and inline script for settings page
      */
-    public function enqueue_admin_styles($hook) {
+    public function enqueue_admin_assets($hook) {
         if ('settings_page_navtalk-settings' !== $hook) {
             return;
         }
-        
+
         wp_enqueue_style(
             'navtalk-admin-style',
             NAVTALK_PLUGIN_URL . 'admin/css/admin-style.css',
             [],
             NAVTALK_VERSION
         );
+
+        wp_register_script(
+            'navtalk-admin-settings',
+            false,
+            ['jquery'],
+            NAVTALK_VERSION,
+            true
+        );
+        wp_enqueue_script('navtalk-admin-settings');
+
+        $inline = <<<'JS'
+(function($) {
+    $('#test-connection').on('click', function() {
+        var button = $(this);
+        var result = $('#test-result');
+        button.prop('disabled', true).text('Testing...');
+        result.html('');
+        $.ajax({
+            url: ajaxurl,
+            type: 'POST',
+            data: {
+                action: 'navtalk_test_connection',
+                license: $('#navtalk_license').val()
+            },
+            success: function(response) {
+                if (response.success) {
+                    result.html('<span style="color: green;">✓ ' + response.data.message + '</span>');
+                } else {
+                    result.html('<span style="color: red;">✗ ' + response.data.message + '</span>');
+                }
+            },
+            error: function() {
+                result.html('<span style="color: red;">✗ Connection test failed</span>');
+            },
+            complete: function() {
+                button.prop('disabled', false).text('Test Connection');
+            }
+        });
+    });
+    $('.copy-shortcode').on('click', function() {
+        var button = $(this);
+        var shortcode = button.data('shortcode');
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(shortcode).then(function() {
+                showCopySuccess(button);
+            }).catch(function() {
+                fallbackCopy(shortcode, button);
+            });
+        } else {
+            fallbackCopy(shortcode, button);
+        }
+    });
+    function fallbackCopy(text, button) {
+        var temp = $('<textarea>');
+        $('body').append(temp);
+        temp.val(text).select();
+        try {
+            document.execCommand('copy');
+            showCopySuccess(button);
+        } catch (err) {
+            button.text('Failed').css('background-color', '#f44336');
+            setTimeout(function() {
+                button.text('Copy').css('background-color', '');
+            }, 2000);
+        }
+        temp.remove();
+    }
+    function showCopySuccess(button) {
+        var originalText = button.text();
+        button.text('Copied!').css({
+            'background-color': '#4caf50',
+            'color': '#fff',
+            'border-color': '#4caf50'
+        });
+        setTimeout(function() {
+            button.text(originalText).css({
+                'background-color': '',
+                'color': '',
+                'border-color': ''
+            });
+        }, 2000);
+    }
+})(jQuery);
+JS;
+        wp_add_inline_script('navtalk-admin-settings', $inline);
     }
 }
 

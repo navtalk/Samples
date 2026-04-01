@@ -19,7 +19,58 @@ class NavTalk_Shortcode {
         add_shortcode('navtalk_floating', [$this, 'render_floating']);
         add_shortcode('navtalk_link', [$this, 'render_link']);
         add_shortcode('navtalk_list', [$this, 'render_avatar_list']);
+        add_action('wp_enqueue_scripts', [$this, 'enqueue_floating_inline_assets'], 25);
         add_action('wp_footer', [$this, 'output_global_floating'], 998);
+    }
+
+    /**
+     * Enqueue inline CSS/JS for the global floating widget via WordPress asset APIs.
+     */
+    public function enqueue_floating_inline_assets() {
+        if (get_option('navtalk_floating_enabled', '0') !== '1') {
+            return;
+        }
+        if ('' === (string) get_option('navtalk_floating_avatar', '') || '' === (string) get_option('navtalk_license', '')) {
+            return;
+        }
+        if (is_singular()) {
+            $post_id = get_queried_object_id();
+            if ($post_id && get_post_meta($post_id, '_navtalk_show_floating', true) === 'hide') {
+                return;
+            }
+        }
+
+        $custom_style = get_option('navtalk_floating_custom_style', '');
+        if ('' !== $custom_style) {
+            wp_add_inline_style('navtalk-widget-style', wp_strip_all_tags($custom_style));
+        }
+    }
+
+    /**
+     * Static footer script: apply saved collapsed state immediately after widget markup (DOM must exist).
+     */
+    private static function floating_collapse_inline_js() {
+        return <<<'JS'
+(function() {
+    try {
+        var savedState = localStorage.getItem('navtalk_widget_state');
+        if (savedState === 'collapsed') {
+            var widget = document.getElementById('ntw-widget-root');
+            var toggleBtn = document.getElementById('ntw-toggle-widget');
+            if (widget) {
+                widget.classList.add('ntw-collapsed');
+            }
+            if (toggleBtn) {
+                toggleBtn.setAttribute('aria-expanded', 'false');
+                var toggleText = toggleBtn.querySelector('.ntw-toggle-text');
+                if (toggleText) {
+                    toggleText.textContent = 'Show';
+                }
+            }
+        }
+    } catch (e) {}
+})();
+JS;
     }
 
     /**
@@ -88,11 +139,9 @@ class NavTalk_Shortcode {
         $show_toggle = get_option('navtalk_show_toggle_button', '1') === '1';
         $button_size = get_option('navtalk_floating_button_size', '60px');
         $button_color = get_option('navtalk_floating_button_color', '#667eea');
-        $custom_style = get_option('navtalk_floating_custom_style', '');
         $prompt = get_option('navtalk_floating_prompt', '');
         $voice = get_option('navtalk_floating_voice', '');
         $model = get_option('navtalk_floating_model', '');
-        $js_callbacks = get_option('navtalk_floating_js_callbacks', '');
 
         // Get image/video URLs
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : ($avatar_info['url'] ?? '');
@@ -106,18 +155,7 @@ class NavTalk_Shortcode {
         
         // Generate unique container ID
         $unique_id = 'ntw-widget-root';
-        
-        // Output custom CSS if provided
-        if (!empty($custom_style)) {
-            echo '<style id="ntw-custom-style">' . esc_html($custom_style) . '</style>';
-        }
-        
-        // Output custom JS callbacks if provided
-        if (!empty($js_callbacks)) {
-            // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Admin-configured JavaScript callbacks, output as-is
-            echo '<script id="ntw-custom-callbacks">' . $js_callbacks . '</script>';
-        }
-        
+
         $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : $avatar_id);
         ?>
         <!-- NavTalk Global Floating Widget -->
@@ -193,32 +231,11 @@ class NavTalk_Shortcode {
             </button>
             <?php endif; ?>
         </div>
-        
-        <!-- Inline script to prevent flash of expanded state on page load -->
-        <script>
-        (function() {
-            try {
-                var savedState = localStorage.getItem('navtalk_widget_state');
-                if (savedState === 'collapsed') {
-                    var widget = document.getElementById('ntw-widget-root');
-                    var toggleBtn = document.getElementById('ntw-toggle-widget');
-                    if (widget) {
-                        widget.classList.add('ntw-collapsed');
-                    }
-                    if (toggleBtn) {
-                        toggleBtn.setAttribute('aria-expanded', 'false');
-                        var toggleText = toggleBtn.querySelector('.ntw-toggle-text');
-                        if (toggleText) {
-                            toggleText.textContent = 'Show';
-                        }
-                    }
-                }
-            } catch (e) {
-                // Silently fail if localStorage is not available
-            }
-        })();
-        </script>
         <?php
+        wp_register_script('navtalk-floating-collapse', false, [], NAVTALK_VERSION, true);
+        wp_enqueue_script('navtalk-floating-collapse');
+        wp_add_inline_script('navtalk-floating-collapse', self::floating_collapse_inline_js(), 'after');
+        wp_print_scripts('navtalk-floating-collapse');
     }
 
     /**
@@ -572,7 +589,7 @@ class NavTalk_Shortcode {
 
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
-            return $content;
+            return wp_kses_post((string) $content);
         }
 
         // Get avatar info
@@ -580,7 +597,7 @@ class NavTalk_Shortcode {
         $avatar_info = $api->get_avatar_info($atts['avatarId']);
 
         if (isset($avatar_info['error']) && $avatar_info['error']) {
-            return $content;
+            return wp_kses_post((string) $content);
         }
 
         $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
@@ -723,7 +740,7 @@ class NavTalk_Shortcode {
         }
         
         if (empty($avatars)) {
-            return '<p>No avatars available.</p>';
+            return '<p>' . esc_html__('No avatars available.', 'navtalk-digital-human') . '</p>';
         }
         
         $columns = intval($atts['columns']);
