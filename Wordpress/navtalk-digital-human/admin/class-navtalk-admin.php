@@ -124,7 +124,11 @@ class NavTalk_Admin {
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_position', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => function ($v) {
+                $allowed = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
+                $v = sanitize_text_field((string) $v);
+                return in_array($v, $allowed, true) ? $v : 'bottom-right';
+            },
             'default' => 'bottom-right'
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_size', [

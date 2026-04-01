@@ -113,6 +113,7 @@ Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor w
 * Floating widget custom CSS and collapse-state script use `wp_add_inline_style` / `wp_add_inline_script` instead of raw tags in the footer
 * Shortcode output hardening for `navtalk_link` when license or API calls fail (escaped inner content)
 * Readme: expanded External services disclosure with data flow and Terms/Privacy links
+* Settings: floating position option sanitized against an allowed list (bottom/top corners)
 
 = 1.0.0 =
 * Initial release
