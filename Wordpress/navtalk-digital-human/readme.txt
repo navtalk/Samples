@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.2
+Stable tag: 1.0.3
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -13,6 +13,8 @@ Integrate NavTalk real-time AI avatar conversations into your WordPress site wit
 == Description ==
 
 NavTalk Digital Human is a WordPress plugin that enables you to embed interactive AI avatars on your website. Users can have real-time voice and video conversations with AI-powered digital humans directly from your WordPress pages.
+
+The plugin itself is free and the full plugin code is included in this package. Avatar and conversation features are provided by the NavTalk cloud service (Software as a Service); a NavTalk account and license key are required to use that service—this is not hidden or trial-locked code inside the plugin.
 
 = Features =
 
@@ -89,6 +91,10 @@ Yes, you can use as many avatars as your NavTalk plan allows.
 
 Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor widgets.
 
+= What happens if I delete (uninstall) the plugin? =
+
+Uninstalling removes all settings stored in WordPress (including the license key) and the per-page "show digital human" meta. It does not delete your NavTalk account or data on navtalk.ai; manage those in the NavTalk console.
+
 = What shortcodes are available? =
 
 * [navtalk_avatar] - Display avatar card
@@ -107,6 +113,13 @@ Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor w
 6. Mobile responsive design
 
 == Changelog ==
+
+= 1.0.3 =
+* i18n: load text domain on plugins_loaded
+* Security: require valid nonces for admin AJAX (test connection, refresh avatars)
+* Uninstall: add uninstall.php to remove plugin options and _navtalk_show_floating post meta
+* Privacy: suggested policy text for Tools > Privacy (NavTalk data handling and policy links)
+* Readme: clarify SaaS model vs. trial-locked local code
 
 = 1.0.2 =
 * Security and WordPress.org guidelines: removed admin-stored arbitrary JavaScript output; admin/settings scripts use `wp_add_inline_script`
@@ -136,6 +149,9 @@ Use the shortcode: [navtalk_avatar avatarId="your-avatar-id"] or use Elementor w
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.0.3 =
+Adds translations loading, stricter admin AJAX nonces, uninstall cleanup, and privacy policy helper text. No change required to shortcodes; re-save settings if you use "Test Connection".
 
 = 1.0.2 =
 Security and WordPress.org guideline updates. The settings field for arbitrary custom JavaScript has been removed; use a child theme or custom plugin to enqueue scripts if you need `window.navtalkOnInit` and related hooks.

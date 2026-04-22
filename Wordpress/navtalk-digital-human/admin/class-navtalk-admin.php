@@ -1295,6 +1295,15 @@ CSS;
         );
         wp_enqueue_script('navtalk-admin-settings');
 
+        wp_localize_script(
+            'navtalk-admin-settings',
+            'navtalkAdmin',
+            [
+                'testNonce'    => wp_create_nonce('navtalk_test'),
+                'refreshNonce' => wp_create_nonce('navtalk_refresh_avatars'),
+            ]
+        );
+
         $inline = <<<'JS'
 (function($) {
     // Background field JavaScript
@@ -1451,7 +1460,8 @@ CSS;
             type: 'POST',
             data: {
                 action: 'navtalk_test_connection',
-                license: license
+                license: license,
+                nonce: (typeof navtalkAdmin !== 'undefined' && navtalkAdmin.testNonce) ? navtalkAdmin.testNonce : ''
             },
             success: function(response) {
                 if (response.success) {
@@ -1477,7 +1487,8 @@ CSS;
             url: ajaxurl,
             type: 'POST',
             data: {
-                action: 'navtalk_refresh_avatars'
+                action: 'navtalk_refresh_avatars',
+                nonce: (typeof navtalkAdmin !== 'undefined' && navtalkAdmin.refreshNonce) ? navtalkAdmin.refreshNonce : ''
             },
             success: function(response) {
                 if (response.success) {
@@ -1677,7 +1688,11 @@ JS;
 add_action('wp_ajax_navtalk_test_connection', function() {
     ob_start();
 
-    check_ajax_referer('navtalk_test', 'nonce', false);
+    if (!check_ajax_referer('navtalk_test', 'nonce', false)) {
+        ob_end_clean();
+        wp_send_json_error(['message' => 'Invalid security token.']);
+        return;
+    }
 
     if (!current_user_can('manage_options')) {
         ob_end_clean();
@@ -1719,6 +1734,12 @@ add_action('wp_ajax_navtalk_test_connection', function() {
  */
 add_action('wp_ajax_navtalk_refresh_avatars', function() {
     ob_start();
+
+    if (!check_ajax_referer('navtalk_refresh_avatars', 'nonce', false)) {
+        ob_end_clean();
+        wp_send_json_error(['message' => 'Invalid security token.']);
+        return;
+    }
 
     if (!current_user_can('manage_options')) {
         ob_end_clean();

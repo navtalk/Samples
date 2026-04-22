@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NavTalk Digital Human
  * Description: Integrate NavTalk real-time digital human conversation into WordPress. Simply configure your license key and use [navtalk_avatar avatarId="your-avatar-id"] shortcode to embed avatars.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: NavTalk
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
@@ -17,7 +17,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('NAVTALK_VERSION', '1.0.2');
+define('NAVTALK_VERSION', '1.0.3');
 
 // Plugin directory path
 define('NAVTALK_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -96,6 +96,43 @@ function navtalk_digital_human_maybe_upgrade() {
     update_option('navtalk_installed_version', NAVTALK_VERSION);
 }
 add_action('plugins_loaded', 'navtalk_digital_human_maybe_upgrade', 1);
+
+/**
+ * Load plugin text domain for translations.
+ */
+function navtalk_load_textdomain() {
+    load_plugin_textdomain(
+        'navtalk-digital-human',
+        false,
+        dirname(plugin_basename(__FILE__)) . '/languages'
+    );
+}
+add_action('plugins_loaded', 'navtalk_load_textdomain', 5);
+
+/**
+ * Suggested text for the site Privacy Policy (Tools > Privacy).
+ */
+function navtalk_register_privacy_policy_suggested_text() {
+    if (!function_exists('wp_add_privacy_policy_content')) {
+        return;
+    }
+    $content  = '<p>' . esc_html__(
+        'This plugin sends your stored NavTalk license key to NavTalk (api.navtalk.ai) and may open WebSocket sessions (wss://transfer.navtalk.ai) for real-time voice and video. Visitor microphone and camera use follows browser permissions; session and media data are processed under NavTalk policies, not stored in the plugin database for visitors.',
+        'navtalk-digital-human'
+    ) . '</p>';
+    $content .= '<p><a href="https://navtalk.ai/policy/privacy-policy/" target="_blank" rel="noopener">' . esc_html__(
+        'NavTalk Privacy Policy',
+        'navtalk-digital-human'
+    ) . '</a> &mdash; <a href="https://navtalk.ai/policy/terms-of-service/" target="_blank" rel="noopener">' . esc_html__(
+        'Terms of Service',
+        'navtalk-digital-human'
+    ) . '</a></p>';
+    wp_add_privacy_policy_content(
+        __('NavTalk Digital Human', 'navtalk-digital-human'),
+        $content
+    );
+}
+add_action('admin_init', 'navtalk_register_privacy_policy_suggested_text');
 
 add_action('plugins_loaded', 'navtalk_digital_human_init');
 
