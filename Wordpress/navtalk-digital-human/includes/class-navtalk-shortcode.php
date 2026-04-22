@@ -39,11 +39,6 @@ class NavTalk_Shortcode {
                 return;
             }
         }
-
-        $custom_style = get_option('navtalk_floating_custom_style', '');
-        if ('' !== $custom_style) {
-            wp_add_inline_style('navtalk-widget-style', wp_strip_all_tags($custom_style));
-        }
     }
 
     /**
@@ -138,7 +133,23 @@ JS;
         $position = get_option('navtalk_floating_position', 'bottom-right');
         $show_toggle = get_option('navtalk_show_toggle_button', '1') === '1';
         $button_size = get_option('navtalk_floating_button_size', '60px');
-        $button_color = get_option('navtalk_floating_button_color', '#667eea');
+        
+        // Get button background (gradient, solid color, or image)
+        $bg_type = get_option('navtalk_floating_button_bg_type', 'gradient');
+        if ($bg_type === 'image') {
+            $bg_image = get_option('navtalk_floating_button_bg_image', '');
+            $button_background = $bg_image ? 'url(' . esc_url($bg_image) . ') center/cover' : 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)';
+        } else {
+            $button_background = get_option('navtalk_floating_button_background', 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)');
+            // Backward compatibility with legacy color option
+            if (empty($button_background)) {
+                $button_background = get_option('navtalk_floating_button_color', '#667eea');
+            }
+        }
+        
+        // Get icon color
+        $icon_color = get_option('navtalk_floating_button_icon_color', '#ffffff');
+        
         $prompt = get_option('navtalk_floating_prompt', '');
         $voice = get_option('navtalk_floating_voice', '');
         $model = get_option('navtalk_floating_model', '');
@@ -213,7 +224,7 @@ JS;
                                 data-config-voice="<?php echo esc_attr($voice); ?>"
                                 data-config-prompt="<?php echo esc_attr($prompt); ?>"
                                 data-config-tools=""
-                                style="width: <?php echo esc_attr($button_size); ?>; height: <?php echo esc_attr($button_size); ?>; background-color: <?php echo esc_attr($button_color); ?>;">
+                                style="width: <?php echo esc_attr($button_size); ?>; height: <?php echo esc_attr($button_size); ?>; background: <?php echo esc_attr($button_background); ?>; color: <?php echo esc_attr($icon_color); ?>;">
                             <?php echo wp_kses($this->get_phone_icon(), self::allowed_icon_html()); ?>
                         </button>
                     </div>
@@ -786,13 +797,31 @@ JS;
      * @return string SVG HTML
      */
     private function get_phone_icon($custom_icon = '') {
-        // If custom icon URL provided
-        if (!empty($custom_icon) && filter_var($custom_icon, FILTER_VALIDATE_URL)) {
-            return '<img class="navtalk-phone-icon" src="' . esc_url($custom_icon) . '" alt="" width="20" height="20" aria-hidden="true">';
+        // If custom icon URL provided via parameter
+        if (!empty($custom_icon)) {
+            if (filter_var($custom_icon, FILTER_VALIDATE_URL)) {
+                return '<img class="navtalk-phone-icon" src="' . esc_url($custom_icon) . '" alt="" width="24" height="24" aria-hidden="true">';
+            }
+            return $custom_icon; // Direct SVG code
+        }
+        
+        // Check global icon settings
+        $icon_type = get_option('navtalk_floating_button_icon_type', 'default');
+        
+        if ($icon_type === 'svg') {
+            $custom_svg = get_option('navtalk_floating_button_icon_svg', '');
+            if (!empty($custom_svg)) {
+                return $custom_svg;
+            }
+        } elseif ($icon_type === 'image') {
+            $icon_image = get_option('navtalk_floating_button_icon_image', '');
+            if (!empty($icon_image)) {
+                return '<img class="navtalk-phone-icon" src="' . esc_url($icon_image) . '" alt="" width="24" height="24" aria-hidden="true">';
+            }
         }
         
         // Default: inline SVG (WordPress should allow this in content context)
-        return '<svg class="navtalk-phone-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="20" height="20" fill="currentColor" aria-hidden="true">
+        return '<svg class="navtalk-phone-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" width="24" height="24" fill="currentColor" aria-hidden="true">
             <path d="M718.684 455.362c0 20.499 13.639 33.48 33.48 33.48s33.48-13.639 33.48-33.48c-0.658-111.727-90.66-201.819-202.387-202.387-20.499 0-33.48 13.639-33.48 33.48 0 20.499 13.639 33.48 33.48 33.48 74.578 0.658 134.768 60.848 135.426 135.426z m134.678 0c0 20.499 13.639 33.48 33.48 33.48s33.48-13.639 33.48-33.48c0-185.647-152.07-337.155-337.155-337.155-20.499 0-33.48 13.639-33.48 33.48 0 20.499 13.639 33.48 33.48 33.48 148.59 0.091 270.195 121.787 270.195 270.195zM397.71 337.334c37.24-37.24 40.349-94.329 6.869-134.768L300.19 70.43c-33.48-44.108-98.088-50.971-141.538-16.831-3.101 3.101-6.869 3.101-6.869 6.869l-91.227 91.227c-87.559 87.559 37.24 324.084 263.235 550.17S782.642 1049.549 870.103 965.1l91.227-91.227c40.349-40.349 40.349-104.299 0-141.538l-6.869-6.869-131.478-104.389c-40.349-33.48-97.43-30.379-134.768 6.869l-57.089 57.089c-60.848-37.24-114.828-77.589-162.038-124.798s-87.559-101.19-124.798-162.038l53.42-60.848z m-47.21-91.225c9.97 13.639 9.97 33.48-3.101 44.108l-74.487 77.589c-10.531 10.531-13.071 26.71-6.869 40.349 39.781 73.262 90.002 140.313 148.407 199.286 58.965 58.965 126.024 108.626 199.286 148.407 13.639 6.211 29.811 3.759 40.349-6.869l77.589-77.589c13.639-13.639 30.379-13.639 44.108-3.101l131.667 108.058s3.101 0 3.101 3.101c13.071 12.413 13.639 32.913 1.226 45.991l-92.445 92.445c-44.108 44.108-252.698-67.71-451.983-263.235C168.63 458.473 60.572 246.116 104.68 202.008l94.329-94.329c13.639-9.97 37.24-9.97 47.21 6.869l104.299 131.568z"/>
         </svg>';
     }
@@ -968,9 +997,105 @@ JS;
      */
     private static function allowed_icon_html() {
         return [
-            'svg'   => ['class' => true, 'xmlns' => true, 'viewbox' => true, 'width' => true, 'height' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 'stroke-linejoin' => true, 'aria-hidden' => true],
-            'path'  => ['d' => true, 'fill' => true],
-            'img'   => ['src' => true, 'alt' => true, 'class' => true, 'width' => true, 'height' => true, 'aria-hidden' => true],
+            'svg'   => [
+                'class' => true, 'xmlns' => true, 'xmlns:xlink' => true, 'xml:space' => true,
+                'viewBox' => true, 'viewbox' => true, 'width' => true, 'height' => true, 
+                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 
+                'stroke-linejoin' => true, 'stroke-dasharray' => true, 'stroke-dashoffset' => true,
+                'aria-hidden' => true, 'aria-label' => true, 'role' => true, 'style' => true,
+                'preserveAspectRatio' => true, 'version' => true, 'baseProfile' => true, 'id' => true,
+                'x' => true, 'y' => true, 'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true
+            ],
+            'path'  => [
+                'd' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 
+                'stroke-linecap' => true, 'stroke-linejoin' => true, 'stroke-dasharray' => true,
+                'stroke-dashoffset' => true, 'transform' => true, 'fill-rule' => true, 
+                'clip-rule' => true, 'clip-path' => true, 'id' => true, 'class' => true,
+                'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
+            ],
+            'g'     => [
+                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
+                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
+                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true, 'clip-path' => true
+            ],
+            'circle' => [
+                'cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke' => true,
+                'stroke-width' => true, 'stroke-dasharray' => true, 'transform' => true, 
+                'id' => true, 'class' => true, 'opacity' => true, 'fill-opacity' => true, 
+                'stroke-opacity' => true, 'style' => true
+            ],
+            'rect'   => [
+                'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true, 'ry' => true,
+                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
+                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
+                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
+            ],
+            'line'   => [
+                'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true,
+                'stroke-width' => true, 'stroke-linecap' => true, 'stroke-dasharray' => true,
+                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
+                'stroke-opacity' => true, 'style' => true
+            ],
+            'ellipse' => [
+                'cx' => true, 'cy' => true, 'rx' => true, 'ry' => true, 'fill' => true,
+                'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
+                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
+                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
+            ],
+            'polygon' => [
+                'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true,
+                'stroke-dasharray' => true, 'transform' => true, 'id' => true, 'class' => true, 
+                'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
+            ],
+            'polyline' => [
+                'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true,
+                'stroke-linecap' => true, 'stroke-linejoin' => true, 'stroke-dasharray' => true,
+                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
+                'stroke-opacity' => true, 'style' => true
+            ],
+            'defs'   => ['id' => true, 'class' => true],
+            'use'    => [
+                'href' => true, 'xlink:href' => true, 'x' => true, 'y' => true, 
+                'transform' => true, 'id' => true, 'class' => true, 'fill' => true, 
+                'stroke' => true, 'opacity' => true
+            ],
+            'clipPath' => ['id' => true, 'class' => true, 'clipPathUnits' => true],
+            'mask' => ['id' => true, 'class' => true, 'maskUnits' => true, 'maskContentUnits' => true],
+            'pattern' => [
+                'id' => true, 'class' => true, 'x' => true, 'y' => true, 'width' => true, 
+                'height' => true, 'patternUnits' => true, 'patternContentUnits' => true, 
+                'patternTransform' => true, 'viewBox' => true
+            ],
+            'linearGradient' => [
+                'id' => true, 'class' => true, 'x1' => true, 'y1' => true, 'x2' => true, 
+                'y2' => true, 'gradientUnits' => true, 'gradientTransform' => true, 
+                'spreadMethod' => true
+            ],
+            'radialGradient' => [
+                'id' => true, 'class' => true, 'cx' => true, 'cy' => true, 'r' => true, 
+                'fx' => true, 'fy' => true, 'gradientUnits' => true, 'gradientTransform' => true, 
+                'spreadMethod' => true
+            ],
+            'stop' => [
+                'offset' => true, 'stop-color' => true, 'stop-opacity' => true, 'style' => true, 
+                'id' => true, 'class' => true
+            ],
+            'text' => [
+                'x' => true, 'y' => true, 'dx' => true, 'dy' => true, 'text-anchor' => true, 
+                'font-size' => true, 'font-family' => true, 'font-weight' => true, 'fill' => true, 
+                'stroke' => true, 'transform' => true, 'id' => true, 'class' => true, 'style' => true
+            ],
+            'tspan' => [
+                'x' => true, 'y' => true, 'dx' => true, 'dy' => true, 'text-anchor' => true, 
+                'font-size' => true, 'font-family' => true, 'font-weight' => true, 'fill' => true, 
+                'stroke' => true, 'id' => true, 'class' => true, 'style' => true
+            ],
+            'title' => ['id' => true],
+            'desc' => ['id' => true],
+            'img'   => [
+                'src' => true, 'alt' => true, 'class' => true, 'width' => true, 
+                'height' => true, 'aria-hidden' => true, 'aria-label' => true
+            ],
         ];
     }
 

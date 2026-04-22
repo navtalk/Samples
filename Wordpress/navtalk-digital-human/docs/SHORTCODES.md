@@ -17,7 +17,7 @@ Just a button that connects immediately.
 
 ```
 [navtalk_button name="navtalk.Sophia" text="Talk to Sophia"]
-[navtalk_button name="navtalk.Leo" text="开始对话" style="outline" size="large"]
+[navtalk_button name="navtalk.Leo" text="Start chat" style="outline" size="large"]
 ```
 
 **Styles:** `primary` (default), `secondary`, `outline`

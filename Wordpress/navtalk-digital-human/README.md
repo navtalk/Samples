@@ -97,7 +97,7 @@ Display just a button that opens chat modal and connects immediately:
 
 **Examples:**
 ```
-[navtalk_button avatarId="your-avatar-id" text="开始对话" style="outline" size="large"]
+[navtalk_button avatarId="your-avatar-id" text="Start chat" style="outline" size="large"]
 [navtalk_button avatarId="your-avatar-id" text="Chat Now" style="secondary" size="small" icon="false"]
 ```
 

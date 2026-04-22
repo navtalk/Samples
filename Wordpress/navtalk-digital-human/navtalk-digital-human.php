@@ -37,7 +37,6 @@ function navtalk_digital_human_activate() {
     add_option('navtalk_floating_position', 'bottom-right');
     add_option('navtalk_floating_button_size', '60px');
     add_option('navtalk_floating_button_color', '#667eea');
-    add_option('navtalk_floating_custom_style', '');
     // New: Toggle button and advanced configuration
     add_option('navtalk_show_toggle_button', '1');
     add_option('navtalk_floating_prompt', '');
