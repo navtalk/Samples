@@ -859,7 +859,7 @@ class NavTalk_Admin {
                             <div class="navtalk-form-row">
                                 <label for="modal-inline-mode">Display Mode:</label>
                                 <select id="modal-inline-mode" name="inline_mode">
-                                    <option value="">Default (Popup)</option>
+                                    <option value="">Default (Inline)</option>
                                     <option value="true">Inline</option>
                                     <option value="false">Popup</option>
                                 </select>

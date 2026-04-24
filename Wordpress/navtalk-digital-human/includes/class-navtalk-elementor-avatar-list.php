@@ -279,14 +279,8 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         <div class="navtalk-avatar-list" data-columns="<?php echo esc_attr($columns); ?>">
             <?php foreach ($avatars as $avatar): ?>
                 <?php
-                $thumbnail_url = isset($avatar['thumbnailUrl']) ? $avatar['thumbnailUrl'] : ($avatar['url'] ?? '');
-                $avatar_info = [
-                    'name' => $avatar['name'],
-                    'url' => $thumbnail_url,
-                    'status' => isset($avatar['status']) ? $avatar['status'] : 'Unknown'
-                ];
-                
-                $this->render_avatar_card($avatar_info, $settings);
+                // Pass full API avatar row so avatarId/id, thumbnailUrl, videoFile, etc. match shortcode behavior.
+                $this->render_avatar_card($avatar, $settings);
                 ?>
             <?php endforeach; ?>
         </div>
