@@ -14,11 +14,11 @@ This project demonstrates how to build a multi-modal interactive application tha
 
 ## Installation
 1.Required param license in NavtalkManager.js
-  license = "********"
+  - license = "********"
 
 2.Required param characterName/characterId in NavtalkManager.js
-  characterName = "********"
-  characterId = "********"
+  - characterName = "********"
+  - characterId = "********"
 
 ## Getting started
 1.Install expo and start:
