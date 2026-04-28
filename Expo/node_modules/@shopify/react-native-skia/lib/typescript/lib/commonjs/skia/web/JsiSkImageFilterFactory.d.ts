@@ -1,0 +1,34 @@
+export const __esModule: boolean;
+export class JsiSkImageFilterFactory extends _Host.Host {
+    MakeRuntimeShaderWithChildren(_builder: any, _sampleRadius: any, _childShaderNames: any, _inputs: any): void;
+    MakeArithmetic(_k1: any, _k2: any, _k3: any, _k4: any, _enforcePMColor: any, _background: any, _foreground: any, _cropRect: any): void;
+    MakeCrop(_rect: any, _tileMode: any, _input: any): void;
+    MakeEmpty(): void;
+    MakeImage(_image: any, _srcRect: any, _dstRect: any, _filterMode: any, _mipmap: any): void;
+    MakeMagnifier(_lensBounds: any, _zoomAmount: any, _inset: any, _filterMode: any, _mipmap: any, _input: any, _cropRect: any): void;
+    MakeMatrixConvolution(_kernelSizeX: any, _kernelSizeY: any, _kernel: any, _gain: any, _bias: any, _kernelOffsetX: any, _kernelOffsetY: any, _tileMode: any, _convolveAlpha: any, _input: any, _cropRect: any): void;
+    MakeMatrixTransform(_matrix: any, _filterMode: any, _mipmap: any, _input: any): void;
+    MakeMerge(_filters: any, _cropRect: any): void;
+    MakePicture(_picture: any, _targetRect: any): void;
+    MakeTile(_src: any, _dst: any, _input: any): void;
+    MakeDistantLitDiffuse(_direction: any, _lightColor: any, _surfaceScale: any, _kd: any, _input: any, _cropRect: any): void;
+    MakePointLitDiffuse(_location: any, _lightColor: any, _surfaceScale: any, _kd: any, _input: any, _cropRect: any): void;
+    MakeSpotLitDiffuse(_location: any, _target: any, _falloffExponent: any, _cutoffAngle: any, _lightColor: any, _surfaceScale: any, _kd: any, _input: any, _cropRect: any): void;
+    MakeDistantLitSpecular(_direction: any, _lightColor: any, _surfaceScale: any, _ks: any, _shininess: any, _input: any, _cropRect: any): void;
+    MakePointLitSpecular(_location: any, _lightColor: any, _surfaceScale: any, _ks: any, _shininess: any, _input: any, _cropRect: any): void;
+    MakeSpotLitSpecular(_location: any, _target: any, _falloffExponent: any, _cutoffAngle: any, _lightColor: any, _surfaceScale: any, _ks: any, _shininess: any, _input: any, _cropRect: any): void;
+    MakeOffset(dx: any, dy: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeDisplacementMap(channelX: any, channelY: any, scale: any, in1: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeShader(shader: any, dither: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeBlur(sigmaX: any, sigmaY: any, mode: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeColorFilter(colorFilter: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeCompose(outer: any, inner: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeDropShadow(dx: any, dy: any, sigmaX: any, sigmaY: any, color: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeDropShadowOnly(dx: any, dy: any, sigmaX: any, sigmaY: any, color: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeErode(rx: any, ry: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeDilate(rx: any, ry: any, input: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeBlend(mode: any, background: any, foreground: any, cropRect: any): _JsiSkImageFilter.JsiSkImageFilter;
+    MakeRuntimeShader(_builder: any, _childShaderName: any, _input: any): jest.Mock<any, any, any>;
+}
+import _Host = require("./Host");
+import _JsiSkImageFilter = require("./JsiSkImageFilter");

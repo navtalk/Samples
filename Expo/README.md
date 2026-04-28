@@ -1,24 +1,39 @@
-# NavTalk Expo Demo
+# NavTalk Expo Sample
 
-This Expo application recreates the conversational experience demonstrated in the native iOS sample. The layout mirrors the
-original UIKit implementation with a full-screen background image, gradient-masked transcript list, and contextual call
-controls that transition between **Call**, **Connecting**, and **Hang Up** states.
+NavTalk Expo Sample is a React Native (Expo-based) demo project designed to showcase a real-time AI communication system with voice and video interaction capabilities on mobile devices.
 
-Key touches carried over from the iOS build include:
+## Overview
+This project demonstrates how to build a multi-modal interactive application that combines:
 
-- Loading the Leo character background from the same NavTalk CDN with automatic fallback to an on-device gradient when the
-  network is unavailable.
-- A gradient mask on the transcript list so recent messages fade into the background just like the UITableView mask.
-- Distinct call controls for each NavTalk status, complete with iconography and the translucent connecting state.
-- A scripted question/answer exchange that echoes the flow you see in the native project.
+  - Real-time WebSocket communication
+  - WebRTC audio and video calling
+  - Live voice input and output streaming
+  - Camera capture and image streaming
+  - AI conversation flow (text + speech transcription)
+  - Local message storage and history management
+
+## Installation
+1.Required param license in NavtalkManager.js
+  license = "********"
+
+2.Required param characterName/characterId in NavtalkManager.js
+  characterName = "********"
+  characterId = "********"
 
 ## Getting started
-
+1.Install expo and start:
 ```bash
-cd Expo
-npm install
-npm start
+  cd project
+  npm install
 ```
 
-When you press **Call**, the demo simulates a WebRTC session. After a brief connecting state the scripted conversation flows in
-real time, alternating between question and answer bubbles exactly as it does in the UIKit experience.
+2.Install iOS and start:
+```bash
+  cd project/ios
+  pod install
+```
+
+3.Install Android and start
+  - Sync project with gradle file
+
+

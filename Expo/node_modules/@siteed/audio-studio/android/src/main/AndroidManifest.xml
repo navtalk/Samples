@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Core permissions required for basic functionality -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    
+    <!-- All other permissions are handled conditionally by the plugin based on configuration:
+         - FOREGROUND_SERVICE & FOREGROUND_SERVICE_MICROPHONE & WAKE_LOCK: enableBackgroundAudio
+         - POST_NOTIFICATIONS: enableNotifications  
+         - BLUETOOTH, BLUETOOTH_ADMIN, BLUETOOTH_CONNECT, USB_PERMISSION: enableDeviceDetection
+         - READ_PHONE_STATE: enablePhoneStateHandling
+    -->
+
+    <application>
+        <receiver 
+            android:name=".RecordingActionReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="PAUSE_RECORDING" />
+                <action android:name="RESUME_RECORDING" />
+                <action android:name="STOP_RECORDING" />
+            </intent-filter>
+        </receiver>
+
+        <service
+            android:name=".AudioRecordingService"
+            android:enabled="true"
+            android:exported="false"
+            android:foregroundServiceType="microphone" />
+    </application>
+</manifest>

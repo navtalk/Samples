@@ -1,0 +1,31 @@
+--- AppRTCProximitySensor.orig.java	
++++ AppRTCProximitySensor.java
+@@ -7,7 +7,7 @@
+  *  in the file PATENTS.  All contributing project authors may
+  *  be found in the AUTHORS file in the root of the source tree.
+  */
+-package org.appspot.apprtc;
++package com.zxcpoiu.incallmanager.AppRTC;
+ import android.content.Context;
+ import android.hardware.Sensor;
+ import android.hardware.SensorEvent;
+@@ -16,8 +16,8 @@
+ import android.os.Build;
+ import android.util.Log;
+ import androidx.annotation.Nullable;
+-import org.appspot.apprtc.util.AppRTCUtils;
+-import org.webrtc.ThreadUtils;
++import com.zxcpoiu.incallmanager.AppRTC.AppRTCUtils;
++import com.zxcpoiu.incallmanager.AppRTC.ThreadUtils;
+ /**
+  * AppRTCProximitySensor manages functions related to the proximity sensor in
+  * the AppRTC demo.
+@@ -38,7 +38,7 @@
+   @Nullable private Sensor proximitySensor;
+   private boolean lastStateReportIsNear;
+   /** Construction */
+-  static AppRTCProximitySensor create(Context context, Runnable sensorStateListener) {
++  public static AppRTCProximitySensor create(Context context, Runnable sensorStateListener) {
+     return new AppRTCProximitySensor(context, sensorStateListener);
+   }
+   private AppRTCProximitySensor(Context context, Runnable sensorStateListener) {

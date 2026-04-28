@@ -1,0 +1,36 @@
+import type { CanvasKit } from "canvaskit-wasm";
+import type { ColorChannel, ImageFilterFactory, SkColor, SkColorFilter, SkImageFilter, BlendMode, SkRect, SkRuntimeShaderBuilder, SkShader, TileMode, FilterMode, MipmapMode, SkImage, SkMatrix, SkPicture, SkPoint3 } from "../types";
+import { Host } from "./Host";
+import { JsiSkImageFilter } from "./JsiSkImageFilter";
+export declare class JsiSkImageFilterFactory extends Host implements ImageFilterFactory {
+    constructor(CanvasKit: CanvasKit);
+    MakeRuntimeShaderWithChildren(_builder: SkRuntimeShaderBuilder, _sampleRadius: number, _childShaderNames: string[], _inputs: Array<SkImageFilter | null>): SkImageFilter;
+    MakeArithmetic(_k1: number, _k2: number, _k3: number, _k4: number, _enforcePMColor: boolean, _background?: SkImageFilter | null, _foreground?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeCrop(_rect: SkRect, _tileMode?: TileMode | null, _input?: SkImageFilter | null): SkImageFilter;
+    MakeEmpty(): SkImageFilter;
+    MakeImage(_image: SkImage, _srcRect?: SkRect | null, _dstRect?: SkRect | null, _filterMode?: FilterMode, _mipmap?: MipmapMode): SkImageFilter;
+    MakeMagnifier(_lensBounds: SkRect, _zoomAmount: number, _inset: number, _filterMode?: FilterMode, _mipmap?: MipmapMode, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeMatrixConvolution(_kernelSizeX: number, _kernelSizeY: number, _kernel: number[], _gain: number, _bias: number, _kernelOffsetX: number, _kernelOffsetY: number, _tileMode: TileMode, _convolveAlpha: boolean, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeMatrixTransform(_matrix: SkMatrix, _filterMode?: FilterMode, _mipmap?: MipmapMode, _input?: SkImageFilter | null): SkImageFilter;
+    MakeMerge(_filters: Array<SkImageFilter | null>, _cropRect?: SkRect | null): SkImageFilter;
+    MakePicture(_picture: SkPicture, _targetRect?: SkRect | null): SkImageFilter;
+    MakeTile(_src: SkRect, _dst: SkRect, _input?: SkImageFilter | null): SkImageFilter;
+    MakeDistantLitDiffuse(_direction: SkPoint3, _lightColor: SkColor, _surfaceScale: number, _kd: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakePointLitDiffuse(_location: SkPoint3, _lightColor: SkColor, _surfaceScale: number, _kd: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeSpotLitDiffuse(_location: SkPoint3, _target: SkPoint3, _falloffExponent: number, _cutoffAngle: number, _lightColor: SkColor, _surfaceScale: number, _kd: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeDistantLitSpecular(_direction: SkPoint3, _lightColor: SkColor, _surfaceScale: number, _ks: number, _shininess: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakePointLitSpecular(_location: SkPoint3, _lightColor: SkColor, _surfaceScale: number, _ks: number, _shininess: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeSpotLitSpecular(_location: SkPoint3, _target: SkPoint3, _falloffExponent: number, _cutoffAngle: number, _lightColor: SkColor, _surfaceScale: number, _ks: number, _shininess: number, _input?: SkImageFilter | null, _cropRect?: SkRect | null): SkImageFilter;
+    MakeOffset(dx: number, dy: number, input?: SkImageFilter | null, cropRect?: SkRect | null): JsiSkImageFilter;
+    MakeDisplacementMap(channelX: ColorChannel, channelY: ColorChannel, scale: number, in1: SkImageFilter, input?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeShader(shader: SkShader, dither?: boolean, cropRect?: SkRect | null): SkImageFilter;
+    MakeBlur(sigmaX: number, sigmaY: number, mode: TileMode, input?: SkImageFilter | null, cropRect?: SkRect | null): JsiSkImageFilter;
+    MakeColorFilter(colorFilter: SkColorFilter, input?: SkImageFilter | null, cropRect?: SkRect | null): JsiSkImageFilter;
+    MakeCompose(outer: SkImageFilter | null, inner: SkImageFilter | null): JsiSkImageFilter;
+    MakeDropShadow(dx: number, dy: number, sigmaX: number, sigmaY: number, color: SkColor, input?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeDropShadowOnly(dx: number, dy: number, sigmaX: number, sigmaY: number, color: SkColor, input?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeErode(rx: number, ry: number, input?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeDilate(rx: number, ry: number, input?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeBlend(mode: BlendMode, background: SkImageFilter, foreground?: SkImageFilter | null, cropRect?: SkRect | null): SkImageFilter;
+    MakeRuntimeShader(_builder: SkRuntimeShaderBuilder, _childShaderName: string | null, _input?: SkImageFilter | null): SkImageFilter;
+}

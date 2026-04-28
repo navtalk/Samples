@@ -1,0 +1,1 @@
+{"version":3,"names":["React","GestureHandlerRefContext","createContext"],"sourceRoot":"../../../src","sources":["utils/GestureHandlerRefContext.tsx"],"mappings":";;AAAA,OAAO,KAAKA,KAAK,MAAM,OAAO;AAE9B,OAAO,MAAMC,wBAAwB,gBAAGD,KAAK,CAACE,aAAa,CAEjD,IAAI,CAAC","ignoreList":[]}
