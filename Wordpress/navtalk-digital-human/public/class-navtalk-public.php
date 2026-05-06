@@ -17,7 +17,7 @@ class NavTalk_Public {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('wp_footer', [$this, 'render_chat_modal'], 999);
     }
-    
+
     /**
      * Enqueue front-end styles and scripts
      */

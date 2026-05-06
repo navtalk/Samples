@@ -12,22 +12,6 @@ Full card with image, name, and button.
 
 ---
 
-## 🔘 Button (Instant Connect)
-Just a button that connects immediately.
-
-```
-[navtalk_button name="navtalk.Sophia" text="Talk to Sophia"]
-[navtalk_button name="navtalk.Leo" text="Start chat" style="outline" size="large"]
-```
-
-**Styles:** `primary` (default), `secondary`, `outline`
-**Sizes:** `small`, `medium` (default), `large`
-**Icon:** `true` (default), `false`
-
-**When to use:** Call-to-action sections, forms, contact pages
-
----
-
 ## 🎈 Floating Button
 Fixed button at screen corner (instant connect).
 
@@ -41,20 +25,6 @@ Fixed button at screen corner (instant connect).
 **Size:** Any CSS size (e.g., `60px`, `70px`)
 
 **When to use:** Site-wide assistance, support pages
-
----
-
-## 🔗 Text Link (Instant Connect)
-Inline clickable text.
-
-```
-[navtalk_link name="navtalk.Ava"]Click here to chat[/navtalk_link]
-[navtalk_link name="navtalk.Emma" style="button"]Start Chat[/navtalk_link]
-```
-
-**Styles:** `default` (underline), `button`, `underline`
-
-**When to use:** Within paragraphs, blog posts, help text
 
 ---
 
@@ -81,15 +51,13 @@ Grid of all your avatars from NavTalk account.
 
 ### Instant Connect vs Manual Connect
 - **Avatar Card:** Opens modal, user clicks call button (2 steps)
-- **Button/Link/Floating:** Opens modal AND connects automatically (1 step)
+- **Floating Button:** Opens modal AND connects automatically (1 step)
 
 ### Multiple Shortcodes
 You can use multiple shortcodes on one page:
 ```html
 <h2>Our AI Team</h2>
 [navtalk_list columns="3" filter="available"]
-
-<p>Or quick chat: [navtalk_button name="navtalk.Ethan" text="Quick Support"]</p>
 
 [navtalk_floating name="navtalk.Emma"]
 ```
@@ -125,7 +93,6 @@ All shortcodes work in:
 <h1>Meet Your AI Assistant</h1>
 [navtalk_avatar name="navtalk.Ethan" width="400px"]
 <p>24/7 AI-powered support for all your needs.</p>
-[navtalk_button name="navtalk.Ethan" text="Start Free Consultation" size="large"]
 ```
 
 ### Support Page
@@ -133,8 +100,7 @@ All shortcodes work in:
 [navtalk_floating name="navtalk.Emma" position="bottom-right"]
 
 <h2>Need Help?</h2>
-<p>[navtalk_link name="navtalk.Emma"]Chat with our AI support[/navtalk_link] 
-   or browse our FAQ below.</p>
+<p>Ask our AI expert below or browse our FAQ.</p>
 ```
 
 ### Team Page
@@ -146,16 +112,15 @@ All shortcodes work in:
 ### Blog Post
 ```
 <p>Have questions about this article? 
-   [navtalk_link name="navtalk.Sophia"]Ask our AI expert[/navtalk_link] 
-   for clarification.</p>
+   See our AI expert team for clarification.</p>
+[navtalk_list filter="custom" names="navtalk.Sophia" columns="1"]
 ```
 
 ### Contact Form
 ```
 <h3>Quick Contact Options</h3>
-[navtalk_button name="navtalk.Leo" text="Chat Now" style="primary" size="large"]
-<p style="margin: 10px 0;">or</p>
-[navtalk_button name="navtalk.Mia" text="Email Us" style="outline" size="medium"]
+[navtalk_avatar name="navtalk.Leo"]
+<p style="margin: 10px 0;">or email us directly.</p>
 ```
 
 ---

@@ -589,43 +589,47 @@
             
             switch (data.type) {
                 case NavTalkMessageType.CONNECTED_FAIL:
-                case NavTalkMessageType.CONNECTED_CLOSE:
-                    const errorMessage = data.message || "Unknown error";
-                    console.error(`NavTalk: Connection error: ${errorMessage}`);
-                    
-                    // If in call, cleanup resources but keep UI open
+                case NavTalkMessageType.CONNECTED_CLOSE: {
+                    const nestedMsg = (navData && typeof navData === 'object' && navData.message) ? String(navData.message) : '';
+                    const serverMsg = (data.message || nestedMsg || '').trim();
+                    const isClose = data.type === NavTalkMessageType.CONNECTED_CLOSE;
+                    const userFacingMessage = serverMsg || (isClose ? 'Connection closed.' : 'Connection failed. Please try again.');
+                    console.error(`NavTalk: Connection error: ${userFacingMessage}`);
+
                     if (this.socket || this.peerConnection) {
                         console.log('NavTalk: Cleaning up resources due to connection error');
-                        
-                        // Hide loading overlay
+
                         if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
                             console.log('NavTalk: Hiding loading overlay due to connection error');
                             this.currentLoadingOverlay.hide();
                         }
                         this.currentLoadingOverlay = null;
-                        
-                        // Stop recording
+
                         this.stopRecording();
-                        
-                        // Close WebSocket
+
                         if (this.socket) {
                             this.socket.close();
                             this.socket = null;
                         }
-                        
-                        // Clean up WebRTC resources
+
                         if (this.peerConnection) {
                             this.peerConnection.close();
                             this.peerConnection = null;
                         }
-                        
-                        // Clear audio queue
+
                         this.audioQueue = [];
                         this.isPlaying = false;
-                        
-                        console.log('NavTalk: Resources cleaned up, UI remains open for retry');
+                    }
+
+                    this.showError(userFacingMessage);
+
+                    if (this.currentInlineButton && this.currentInlineButton.length) {
+                        this.stopInlineCall();
+                    } else if ($('#btnRealtime').length && $('#btnRealtime').hasClass('active')) {
+                        void this.stopCall().catch((err) => console.error('NavTalk: stopCall after connection error', err));
                     }
                     break;
+                }
                     
                 case NavTalkMessageType.CONNECTED_SUCCESS:
                     if (data.data && data.data.iceServers) {
@@ -1067,7 +1071,7 @@
         }
         
         showError(message) {
-            alert('NavTalk Error: ' + message);
+            alert('Error: ' + message);
         }
         
         hasSessionConfig() {

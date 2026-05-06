@@ -63,7 +63,7 @@ class NavTalk_Config {
      * 
      * @var string
      */
-    const DEFAULT_MODAL_WIDTH = '1200px';
+    const DEFAULT_MODAL_WIDTH = '600px';
     const DEFAULT_MODAL_HEIGHT = '800px';
     const DEFAULT_MODAL_MAX_WIDTH = '90vw';
     const DEFAULT_MODAL_MAX_HEIGHT = '90vh';

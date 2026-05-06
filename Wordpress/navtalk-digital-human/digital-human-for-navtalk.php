@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: NavTalk Digital Human
- * Description: Integrate NavTalk real-time digital human conversation into WordPress. Simply configure your license key and use [navtalk_avatar avatarId="your-avatar-id"] shortcode to embed avatars.
- * Version: 1.0.3
+ * Plugin Name: Digital Human for NavTalk
+ * Description: Third-party integration: connect your site to NavTalk for real-time digital human conversations. Add a license key and use [navtalk_avatar avatarId="your-avatar-id"] to embed avatars.
+ * Version: 1.0.6
  * Author: NavTalk
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: navtalk-digital-human
+ * Text Domain: digital-human-for-navtalk
  * Domain Path: /languages
  */
 
@@ -17,7 +17,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('NAVTALK_VERSION', '1.0.3');
+define('NAVTALK_VERSION', '1.0.6');
 
 // Plugin directory path
 define('NAVTALK_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -39,9 +39,10 @@ function navtalk_digital_human_activate() {
     add_option('navtalk_floating_button_color', '#667eea');
     // New: Toggle button and advanced configuration
     add_option('navtalk_show_toggle_button', '1');
-    add_option('navtalk_floating_prompt', '');
     add_option('navtalk_floating_voice', '');
     add_option('navtalk_floating_model', '');
+    add_option('navtalk_auto_hangup_enabled', '0');
+    add_option('navtalk_auto_hangup_description', 'Call this function when the user says goodbye');
 
     // Flush rewrite rules
     flush_rewrite_rules();
@@ -70,20 +71,19 @@ require_once NAVTALK_PLUGIN_DIR . 'public/class-navtalk-public.php';
  * Initialize the plugin
  */
 function navtalk_digital_human_init() {
-    // Initialize admin
-    if (is_admin()) {
-        $admin = new NavTalk_Admin();
-        $admin->init();
-    }
+    // Admin functionality
+    $admin = new NavTalk_Admin();
+    $admin->init();
     
-    // Initialize public
+    // Public functionality
     $public = new NavTalk_Public();
     $public->init();
     
-    // Initialize shortcode
+    // Shortcode functionality
     $shortcode = new NavTalk_Shortcode();
     $shortcode->init();
 }
+add_action('plugins_loaded', 'navtalk_digital_human_init');
 /**
  * One-time cleanup and version tracking (e.g. remove deprecated options).
  */
@@ -93,21 +93,10 @@ function navtalk_digital_human_maybe_upgrade() {
         return;
     }
     delete_option('navtalk_floating_js_callbacks');
+    delete_option('navtalk_custom_css');
     update_option('navtalk_installed_version', NAVTALK_VERSION);
 }
 add_action('plugins_loaded', 'navtalk_digital_human_maybe_upgrade', 1);
-
-/**
- * Load plugin text domain for translations.
- */
-function navtalk_load_textdomain() {
-    load_plugin_textdomain(
-        'navtalk-digital-human',
-        false,
-        dirname(plugin_basename(__FILE__)) . '/languages'
-    );
-}
-add_action('plugins_loaded', 'navtalk_load_textdomain', 5);
 
 /**
  * Suggested text for the site Privacy Policy (Tools > Privacy).
@@ -118,23 +107,21 @@ function navtalk_register_privacy_policy_suggested_text() {
     }
     $content  = '<p>' . esc_html__(
         'This plugin sends your stored NavTalk license key to NavTalk (api.navtalk.ai) and may open WebSocket sessions (wss://transfer.navtalk.ai) for real-time voice and video. Visitor microphone and camera use follows browser permissions; session and media data are processed under NavTalk policies, not stored in the plugin database for visitors.',
-        'navtalk-digital-human'
+        'digital-human-for-navtalk'
     ) . '</p>';
     $content .= '<p><a href="https://navtalk.ai/policy/privacy-policy/" target="_blank" rel="noopener">' . esc_html__(
         'NavTalk Privacy Policy',
-        'navtalk-digital-human'
+        'digital-human-for-navtalk'
     ) . '</a> &mdash; <a href="https://navtalk.ai/policy/terms-of-service/" target="_blank" rel="noopener">' . esc_html__(
         'Terms of Service',
-        'navtalk-digital-human'
+        'digital-human-for-navtalk'
     ) . '</a></p>';
     wp_add_privacy_policy_content(
-        __('NavTalk Digital Human', 'navtalk-digital-human'),
+        __('Digital Human for NavTalk', 'digital-human-for-navtalk'),
         $content
     );
 }
 add_action('admin_init', 'navtalk_register_privacy_policy_suggested_text');
-
-add_action('plugins_loaded', 'navtalk_digital_human_init');
 
 /**
  * Enable shortcode parsing in Gutenberg HTML blocks
@@ -146,26 +133,23 @@ add_action('plugins_loaded', 'navtalk_digital_human_init');
  */
 function navtalk_enable_shortcode_in_html_block() {
     add_filter('render_block', function($block_content, $block) {
+        // Skip during REST API requests to prevent JSON response corruption
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return $block_content;
+        }
+
         // Check if this is a custom HTML block
-        if ($block['blockName'] === 'core/html') {
+        if (isset($block['blockName']) && $block['blockName'] === 'core/html') {
             // Parse shortcodes in the HTML content
-            return do_shortcode($block_content);
+            return do_shortcode((string) $block_content);
         }
         return $block_content;
     }, 10, 2);
 }
 add_action('init', 'navtalk_enable_shortcode_in_html_block');
 
-/**
- * Enable shortcode parsing in all content areas
- * 
- * This ensures NavTalk shortcodes work in all content types including
- * HTML blocks, text widgets, and other content areas.
- * Priority 11 ensures it runs after default WordPress content filters.
- * 
- * @since 1.0.0
- */
-add_filter('the_content', 'do_shortcode', 11);
+// Note: the_content shortcode parsing is handled by WordPress default filters.
+// We only add specialized block rendering support for custom HTML blocks.
 
 /**
  * Register Elementor Widgets
@@ -194,7 +178,7 @@ function navtalk_add_elementor_widget_categories($elements_manager) {
     $elements_manager->add_category(
         'navtalk',
         [
-            'title' => __('NavTalk', 'navtalk-digital-human'),
+            'title' => __('NavTalk integration', 'digital-human-for-navtalk'),
             'icon' => 'fa fa-plug',
         ]
     );

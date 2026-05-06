@@ -42,7 +42,7 @@ class NavTalk_API {
         if (empty($this->license)) {
             return [
                 'error' => true,
-                'message' => 'License key is not configured. Please go to Settings > NavTalk Digital Human to configure.'
+                'message' => 'License key is not configured. Please go to Settings > Digital Human for NavTalk to configure.'
             ];
         }
 
@@ -77,6 +77,14 @@ class NavTalk_API {
         $status_code = wp_remote_retrieve_response_code($response);
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
+
+        // Check if response is valid JSON
+        if (!is_array($data)) {
+            return [
+                'error' => true,
+                'message' => 'Invalid API response format'
+            ];
+        }
 
         // Check response code
         if ($status_code !== 200) {
@@ -178,7 +186,7 @@ class NavTalk_API {
         $body = wp_remote_retrieve_body($response);
         $data = json_decode($body, true);
         
-        if ($status_code === 200 && isset($data['code']) && $data['code'] === 200) {
+        if ($status_code === 200 && is_array($data) && isset($data['code']) && $data['code'] === 200) {
             $avatar_count = isset($data['data']) ? count($data['data']) : 0;
             return [
                 'success' => true,

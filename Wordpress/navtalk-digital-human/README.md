@@ -80,28 +80,7 @@ Embed a single avatar with full card display:
 [navtalk_avatar avatarId="your-avatar-id"]
 ```
 
-### 2. Button Only (Instant Connect)
-
-Display just a button that opens chat modal and connects immediately:
-
-```
-[navtalk_button avatarId="your-avatar-id" text="Talk to Emma"]
-```
-
-**Parameters:**
-- `avatarId` (required): Avatar ID (from NavTalk API / avatar list)
-- `text` (optional): Button text, default: "Start Chat"
-- `style` (optional): `primary`, `secondary`, `outline`, default: `primary`
-- `size` (optional): `small`, `medium`, `large`, default: `medium`
-- `icon` (optional): `true` or `false`, default: `true`
-
-**Examples:**
-```
-[navtalk_button avatarId="your-avatar-id" text="Start chat" style="outline" size="large"]
-[navtalk_button avatarId="your-avatar-id" text="Chat Now" style="secondary" size="small" icon="false"]
-```
-
-### 3. Floating Button
+### 2. Floating Button
 
 Fixed position button at corner of screen (instant connect):
 
@@ -121,25 +100,7 @@ Fixed position button at corner of screen (instant connect):
 [navtalk_floating avatarId="your-avatar-id" position="top-right" size="70px"]
 ```
 
-### 4. Text Link
-
-Inline text link that opens chat (instant connect):
-
-```
-[navtalk_link avatarId="your-avatar-id"]Click here to chat[/navtalk_link]
-```
-
-**Parameters:**
-- `avatarId` (required): Avatar ID
-- `style` (optional): `default`, `button`, `underline`, default: `default`
-
-**Examples:**
-```
-[navtalk_link avatarId="your-avatar-id" style="button"]Start Conversation[/navtalk_link]
-[navtalk_link avatarId="your-avatar-id" style="underline"]Talk to our AI assistant[/navtalk_link]
-```
-
-### 5. Avatar List (WordPress Integration)
+### 3. Avatar List (WordPress Integration)
 
 Display a grid of all available avatars from your account:
 
@@ -193,19 +154,9 @@ Customize the avatar display with these parameters:
 [navtalk_avatar avatarId="your-avatar-id"]
 ```
 
-**Button that connects immediately:**
-```
-[navtalk_button avatarId="your-avatar-id" text="Start Chat" style="primary"]
-```
-
 **Floating button in corner:**
 ```
 [navtalk_floating avatarId="your-avatar-id" position="bottom-right"]
-```
-
-**Text link:**
-```
-[navtalk_link avatarId="your-avatar-id"]Click to chat[/navtalk_link]
 ```
 
 **Grid of all available avatars:**
@@ -225,15 +176,9 @@ Customize the avatar display with these parameters:
 **Mixed layout:**
 ```html
 <h2>Talk to Our AI Team</h2>
-<p>Choose an AI assistant: 
-   [navtalk_link avatarId="id1"]Ethan[/navtalk_link] | 
-   [navtalk_link avatarId="id2"]Emma[/navtalk_link] | 
-   [navtalk_link avatarId="id3"]Sophia[/navtalk_link]
-</p>
+<p>Choose an AI assistant from the list below:</p>
 
-<div style="margin-top: 20px;">
-    [navtalk_button avatarId="your-avatar-id" text="Quick Chat" style="outline"]
-</div>
+[navtalk_list columns="3" filter="available"]
 
 [navtalk_floating avatarId="your-avatar-id"]
 ```
@@ -251,20 +196,13 @@ Customize the avatar display with these parameters:
 8. **View Transcript**: See conversation text in real-time
 9. **End Chat**: Click close button or call button to end
 
-### Button/Link Flow (Instant Connect)
-1. **Click Button/Link**: Single click on button or link
-2. **Modal Opens**: Full-screen modal appears
-3. **Auto-Connect**: Automatically connects (no need to click call button)
-4. **Allow Microphone**: Browser requests microphone permission
-5. **Start Talking**: Begin conversation immediately
-6. **Interactive Chat**: Real-time voice and video interaction
-7. **End Chat**: Click close button to end
-
 ### Floating Button Flow
 1. **Always Visible**: Floating button always visible on page
 2. **Click Anytime**: Click button from any scroll position
 3. **Instant Connect**: Opens modal and connects immediately
 4. **Quick Access**: Fast access to AI assistant from anywhere
+5. **Interactive Chat**: Real-time voice and video interaction
+6. **End Chat**: Click close button to end
 
 ### Technical Flow
 
@@ -376,9 +314,7 @@ For support, please contact:
 ### Version 1.0.0 (2026-03-09)
 - Initial release
 - Basic shortcode functionality (`[navtalk_avatar]`)
-- Button shortcode (`[navtalk_button]`) with instant connect
 - Floating button shortcode (`[navtalk_floating]`)
-- Link shortcode (`[navtalk_link]`)
 - Avatar list shortcode (`[navtalk_list]`) - WordPress integration
 - WebSocket and WebRTC integration
 - Real-time voice and video communication
@@ -386,7 +322,7 @@ For support, please contact:
 - Multiple avatar support
 - Responsive design
 - Admin configuration panel
-- Instant connect feature for buttons and links
+- Instant connect feature for floating buttons
 
 ## License
 
@@ -400,8 +336,8 @@ Developed by NavTalk Team
 
 ## FAQ
 
-**Q: What's the difference between avatar card and button shortcodes?**
-A: Avatar cards show full card UI and require clicking the call button after opening modal. Buttons connect immediately when clicked.
+**Q: What's the difference between avatar card and floating button?**
+A: Avatar cards show full card UI and require clicking the call button after opening modal (unless auto-call is enabled). Floating buttons connect immediately when clicked.
 
 **Q: Do I need to create avatars manually?**
 A: Avatars and their IDs come from your NavTalk account; use Settings > NavTalk Digital Human or the API to get avatar IDs for shortcodes.

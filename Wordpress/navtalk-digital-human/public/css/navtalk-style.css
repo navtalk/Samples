@@ -610,7 +610,7 @@
 
 .navtalk-modal-content {
     position: relative;
-    width: var(--modal-width, 1200px);
+    width: var(--modal-width, 600px);
     height: var(--modal-height, 800px);
     max-width: var(--modal-max-width, 90vw);
     max-height: var(--modal-max-height, 90vh);

@@ -26,7 +26,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
      * @return string
      */
     public function get_title() {
-        return __('NavTalk Avatar List', 'navtalk-digital-human');
+        return __('Avatar List for NavTalk', 'digital-human-for-navtalk');
     }
     
     /**
@@ -46,7 +46,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->start_controls_section(
             'content_section',
             [
-                'label' => __('Content', 'navtalk-digital-human'),
+                'label' => __('Content', 'digital-human-for-navtalk'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -54,12 +54,49 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'columns',
             [
-                'label' => __('Columns', 'navtalk-digital-human'),
+                'label' => __('Columns', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::NUMBER,
                 'min' => 1,
                 'max' => 6,
                 'step' => 1,
                 'default' => 3,
+            ]
+        );
+
+        $this->add_control(
+            'filter',
+            [
+                'label' => __('Filter', 'digital-human-for-navtalk'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'all' => __('All', 'digital-human-for-navtalk'),
+                    'available' => __('Available Only', 'digital-human-for-navtalk'),
+                    'custom' => __('Custom (Specify IDs)', 'digital-human-for-navtalk'),
+                ],
+                'default' => 'all',
+            ]
+        );
+
+        $this->add_control(
+            'avatar_ids',
+            [
+                'label' => __('Avatar IDs', 'digital-human-for-navtalk'),
+                'type' => \Elementor\Controls_Manager::TEXT,
+                'placeholder' => __('e.g., id1, id2, id3', 'digital-human-for-navtalk'),
+                'description' => __('Comma-separated list of avatar IDs to display.', 'digital-human-for-navtalk'),
+                'condition' => [
+                    'filter' => 'custom',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'limit',
+            [
+                'label' => __('Limit', 'digital-human-for-navtalk'),
+                'type' => \Elementor\Controls_Manager::NUMBER,
+                'min' => 1,
+                'default' => 20,
             ]
         );
         
@@ -69,7 +106,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->start_controls_section(
             'display_section',
             [
-                'label' => __('Display Options', 'navtalk-digital-human'),
+                'label' => __('Display Options', 'digital-human-for-navtalk'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -77,11 +114,11 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'layout',
             [
-                'label' => __('Layout', 'navtalk-digital-human'),
+                'label' => __('Layout', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
-                    'overlay' => __('Overlay', 'navtalk-digital-human'),
-                    'bottom' => __('Bottom', 'navtalk-digital-human'),
+                    'overlay' => __('Overlay', 'digital-human-for-navtalk'),
+                    'bottom' => __('Bottom', 'digital-human-for-navtalk'),
                 ],
                 'default' => 'bottom',
             ]
@@ -90,10 +127,10 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'show_title',
             [
-                'label' => __('Show Title', 'navtalk-digital-human'),
+                'label' => __('Show Title', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'navtalk-digital-human'),
-                'label_off' => __('No', 'navtalk-digital-human'),
+                'label_on' => __('Yes', 'digital-human-for-navtalk'),
+                'label_off' => __('No', 'digital-human-for-navtalk'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -102,10 +139,10 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'show_status',
             [
-                'label' => __('Show Status', 'navtalk-digital-human'),
+                'label' => __('Show Status', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'navtalk-digital-human'),
-                'label_off' => __('No', 'navtalk-digital-human'),
+                'label_on' => __('Yes', 'digital-human-for-navtalk'),
+                'label_off' => __('No', 'digital-human-for-navtalk'),
                 'return_value' => 'yes',
                 'default' => '',
             ]
@@ -114,10 +151,10 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'show_call_button',
             [
-                'label' => __('Show Call Button', 'navtalk-digital-human'),
+                'label' => __('Show Call Button', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'navtalk-digital-human'),
-                'label_off' => __('No', 'navtalk-digital-human'),
+                'label_on' => __('Yes', 'digital-human-for-navtalk'),
+                'label_off' => __('No', 'digital-human-for-navtalk'),
                 'return_value' => 'yes',
                 'default' => 'yes',
             ]
@@ -126,10 +163,10 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'show_download_button',
             [
-                'label' => __('Show Download Button', 'navtalk-digital-human'),
+                'label' => __('Show Download Button', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SWITCHER,
-                'label_on' => __('Yes', 'navtalk-digital-human'),
-                'label_off' => __('No', 'navtalk-digital-human'),
+                'label_on' => __('Yes', 'digital-human-for-navtalk'),
+                'label_off' => __('No', 'digital-human-for-navtalk'),
                 'return_value' => 'yes',
                 'default' => '',
             ]
@@ -138,11 +175,11 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'status_position',
             [
-                'label' => __('Status Position', 'navtalk-digital-human'),
+                'label' => __('Status Position', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
-                    'corner' => __('Corner', 'navtalk-digital-human'),
-                    'info' => __('Info Section', 'navtalk-digital-human'),
+                    'corner' => __('Corner', 'digital-human-for-navtalk'),
+                    'info' => __('Info Section', 'digital-human-for-navtalk'),
                 ],
                 'default' => 'corner',
                 'condition' => [
@@ -157,7 +194,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->start_controls_section(
             'session_config_section',
             [
-                'label' => __('Session Configuration', 'navtalk-digital-human'),
+                'label' => __('Session Configuration', 'digital-human-for-navtalk'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -165,30 +202,20 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'config_voice',
             [
-                'label' => __('Voice', 'navtalk-digital-human'),
+                'label' => __('Voice', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Voice configuration for the avatar', 'navtalk-digital-human'),
-            ]
-        );
-        
-        $this->add_control(
-            'config_prompt',
-            [
-                'label' => __('Prompt', 'navtalk-digital-human'),
-                'type' => \Elementor\Controls_Manager::TEXTAREA,
-                'default' => '',
-                'description' => __('Custom prompt for the conversation', 'navtalk-digital-human'),
+                'description' => __('Voice configuration for the avatar', 'digital-human-for-navtalk'),
             ]
         );
         
         $this->add_control(
             'config_tools',
             [
-                'label' => __('Tools', 'navtalk-digital-human'),
+                'label' => __('Tools', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::TEXTAREA,
                 'default' => '',
-                'description' => __('Tools configuration (JSON array format)', 'navtalk-digital-human'),
+                'description' => __('Tools configuration (JSON array format)', 'digital-human-for-navtalk'),
                 'placeholder' => '[{"name":"weather","type":"function"}]',
             ]
         );
@@ -199,7 +226,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->start_controls_section(
             'audio_settings_section',
             [
-                'label' => __('Call Audio Settings', 'navtalk-digital-human'),
+                'label' => __('Call Audio Settings', 'digital-human-for-navtalk'),
                 'tab' => \Elementor\Controls_Manager::TAB_CONTENT,
             ]
         );
@@ -207,20 +234,20 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $this->add_control(
             'call_start_audio',
             [
-                'label' => __('Call Start Audio URL', 'navtalk-digital-human'),
+                'label' => __('Call Start Audio URL', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Custom audio URL for call start (leave empty for default)', 'navtalk-digital-human'),
+                'description' => __('Custom audio URL for call start (leave empty for default)', 'digital-human-for-navtalk'),
             ]
         );
         
         $this->add_control(
             'call_end_audio',
             [
-                'label' => __('Call End Audio URL', 'navtalk-digital-human'),
+                'label' => __('Call End Audio URL', 'digital-human-for-navtalk'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Custom audio URL for call end (leave empty for default)', 'navtalk-digital-human'),
+                'description' => __('Custom audio URL for call end (leave empty for default)', 'digital-human-for-navtalk'),
             ]
         );
         
@@ -245,7 +272,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         // Get license
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
-            $this->render_error(__('NavTalk license key is not configured. Please configure it in Settings > NavTalk Digital Human.', 'navtalk-digital-human'));
+            $this->render_error(__('NavTalk license key is not configured. Please configure it in Settings > Digital Human for NavTalk.', 'digital-human-for-navtalk'));
             return;
         }
         
@@ -259,7 +286,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         ]);
         
         if (is_wp_error($response)) {
-            $this->render_error(__('Failed to fetch avatars from API.', 'navtalk-digital-human'));
+            $this->render_error(__('Failed to fetch avatars from API.', 'digital-human-for-navtalk'));
             return;
         }
         
@@ -267,12 +294,40 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $data = json_decode($body, true);
         
         if (!isset($data['data']) || empty($data['data'])) {
-            $this->render_error(__('No avatars found for this license.', 'navtalk-digital-human'));
+            $this->render_error(__('No avatars found for this license.', 'digital-human-for-navtalk'));
             return;
         }
         
         $avatars = $data['data'];
-        $columns = absint($settings['columns']);
+
+        $filter = isset($settings['filter']) ? $settings['filter'] : 'all';
+        $avatar_ids = isset($settings['avatar_ids']) ? $settings['avatar_ids'] : '';
+        $limit_val = isset($settings['limit']) ? intval($settings['limit']) : 20;
+
+        // Filter avatars based on parameters
+        if ($filter === 'available') {
+            $avatars = array_filter($avatars, function($avatar) {
+                return isset($avatar['status']) && $avatar['status'] === 'SUCCESS';
+            });
+        } elseif ($filter === 'custom' && !empty($avatar_ids)) {
+            $custom_ids = array_map('trim', explode(',', $avatar_ids));
+            $avatars = array_filter($avatars, function($avatar) use ($custom_ids) {
+                $aid = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+                return '' !== $aid && in_array((string) $aid, $custom_ids, true);
+            });
+        }
+        
+        // Limit number of avatars
+        if ($limit_val > 0) {
+            $avatars = array_slice($avatars, 0, $limit_val);
+        }
+
+        if (empty($avatars)) {
+            $this->render_error(__('No avatars available.', 'digital-human-for-navtalk'));
+            return;
+        }
+
+        $columns = isset($settings['columns']) ? absint($settings['columns']) : 3;
         
         // Render avatar list
         ?>
@@ -297,8 +352,8 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         #>
         <div class="navtalk-avatar-list" data-columns="{{ columns }}">
             <div class="navtalk-avatar-card" style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">
-                <p><?php echo esc_html(__('Avatar List will be displayed here', 'navtalk-digital-human')); ?></p>
-                <small><?php echo esc_html(__('Preview is not available in editor', 'navtalk-digital-human')); ?></small>
+                <p><?php echo esc_html(__('Avatar List will be displayed here', 'digital-human-for-navtalk')); ?></p>
+                <small><?php echo esc_html(__('Preview is not available in editor', 'digital-human-for-navtalk')); ?></small>
             </div>
         </div>
         <?php
