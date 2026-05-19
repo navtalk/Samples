@@ -40,33 +40,6 @@ class NavTalk_Shortcode {
     }
 
     /**
-     * Static footer script: apply saved collapsed state immediately after widget markup (DOM must exist).
-     */
-    private static function floating_collapse_inline_js() {
-        return <<<'JS'
-(function() {
-    try {
-        var savedState = localStorage.getItem('navtalk_widget_state');
-        if (savedState === 'collapsed') {
-            var widget = document.getElementById('ntw-widget-root');
-            var toggleBtn = document.getElementById('ntw-toggle-widget');
-            if (widget) {
-                widget.classList.add('ntw-collapsed');
-            }
-            if (toggleBtn) {
-                toggleBtn.setAttribute('aria-expanded', 'false');
-                var toggleText = toggleBtn.querySelector('.ntw-toggle-text');
-                if (toggleText) {
-                    toggleText.textContent = 'Show';
-                }
-            }
-        }
-    } catch (e) {}
-})();
-JS;
-    }
-
-    /**
      * Output global digital human assistant in footer (floating widget)
      * Controlled by global settings and per-page display options
      */
@@ -238,9 +211,13 @@ JS;
             <?php endif; ?>
         </div>
         <?php
-        wp_register_script('navtalk-floating-collapse', false, [], NAVTALK_VERSION, true);
-        wp_enqueue_script('navtalk-floating-collapse');
-        wp_add_inline_script('navtalk-floating-collapse', self::floating_collapse_inline_js(), 'after');
+        wp_enqueue_script(
+            'navtalk-floating-collapse',
+            NAVTALK_PLUGIN_URL . 'public/js/navtalk-floating-collapse.js',
+            [],
+            NAVTALK_VERSION,
+            true
+        );
         wp_print_scripts('navtalk-floating-collapse');
     }
 
@@ -566,13 +543,12 @@ JS;
         <div class="navtalk-avatar-list <?php echo esc_attr($style_class); ?> <?php echo esc_attr($atts['class']); ?>" data-columns="<?php echo esc_attr($columns); ?>">
             <?php foreach ($avatars as $avatar): ?>
                 <?php
-                // Use the layout rendering methods for each avatar in the list
+                // Late escaping: render_*_layout() builds HTML with esc_attr/esc_url/esc_html
+                // inside; wp_kses() at the echo site enforces a strict tag/attribute whitelist.
                 if ($layout === 'overlay') {
-                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_overlay_layout method
-                    echo $this->render_overlay_layout($avatar, $atts);
+                    echo wp_kses($this->render_overlay_layout($avatar, $atts), self::allowed_avatar_card_html());
                 } else {
-                    // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_bottom_layout method
-                    echo $this->render_bottom_layout($avatar, $atts);
+                    echo wp_kses($this->render_bottom_layout($avatar, $atts), self::allowed_avatar_card_html());
                 }
                 ?>
             <?php endforeach; ?>
@@ -690,7 +666,7 @@ JS;
 
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
+        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -740,7 +716,7 @@ JS;
 
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
-                        <span class="navtalk-status-badge <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>"></span>
+                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>"></span>
                     <?php endif; ?>
                 </div>
 
@@ -753,10 +729,10 @@ JS;
                     <!-- Button Group -->
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
-                            <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
+                            <button class="navtalk-icon-button navtalk-call-btn <?php echo esc_attr($inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'); ?>"
                                     data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                     data-avatar-img="<?php echo esc_url($image_url); ?>"
-                                    data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
+                                    data-inline-mode="<?php echo esc_attr($inline_mode ? 'true' : 'false'); ?>"
                                     data-container-id="<?php echo esc_attr($unique_id); ?>"
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
@@ -797,7 +773,7 @@ JS;
     /**
      * Allowed HTML for icon output (SVG/img) for wp_kses
      */
-    private static function allowed_icon_html() {
+    public static function allowed_icon_html() {
         return [
             'svg'   => [
                 'class' => true, 'xmlns' => true, 'xmlns:xlink' => true, 'xml:space' => true,
@@ -902,6 +878,102 @@ JS;
     }
 
     /**
+     * Allowed HTML for the rendered avatar card output (used with wp_kses for late escaping).
+     *
+     * Merges SVG/icon whitelist with the structural HTML produced by render_overlay_layout()
+     * and render_bottom_layout(). All dynamic values inside these renderers are already
+     * escaped at build-time with esc_attr/esc_url/esc_html; wp_kses() at the echo site
+     * provides late escaping for Plugin Check compliance.
+     *
+     * @return array
+     */
+    public static function allowed_avatar_card_html() {
+        $common_attrs = [
+            'class'       => true,
+            'id'          => true,
+            'style'       => true,
+            'title'       => true,
+            'aria-hidden' => true,
+            'aria-label'  => true,
+            'role'        => true,
+        ];
+
+        $data_attrs = [
+            'data-avatar-id'             => true,
+            'data-avatar-img'            => true,
+            'data-inline-mode'           => true,
+            'data-container-id'          => true,
+            'data-config-voice'          => true,
+            'data-config-tools'          => true,
+            'data-call-start-audio'      => true,
+            'data-call-end-audio'        => true,
+            'data-connect-immediately'   => true,
+            'data-modal-width'           => true,
+            'data-modal-height'          => true,
+            'data-modal-max-width'       => true,
+            'data-modal-max-height'      => true,
+            'data-modal-overlay-color'   => true,
+            'data-call-button-position'  => true,
+            'data-columns'               => true,
+            'data-hover-play'            => true,
+        ];
+
+        $card_html = [
+            'div'    => array_merge($common_attrs, $data_attrs),
+            'span'   => $common_attrs,
+            'p'      => $common_attrs,
+            'h1'     => $common_attrs,
+            'h2'     => $common_attrs,
+            'h3'     => $common_attrs,
+            'h4'     => $common_attrs,
+            'h5'     => $common_attrs,
+            'h6'     => $common_attrs,
+            'small'  => $common_attrs,
+            'strong' => $common_attrs,
+            'em'     => $common_attrs,
+            'br'     => [],
+            'a'      => array_merge($common_attrs, [
+                'href'     => true,
+                'download' => true,
+                'rel'      => true,
+                'target'   => true,
+            ]),
+            'button' => array_merge($common_attrs, $data_attrs, [
+                'type'          => true,
+                'disabled'      => true,
+                'aria-expanded' => true,
+            ]),
+            'img'    => array_merge($common_attrs, [
+                'src'    => true,
+                'alt'    => true,
+                'width'  => true,
+                'height' => true,
+                'srcset' => true,
+                'sizes'  => true,
+                'loading' => true,
+            ]),
+            'video'  => array_merge($common_attrs, $data_attrs, [
+                'src'         => true,
+                'poster'      => true,
+                'muted'       => true,
+                'autoplay'    => true,
+                'loop'        => true,
+                'playsinline' => true,
+                'controls'    => true,
+                'preload'     => true,
+                'width'       => true,
+                'height'      => true,
+            ]),
+            'source' => [
+                'src'  => true,
+                'type' => true,
+            ],
+        ];
+
+        return array_merge(self::allowed_icon_html(), $card_html);
+    }
+
+    /**
      * Render bottom layout for avatar card
      * 
      * @param array $avatar_info Avatar data
@@ -944,7 +1016,7 @@ JS;
 
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo $inline_mode ? 'navtalk-inline-mode' : ''; ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
+        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -993,7 +1065,7 @@ JS;
 
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
-                        <span class="navtalk-status-badge <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>"></span>
+                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>"></span>
                     <?php endif; ?>
                 </div>
 
@@ -1004,7 +1076,7 @@ JS;
                     <?php endif; ?>
 
                     <?php if ($show_status && $status_position === 'info'): ?>
-                        <p class="navtalk-avatar-status <?php echo $is_available ? 'status-available' : 'status-unavailable'; ?>">
+                        <p class="navtalk-avatar-status <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>">
                             <span class="status-indicator"></span>
                             <?php echo esc_html($is_available ? __('Available', 'digital-human-for-navtalk') : __('Unavailable', 'digital-human-for-navtalk')); ?>
                         </p>
@@ -1013,10 +1085,10 @@ JS;
                     <!-- Button Group -->
                     <div class="navtalk-button-group">
                         <?php if ($show_call_button): ?>
-                            <button class="navtalk-icon-button navtalk-call-btn <?php echo $inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'; ?>"
+                            <button class="navtalk-icon-button navtalk-call-btn <?php echo esc_attr($inline_mode ? 'navtalk-inline-call' : 'navtalk-start-chat'); ?>"
                                     data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                     data-avatar-img="<?php echo esc_url($image_url); ?>"
-                                    data-inline-mode="<?php echo $inline_mode ? 'true' : 'false'; ?>"
+                                    data-inline-mode="<?php echo esc_attr($inline_mode ? 'true' : 'false'); ?>"
                                     data-container-id="<?php echo esc_attr($unique_id); ?>"
                                     data-config-voice="<?php echo esc_attr($atts['voice']); ?>"
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"

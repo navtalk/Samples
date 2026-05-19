@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.6
+Stable tag: 1.0.7
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,12 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.0.7 =
+* Security: AJAX handlers (`wp_ajax_navtalk_test_connection`, `wp_ajax_navtalk_refresh_avatars`) now verify capability and nonce explicitly with `current_user_can()` + `wp_verify_nonce()` so Plugin Check can detect both checks statically.
+* Security: late escaping applied to all variable, option and generated output that was previously echoed via `phpcs:ignore`. `render_overlay_layout()` / `render_bottom_layout()` output is now passed through `wp_kses()` with a strict tag/attribute whitelist (`NavTalk_Shortcode::allowed_avatar_card_html()`); same fix applied to the Elementor avatar widget.
+* Security: remaining ternary echoes in admin/shortcode templates wrapped with `esc_attr()` / `esc_html()` (display:none toggles, status colors/badges, "Available/Unavailable" labels).
+* Refactor: the global floating-widget collapse-state script moved out of `wp_add_inline_script` into a registered file at `public/js/navtalk-floating-collapse.js`.
+
 = 1.0.6 =
 * Plugin Check: limit readme tags to five; prefix globals in uninstall.php; SVG preview uses sanitize_svg_field; drop redundant load_plugin_textdomain (WordPress.org-hosted translations load automatically since WP 4.6).
 * Note for scans: run Plugin Check with the plugin folder named `digital-human-for-navtalk` so the expected text domain matches the slug.
@@ -161,6 +167,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.0.7 =
+Security hardening to address WordPress.org Plugin Team review: explicit AJAX nonce/capability checks, late escaping of all dynamic output, and inline JS moved to a registered file.
 
 = 1.0.6 =
 Maintenance release for Plugin Check / tooling alignment.

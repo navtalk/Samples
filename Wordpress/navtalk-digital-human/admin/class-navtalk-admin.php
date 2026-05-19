@@ -395,7 +395,7 @@ class NavTalk_Admin {
                 <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_bg_type" value="image" <?php checked($bg_type, 'image'); ?>> <?php esc_html_e('Image', 'digital-human-for-navtalk'); ?></label>
             </div>
             
-            <div class="navtalk-bg-color-section" style="<?php echo $bg_type === 'image' ? 'display:none;' : ''; ?>">
+            <div class="navtalk-bg-color-section" style="<?php echo esc_attr($bg_type === 'image' ? 'display:none;' : ''); ?>">
                 <select id="navtalk_bg_preset" style="width: 100%; margin-bottom: 10px;">
                     <option value=""><?php esc_html_e('Custom', 'digital-human-for-navtalk'); ?></option>
                     <option value="linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)"><?php esc_html_e('Blue purple gradient', 'digital-human-for-navtalk'); ?></option>
@@ -411,10 +411,10 @@ class NavTalk_Admin {
                 <textarea name="navtalk_floating_button_background" id="navtalk_bg_input" rows="3" class="large-text code" placeholder="<?php esc_attr_e('e.g. linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)', 'digital-human-for-navtalk'); ?>"><?php echo esc_textarea($background); ?></textarea>
             </div>
             
-            <div class="navtalk-bg-image-section" style="<?php echo $bg_type !== 'image' ? 'display:none;' : ''; ?>">
+            <div class="navtalk-bg-image-section" style="<?php echo esc_attr($bg_type !== 'image' ? 'display:none;' : ''); ?>">
                 <input type="hidden" name="navtalk_floating_button_bg_image" id="navtalk_bg_image_url" value="<?php echo esc_attr($bg_image); ?>">
                 <button type="button" class="button" id="navtalk_upload_bg_image"><?php esc_html_e('Upload background image', 'digital-human-for-navtalk'); ?></button>
-                <button type="button" class="button" id="navtalk_remove_bg_image" style="<?php echo empty($bg_image) ? 'display:none;' : ''; ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
+                <button type="button" class="button" id="navtalk_remove_bg_image" style="<?php echo esc_attr(empty($bg_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
                 <div id="navtalk_bg_image_preview" style="margin-top: 10px;">
                     <?php if (!empty($bg_image)): ?>
                         <img src="<?php echo esc_url($bg_image); ?>" style="max-width: 150px; border-radius: 8px; border: 2px solid #ddd;">
@@ -450,7 +450,7 @@ class NavTalk_Admin {
                 <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="image" <?php checked($icon_type, 'image'); ?>> <?php esc_html_e('Image', 'digital-human-for-navtalk'); ?></label>
             </div>
             
-            <div class="navtalk-icon-svg-section" style="<?php echo $icon_type !== 'svg' ? 'display:none;' : ''; ?>">
+            <div class="navtalk-icon-svg-section" style="<?php echo esc_attr($icon_type !== 'svg' ? 'display:none;' : ''); ?>">
                 <textarea name="navtalk_floating_button_icon_svg" id="navtalk_icon_svg_input" rows="6" class="large-text code" placeholder="<?php esc_attr_e('Paste SVG code…', 'digital-human-for-navtalk'); ?>"><?php echo esc_textarea($icon_svg); ?></textarea>
                 <div style="margin-top: 10px;">
                     <button type="button" class="button" id="navtalk_copy_svg_btn"><?php esc_html_e('Copy SVG code', 'digital-human-for-navtalk'); ?></button>
@@ -467,10 +467,10 @@ class NavTalk_Admin {
                 <p class="description"><?php esc_html_e('Tip: use fill="currentColor" in your SVG to inherit the icon color setting below.', 'digital-human-for-navtalk'); ?></p>
             </div>
             
-            <div class="navtalk-icon-image-section" style="<?php echo $icon_type !== 'image' ? 'display:none;' : ''; ?>">
+            <div class="navtalk-icon-image-section" style="<?php echo esc_attr($icon_type !== 'image' ? 'display:none;' : ''); ?>">
                 <input type="hidden" name="navtalk_floating_button_icon_image" id="navtalk_icon_image_url" value="<?php echo esc_attr($icon_image); ?>">
                 <button type="button" class="button" id="navtalk_upload_icon_image"><?php esc_html_e('Upload icon image', 'digital-human-for-navtalk'); ?></button>
-                <button type="button" class="button" id="navtalk_remove_icon_image" style="<?php echo empty($icon_image) ? 'display:none;' : ''; ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
+                <button type="button" class="button" id="navtalk_remove_icon_image" style="<?php echo esc_attr(empty($icon_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
                 <div id="navtalk_icon_image_preview" style="margin-top: 10px;">
                     <?php if (!empty($icon_image)): ?>
                         <img src="<?php echo esc_url($icon_image); ?>" style="max-width: 80px; border-radius: 8px; border: 2px solid #ddd;">
@@ -517,7 +517,7 @@ class NavTalk_Admin {
             Your NavTalk API license key (required for the plugin to work).
         </p>
         
-        <div id="test-connection-wrapper" style="margin-top: 10px;<?php echo empty($license) ? ' display: none;' : ''; ?>">
+        <div id="test-connection-wrapper" style="margin-top: 10px;<?php echo esc_attr(empty($license) ? ' display: none;' : ''); ?>">
             <button type="button" id="test-connection" class="button button-secondary">
                 Test Connection
             </button>
@@ -560,7 +560,7 @@ class NavTalk_Admin {
                 if ('' === (string) $avatar_id) continue;
             ?>
                 <option value="<?php echo esc_attr($avatar_id); ?>" <?php selected($current, $avatar_id); ?>>
-                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo $available ? '' : ' (' . esc_html__('Unavailable', 'digital-human-for-navtalk') . ')'; ?>
+                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo esc_html($available ? '' : ' (' . __('Unavailable', 'digital-human-for-navtalk') . ')'); ?>
                 </option>
             <?php endforeach; ?>
         </select>
@@ -1086,7 +1086,7 @@ class NavTalk_Admin {
                      alt="<?php echo esc_attr($display_name); ?>"
                      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 5% !important ;">
                 <span class="status-badge" 
-                      style="position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; border-radius: 50%; background: <?php echo $is_available ? '#4caf50' : '#f44336'; ?>; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></span>
+                      style="position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; border-radius: 50%; background: <?php echo esc_attr($is_available ? '#4caf50' : '#f44336'); ?>; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></span>
             </div>
             
             <div style="padding: 15px;">
@@ -1094,8 +1094,8 @@ class NavTalk_Admin {
                     <?php echo esc_html($display_name); ?>
                 </h4>
                 
-                <p style="margin: 0 0 12px 0; font-size: 12px; color: <?php echo $is_available ? '#4caf50' : '#999'; ?>; font-weight: 500;">
-                    <?php echo $is_available ? '● Available' : '● Unavailable'; ?>
+                <p style="margin: 0 0 12px 0; font-size: 12px; color: <?php echo esc_attr($is_available ? '#4caf50' : '#999'); ?>; font-weight: 500;">
+                    <?php echo esc_html($is_available ? __('● Available', 'digital-human-for-navtalk') : __('● Unavailable', 'digital-human-for-navtalk')); ?>
                 </p>
                 
                 <div style="margin-bottom: 10px;">
@@ -1776,16 +1776,15 @@ JS;
 add_action('wp_ajax_navtalk_test_connection', function() {
     ob_start();
 
-    if (!check_ajax_referer('navtalk_test', 'nonce', false)) {
-        ob_end_clean();
-        wp_send_json_error(['message' => 'Invalid security token.']);
-        return;
-    }
-
     if (!current_user_can('manage_options')) {
         ob_end_clean();
-        wp_send_json_error(['message' => 'Permission denied']);
-        return;
+        wp_send_json_error(['message' => 'Permission denied'], 403);
+    }
+
+    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'navtalk_test')) {
+        ob_end_clean();
+        wp_send_json_error(['message' => 'Invalid security token.'], 403);
     }
 
     // Temporarily set license for testing
@@ -1823,16 +1822,15 @@ add_action('wp_ajax_navtalk_test_connection', function() {
 add_action('wp_ajax_navtalk_refresh_avatars', function() {
     ob_start();
 
-    if (!check_ajax_referer('navtalk_refresh_avatars', 'nonce', false)) {
-        ob_end_clean();
-        wp_send_json_error(['message' => 'Invalid security token.']);
-        return;
-    }
-
     if (!current_user_can('manage_options')) {
         ob_end_clean();
-        wp_send_json_error(['message' => 'Permission denied']);
-        return;
+        wp_send_json_error(['message' => 'Permission denied'], 403);
+    }
+
+    $nonce = isset($_POST['nonce']) ? sanitize_text_field(wp_unslash($_POST['nonce'])) : '';
+    if (!wp_verify_nonce($nonce, 'navtalk_refresh_avatars')) {
+        ob_end_clean();
+        wp_send_json_error(['message' => 'Invalid security token.'], 403);
     }
 
     $license = get_option('navtalk_license', '');

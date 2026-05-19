@@ -497,7 +497,11 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $method = $reflection->getMethod('render_avatar_card');
         $method->setAccessible(true);
         
-        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Output is escaped in render_avatar_card method
-        echo $method->invoke($shortcode, $avatar_info, $atts);
+        // Late escaping: render_avatar_card() builds HTML with esc_attr/esc_url/esc_html
+        // inside; wp_kses() at the echo site enforces a strict tag/attribute whitelist.
+        echo wp_kses(
+            (string) $method->invoke($shortcode, $avatar_info, $atts),
+            NavTalk_Shortcode::allowed_avatar_card_html()
+        );
     }
 }
