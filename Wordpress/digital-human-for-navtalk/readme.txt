@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 6.9
-Stable tag: 1.0.7
+Stable tag: 1.1.0
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,12 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.0 =
+* Packaging: plugin folder renamed to `digital-human-for-navtalk` to match the plugin slug and main bootstrap file, aligning with WordPress.org guidelines.
+* Encoding: source files normalized to UTF-8 (without BOM) and line endings standardized for better cross-platform compatibility and editor support.
+* Maintenance: documentation refreshed (README, install/shortcodes docs) and version metadata kept in sync across `digital-human-for-navtalk.php`, `readme.txt` and the installed-version option.
+* Compatibility: tested up to current WordPress release; no breaking changes to existing shortcodes, settings or Elementor widgets.
+
 = 1.0.7 =
 * Security: AJAX handlers (`wp_ajax_navtalk_test_connection`, `wp_ajax_navtalk_refresh_avatars`) now verify capability and nonce explicitly with `current_user_can()` + `wp_verify_nonce()` so Plugin Check can detect both checks statically.
 * Security: late escaping applied to all variable, option and generated output that was previously echoed via `phpcs:ignore`. `render_overlay_layout()` / `render_bottom_layout()` output is now passed through `wp_kses()` with a strict tag/attribute whitelist (`NavTalk_Shortcode::allowed_avatar_card_html()`); same fix applied to the Elementor avatar widget.
@@ -167,6 +173,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.0 =
+Maintenance release: plugin folder renamed to `digital-human-for-navtalk` to match the slug, source files normalized to UTF-8, and documentation refreshed. No changes to shortcodes or saved settings; safe to update.
 
 = 1.0.7 =
 Security hardening to address WordPress.org Plugin Team review: explicit AJAX nonce/capability checks, late escaping of all dynamic output, and inline JS moved to a registered file.
