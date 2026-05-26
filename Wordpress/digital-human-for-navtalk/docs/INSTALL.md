@@ -90,7 +90,7 @@ Add custom CSS in **Appearance → Customize → Additional CSS**:
 
 ## System Requirements
 
-- WordPress 5.0+
+- WordPress 5.0+ (tested up to 7.0)
 - PHP 7.2+
 - MySQL 5.6+
 - HTTPS enabled (required)

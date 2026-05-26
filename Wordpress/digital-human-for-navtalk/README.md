@@ -19,7 +19,7 @@ NavTalk Digital Human is a WordPress plugin that enables you to embed interactiv
 
 ## Requirements
 
-- WordPress 5.0 or higher
+- WordPress 5.0 or higher (tested up to 7.0)
 - PHP 7.2 or higher
 - Modern web browser with WebRTC support
 - HTTPS enabled (required for microphone access)
@@ -315,7 +315,7 @@ For support, please contact:
 - Packaging: plugin folder renamed to `digital-human-for-navtalk` to match the plugin slug and main bootstrap file (WordPress.org guideline alignment)
 - Encoding: source files normalized to UTF-8 (without BOM); line endings standardized for cross-platform/editor compatibility
 - Maintenance: documentation refreshed (README, install/shortcodes docs); version metadata synchronized across `digital-human-for-navtalk.php`, `readme.txt` and the installed-version option
-- Compatibility: tested up to current WordPress release; no breaking changes to existing shortcodes, settings or Elementor widgets
+- Compatibility: tested up to WordPress 7.0; no breaking changes to shortcodes, settings, AJAX or Elementor widgets
 
 ### Version 1.0.7
 - Security: AJAX handlers verify capability and nonce explicitly so Plugin Check detects both checks statically
