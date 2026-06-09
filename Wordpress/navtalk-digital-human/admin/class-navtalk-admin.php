@@ -113,7 +113,7 @@ class NavTalk_Admin {
     public function add_navtalk_meta_box() {
         add_meta_box(
             'navtalk_show_floating',
-            __('Digital Human Assistant', 'digital-human-for-navtalk'),
+            __('Digital Human Assistant', 'navtalk-digital-human'),
             [$this, 'render_navtalk_meta_box'],
             ['post', 'page'],
             'side'
@@ -130,10 +130,10 @@ class NavTalk_Admin {
         <p>
             <label>
                 <input type="checkbox" name="navtalk_show_floating" value="show" <?php checked($value, 'show'); ?>>
-                <?php esc_html_e('Show Digital Human Assistant on This Page', 'digital-human-for-navtalk'); ?>
+                <?php esc_html_e('Show Digital Human Assistant on This Page', 'navtalk-digital-human'); ?>
             </label>
         </p>
-        <p class="description"><?php esc_html_e('Only takes effect when global digital human assistant is enabled in settings. Uncheck to hide floating digital human on this page.', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('Only takes effect when global digital human assistant is enabled in settings. Uncheck to hide floating digital human on this page.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -157,8 +157,8 @@ class NavTalk_Admin {
      */
     public function add_settings_page() {
         add_options_page(
-            __('Digital Human for NavTalk Settings', 'digital-human-for-navtalk'),
-            __('Digital Human for NavTalk', 'digital-human-for-navtalk'),
+            __('NavTalk Digital Human Settings', 'navtalk-digital-human'),
+            __('NavTalk Digital Human', 'navtalk-digital-human'),
             'manage_options',
             'navtalk-settings',
             [$this, 'render_settings_page']
@@ -294,90 +294,90 @@ class NavTalk_Admin {
 
         add_settings_section(
             'navtalk_floating_section',
-            __('Digital Human Assistant', 'digital-human-for-navtalk'),
+            __('Digital Human Assistant', 'navtalk-digital-human'),
             [$this, 'render_floating_section_callback'],
             'navtalk-settings'
         );
         add_settings_field(
             'navtalk_floating_enabled',
-            __('Enable Digital Human Assistant', 'digital-human-for-navtalk'),
+            __('Enable Digital Human Assistant', 'navtalk-digital-human'),
             [$this, 'render_floating_enabled_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_avatar',
-            __('Select Digital Human Avatar', 'digital-human-for-navtalk'),
+            __('Select Digital Human Avatar', 'navtalk-digital-human'),
             [$this, 'render_floating_avatar_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_position',
-            __('Floating Position', 'digital-human-for-navtalk'),
+            __('Floating Position', 'navtalk-digital-human'),
             [$this, 'render_floating_position_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_button_size',
-            __('Call Button Size', 'digital-human-for-navtalk'),
+            __('Call Button Size', 'navtalk-digital-human'),
             [$this, 'render_floating_button_size_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_button_background',
-            __('Call Button Background', 'digital-human-for-navtalk'),
+            __('Call Button Background', 'navtalk-digital-human'),
             [$this, 'render_floating_button_background_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_button_icon',
-            __('Call Button Icon', 'digital-human-for-navtalk'),
+            __('Call Button Icon', 'navtalk-digital-human'),
             [$this, 'render_floating_button_icon_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_button_icon_color',
-            __('Icon Color', 'digital-human-for-navtalk'),
+            __('Icon Color', 'navtalk-digital-human'),
             [$this, 'render_floating_button_icon_color_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_show_toggle_button',
-            __('Show Floating Toggle Button', 'digital-human-for-navtalk'),
+            __('Show Floating Toggle Button', 'navtalk-digital-human'),
             [$this, 'render_show_toggle_button_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_voice',
-            __('Voice Configuration', 'digital-human-for-navtalk'),
+            __('Voice Configuration', 'navtalk-digital-human'),
             [$this, 'render_floating_voice_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_floating_model',
-            __('Model Configuration', 'digital-human-for-navtalk'),
+            __('Model Configuration', 'navtalk-digital-human'),
             [$this, 'render_floating_model_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_auto_hangup_enabled',
-            __('Enable Auto Hangup', 'digital-human-for-navtalk'),
+            __('Enable Auto Hangup', 'navtalk-digital-human'),
             [$this, 'render_auto_hangup_enabled_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
         add_settings_field(
             'navtalk_auto_hangup_description',
-            __('Auto Hangup Description', 'digital-human-for-navtalk'),
+            __('Auto Hangup Description', 'navtalk-digital-human'),
             [$this, 'render_auto_hangup_description_field'],
             'navtalk-settings',
             'navtalk_floating_section'
@@ -391,30 +391,30 @@ class NavTalk_Admin {
         ?>
         <div class="navtalk-bg-field">
             <div style="margin-bottom: 15px;">
-                <label><input type="radio" name="navtalk_floating_button_bg_type" value="gradient" <?php checked($bg_type, 'gradient'); ?>> <?php esc_html_e('Gradient / solid', 'digital-human-for-navtalk'); ?></label>
-                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_bg_type" value="image" <?php checked($bg_type, 'image'); ?>> <?php esc_html_e('Image', 'digital-human-for-navtalk'); ?></label>
+                <label><input type="radio" name="navtalk_floating_button_bg_type" value="gradient" <?php checked($bg_type, 'gradient'); ?>> <?php esc_html_e('Gradient / solid', 'navtalk-digital-human'); ?></label>
+                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_bg_type" value="image" <?php checked($bg_type, 'image'); ?>> <?php esc_html_e('Image', 'navtalk-digital-human'); ?></label>
             </div>
             
             <div class="navtalk-bg-color-section" style="<?php echo esc_attr($bg_type === 'image' ? 'display:none;' : ''); ?>">
                 <select id="navtalk_bg_preset" style="width: 100%; margin-bottom: 10px;">
-                    <option value=""><?php esc_html_e('Custom', 'digital-human-for-navtalk'); ?></option>
-                    <option value="linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)"><?php esc_html_e('Blue purple gradient', 'digital-human-for-navtalk'); ?></option>
-                    <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"><?php esc_html_e('Purple', 'digital-human-for-navtalk'); ?></option>
-                    <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"><?php esc_html_e('Pink', 'digital-human-for-navtalk'); ?></option>
-                    <option value="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"><?php esc_html_e('Cyan', 'digital-human-for-navtalk'); ?></option>
-                    <option value="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"><?php esc_html_e('Green', 'digital-human-for-navtalk'); ?></option>
-                    <option value="#667eea"><?php esc_html_e('Solid blue', 'digital-human-for-navtalk'); ?></option>
-                    <option value="#e74c3c"><?php esc_html_e('Solid red', 'digital-human-for-navtalk'); ?></option>
-                    <option value="#2ecc71"><?php esc_html_e('Solid green', 'digital-human-for-navtalk'); ?></option>
+                    <option value=""><?php esc_html_e('Custom', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)"><?php esc_html_e('Blue purple gradient', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"><?php esc_html_e('Purple', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"><?php esc_html_e('Pink', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"><?php esc_html_e('Cyan', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"><?php esc_html_e('Green', 'navtalk-digital-human'); ?></option>
+                    <option value="#667eea"><?php esc_html_e('Solid blue', 'navtalk-digital-human'); ?></option>
+                    <option value="#e74c3c"><?php esc_html_e('Solid red', 'navtalk-digital-human'); ?></option>
+                    <option value="#2ecc71"><?php esc_html_e('Solid green', 'navtalk-digital-human'); ?></option>
                 </select>
                 
-                <textarea name="navtalk_floating_button_background" id="navtalk_bg_input" rows="3" class="large-text code" placeholder="<?php esc_attr_e('e.g. linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)', 'digital-human-for-navtalk'); ?>"><?php echo esc_textarea($background); ?></textarea>
+                <textarea name="navtalk_floating_button_background" id="navtalk_bg_input" rows="3" class="large-text code" placeholder="<?php esc_attr_e('e.g. linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)', 'navtalk-digital-human'); ?>"><?php echo esc_textarea($background); ?></textarea>
             </div>
             
             <div class="navtalk-bg-image-section" style="<?php echo esc_attr($bg_type !== 'image' ? 'display:none;' : ''); ?>">
                 <input type="hidden" name="navtalk_floating_button_bg_image" id="navtalk_bg_image_url" value="<?php echo esc_attr($bg_image); ?>">
-                <button type="button" class="button" id="navtalk_upload_bg_image"><?php esc_html_e('Upload background image', 'digital-human-for-navtalk'); ?></button>
-                <button type="button" class="button" id="navtalk_remove_bg_image" style="<?php echo esc_attr(empty($bg_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
+                <button type="button" class="button" id="navtalk_upload_bg_image"><?php esc_html_e('Upload background image', 'navtalk-digital-human'); ?></button>
+                <button type="button" class="button" id="navtalk_remove_bg_image" style="<?php echo esc_attr(empty($bg_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'navtalk-digital-human'); ?></button>
                 <div id="navtalk_bg_image_preview" style="margin-top: 10px;">
                     <?php if (!empty($bg_image)): ?>
                         <img src="<?php echo esc_url($bg_image); ?>" style="max-width: 150px; border-radius: 8px; border: 2px solid #ddd;">
@@ -423,7 +423,7 @@ class NavTalk_Admin {
             </div>
             
             <div class="navtalk-bg-preview" style="margin-top: 15px;">
-                <strong><?php esc_html_e('Preview', 'digital-human-for-navtalk'); ?>:</strong>
+                <strong><?php esc_html_e('Preview', 'navtalk-digital-human'); ?>:</strong>
                 <div id="navtalk_bg_preview_box" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #ddd; display: inline-block; vertical-align: middle; margin-left: 10px; <?php 
                     if ($bg_type === 'image' && !empty($bg_image)) {
                         echo 'background: url(' . esc_url($bg_image) . ') center/cover;';
@@ -433,7 +433,7 @@ class NavTalk_Admin {
                 ?>"></div>
             </div>
             
-            <p class="description"><?php esc_html_e('Supports solid colors (e.g. #667eea), linear-gradient(), or a background image.', 'digital-human-for-navtalk'); ?></p>
+            <p class="description"><?php esc_html_e('Supports solid colors (e.g. #667eea), linear-gradient(), or a background image.', 'navtalk-digital-human'); ?></p>
         </div>
         <?php
     }
@@ -445,16 +445,16 @@ class NavTalk_Admin {
         ?>
         <div class="navtalk-icon-field">
             <div style="margin-bottom: 15px;">
-                <label><input type="radio" name="navtalk_floating_button_icon_type" value="default" <?php checked($icon_type, 'default'); ?>> <?php esc_html_e('Default icon', 'digital-human-for-navtalk'); ?></label>
-                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="svg" <?php checked($icon_type, 'svg'); ?>> <?php esc_html_e('SVG code', 'digital-human-for-navtalk'); ?></label>
-                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="image" <?php checked($icon_type, 'image'); ?>> <?php esc_html_e('Image', 'digital-human-for-navtalk'); ?></label>
+                <label><input type="radio" name="navtalk_floating_button_icon_type" value="default" <?php checked($icon_type, 'default'); ?>> <?php esc_html_e('Default icon', 'navtalk-digital-human'); ?></label>
+                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="svg" <?php checked($icon_type, 'svg'); ?>> <?php esc_html_e('SVG code', 'navtalk-digital-human'); ?></label>
+                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="image" <?php checked($icon_type, 'image'); ?>> <?php esc_html_e('Image', 'navtalk-digital-human'); ?></label>
             </div>
             
             <div class="navtalk-icon-svg-section" style="<?php echo esc_attr($icon_type !== 'svg' ? 'display:none;' : ''); ?>">
-                <textarea name="navtalk_floating_button_icon_svg" id="navtalk_icon_svg_input" rows="6" class="large-text code" placeholder="<?php esc_attr_e('Paste SVG code…', 'digital-human-for-navtalk'); ?>"><?php echo esc_textarea($icon_svg); ?></textarea>
+                <textarea name="navtalk_floating_button_icon_svg" id="navtalk_icon_svg_input" rows="6" class="large-text code" placeholder="<?php esc_attr_e('Paste SVG code…', 'navtalk-digital-human'); ?>"><?php echo esc_textarea($icon_svg); ?></textarea>
                 <div style="margin-top: 10px;">
-                    <button type="button" class="button" id="navtalk_copy_svg_btn"><?php esc_html_e('Copy SVG code', 'digital-human-for-navtalk'); ?></button>
-                    <strong style="margin-left: 15px;"><?php esc_html_e('Preview', 'digital-human-for-navtalk'); ?>:</strong>
+                    <button type="button" class="button" id="navtalk_copy_svg_btn"><?php esc_html_e('Copy SVG code', 'navtalk-digital-human'); ?></button>
+                    <strong style="margin-left: 15px;"><?php esc_html_e('Preview', 'navtalk-digital-human'); ?>:</strong>
                     <div id="navtalk_svg_preview" style="width: 50px; height: 50px; border: 2px solid #ddd; border-radius: 8px; padding: 8px; display: inline-block; vertical-align: middle; margin-left: 10px;">
                         <?php
                         if (!empty($icon_svg)) {
@@ -464,13 +464,13 @@ class NavTalk_Admin {
                         ?>
                     </div>
                 </div>
-                <p class="description"><?php esc_html_e('Tip: use fill="currentColor" in your SVG to inherit the icon color setting below.', 'digital-human-for-navtalk'); ?></p>
+                <p class="description"><?php esc_html_e('Tip: use fill="currentColor" in your SVG to inherit the icon color setting below.', 'navtalk-digital-human'); ?></p>
             </div>
             
             <div class="navtalk-icon-image-section" style="<?php echo esc_attr($icon_type !== 'image' ? 'display:none;' : ''); ?>">
                 <input type="hidden" name="navtalk_floating_button_icon_image" id="navtalk_icon_image_url" value="<?php echo esc_attr($icon_image); ?>">
-                <button type="button" class="button" id="navtalk_upload_icon_image"><?php esc_html_e('Upload icon image', 'digital-human-for-navtalk'); ?></button>
-                <button type="button" class="button" id="navtalk_remove_icon_image" style="<?php echo esc_attr(empty($icon_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'digital-human-for-navtalk'); ?></button>
+                <button type="button" class="button" id="navtalk_upload_icon_image"><?php esc_html_e('Upload icon image', 'navtalk-digital-human'); ?></button>
+                <button type="button" class="button" id="navtalk_remove_icon_image" style="<?php echo esc_attr(empty($icon_image) ? 'display:none;' : ''); ?>"><?php esc_html_e('Remove image', 'navtalk-digital-human'); ?></button>
                 <div id="navtalk_icon_image_preview" style="margin-top: 10px;">
                     <?php if (!empty($icon_image)): ?>
                         <img src="<?php echo esc_url($icon_image); ?>" style="max-width: 80px; border-radius: 8px; border: 2px solid #ddd;">
@@ -486,7 +486,7 @@ class NavTalk_Admin {
         ?>
         <input type="color" name="navtalk_floating_button_icon_color" id="navtalk_icon_color_picker" value="<?php echo esc_attr($icon_color); ?>" style="width: 60px; height: 40px;">
         <input type="text" id="navtalk_icon_color_text" value="<?php echo esc_attr($icon_color); ?>" class="small-text" placeholder="#ffffff" style="margin-left: 10px;">
-        <p class="description"><?php esc_html_e('Icon color (applies to the default and SVG code icons).', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('Icon color (applies to the default and SVG code icons).', 'navtalk-digital-human'); ?></p>
         <?php
     }
     
@@ -495,9 +495,9 @@ class NavTalk_Admin {
      */
     public function render_section_callback() {
         echo '<p>';
-        esc_html_e('Configure your NavTalk API license key. Get your license key from ', 'digital-human-for-navtalk');
+        esc_html_e('Configure your NavTalk API license key. Get your license key from ', 'navtalk-digital-human');
         echo '<a href="' . esc_url('https://console.navtalk.ai') . '" target="_blank" rel="noopener noreferrer">';
-        esc_html_e('NavTalk Console', 'digital-human-for-navtalk');
+        esc_html_e('NavTalk Console', 'navtalk-digital-human');
         echo '</a>.</p>';
     }
     
@@ -530,7 +530,7 @@ class NavTalk_Admin {
      * Digital Human Assistant section description
      */
     public function render_floating_section_callback() {
-        echo '<p>' . esc_html__('When enabled, a floating digital human assistant will appear on the front end. Each page/post can individually control whether to show the digital human.', 'digital-human-for-navtalk') . '</p>';
+        echo '<p>' . esc_html__('When enabled, a floating digital human assistant will appear on the front end. Each page/post can individually control whether to show the digital human.', 'navtalk-digital-human') . '</p>';
     }
 
     public function render_floating_enabled_field() {
@@ -539,7 +539,7 @@ class NavTalk_Admin {
         <input type="hidden" name="navtalk_floating_enabled" value="0">
         <label>
             <input type="checkbox" name="navtalk_floating_enabled" value="1" <?php checked($enabled, '1'); ?>>
-            <?php esc_html_e('Enable Global Digital Human Assistant (Floating)', 'digital-human-for-navtalk'); ?>
+            <?php esc_html_e('Enable Global Digital Human Assistant (Floating)', 'navtalk-digital-human'); ?>
         </label>
         <?php
     }
@@ -549,7 +549,7 @@ class NavTalk_Admin {
         $avatars = $this->get_avatars_list();
         ?>
         <select name="navtalk_floating_avatar" id="navtalk_floating_avatar" class="regular-text">
-            <option value=""><?php esc_html_e('— Please Select —', 'digital-human-for-navtalk'); ?></option>
+            <option value=""><?php esc_html_e('— Please Select —', 'navtalk-digital-human'); ?></option>
             <?php foreach ($avatars as $avatar) :
                 $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
                 $name = isset($avatar['name']) ? $avatar['name'] : '';
@@ -560,21 +560,21 @@ class NavTalk_Admin {
                 if ('' === (string) $avatar_id) continue;
             ?>
                 <option value="<?php echo esc_attr($avatar_id); ?>" <?php selected($current, $avatar_id); ?>>
-                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo esc_html($available ? '' : ' (' . __('Unavailable', 'digital-human-for-navtalk') . ')'); ?>
+                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo esc_html($available ? '' : ' (' . __('Unavailable', 'navtalk-digital-human') . ')'); ?>
                 </option>
             <?php endforeach; ?>
         </select>
-        <p class="description"><?php esc_html_e('Select an available digital human avatar from your Avatar list. Please save your License Key first and ensure avatars are available.', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('Select an available digital human avatar from your Avatar list. Please save your License Key first and ensure avatars are available.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
     public function render_floating_position_field() {
         $current = get_option('navtalk_floating_position', 'bottom-right');
         $positions = [
-            'bottom-right' => __('Bottom Right', 'digital-human-for-navtalk'),
-            'bottom-left'  => __('Bottom Left', 'digital-human-for-navtalk'),
-            'top-right'   => __('Top Right', 'digital-human-for-navtalk'),
-            'top-left'    => __('Top Left', 'digital-human-for-navtalk'),
+            'bottom-right' => __('Bottom Right', 'navtalk-digital-human'),
+            'bottom-left'  => __('Bottom Left', 'navtalk-digital-human'),
+            'top-right'   => __('Top Right', 'navtalk-digital-human'),
+            'top-left'    => __('Top Left', 'navtalk-digital-human'),
         ];
         ?>
         <select name="navtalk_floating_position" id="navtalk_floating_position">
@@ -590,7 +590,7 @@ class NavTalk_Admin {
         ?>
         <input type="text" name="navtalk_floating_button_size" id="navtalk_floating_button_size"
                value="<?php echo esc_attr($size); ?>" class="small-text" placeholder="60px">
-        <p class="description"><?php esc_html_e('Example: 50px, 60px, 70px', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('Example: 50px, 60px, 70px', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -600,9 +600,9 @@ class NavTalk_Admin {
         <input type="hidden" name="navtalk_show_toggle_button" value="0">
         <label>
             <input type="checkbox" name="navtalk_show_toggle_button" value="1" <?php checked($show_toggle, '1'); ?>>
-            <?php esc_html_e('Show Hide/Show Toggle Button', 'digital-human-for-navtalk'); ?>
+            <?php esc_html_e('Show Hide/Show Toggle Button', 'navtalk-digital-human'); ?>
         </label>
-        <p class="description"><?php esc_html_e('When enabled, users can hide or show the digital human panel via button.', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('When enabled, users can hide or show the digital human panel via button.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -610,8 +610,8 @@ class NavTalk_Admin {
         $voice = get_option('navtalk_floating_voice', '');
         ?>
         <input type="text" name="navtalk_floating_voice" id="navtalk_floating_voice"
-               value="<?php echo esc_attr($voice); ?>" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use default voice', 'digital-human-for-navtalk'); ?>">
-        <p class="description"><?php esc_html_e('Configure the digital human voice. Leave empty to use default configuration.', 'digital-human-for-navtalk'); ?></p>
+               value="<?php echo esc_attr($voice); ?>" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use default voice', 'navtalk-digital-human'); ?>">
+        <p class="description"><?php esc_html_e('Configure the digital human voice. Leave empty to use default configuration.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -619,8 +619,8 @@ class NavTalk_Admin {
         $model = get_option('navtalk_floating_model', '');
         ?>
         <input type="text" name="navtalk_floating_model" id="navtalk_floating_model"
-               value="<?php echo esc_attr($model); ?>" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use default model', 'digital-human-for-navtalk'); ?>">
-        <p class="description"><?php esc_html_e('Configure the digital human model. Leave empty to use default configuration.', 'digital-human-for-navtalk'); ?></p>
+               value="<?php echo esc_attr($model); ?>" class="regular-text" placeholder="<?php esc_attr_e('Leave empty to use default model', 'navtalk-digital-human'); ?>">
+        <p class="description"><?php esc_html_e('Configure the digital human model. Leave empty to use default configuration.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -630,9 +630,9 @@ class NavTalk_Admin {
         <input type="hidden" name="navtalk_auto_hangup_enabled" value="0">
         <label>
             <input type="checkbox" name="navtalk_auto_hangup_enabled" value="1" <?php checked($enabled, '1'); ?>>
-            <?php esc_html_e('Enable auto hangup when user says goodbye(only OpenAIRealtime provider)', 'digital-human-for-navtalk'); ?>
+            <?php esc_html_e('Enable auto hangup when user says goodbye(only OpenAIRealtime provider)', 'navtalk-digital-human'); ?>
         </label>
-        <p class="description"><?php esc_html_e('When enabled, the AI will automatically end the conversation when the user says goodbye. The end_conversation function will be added to tools.', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('When enabled, the AI will automatically end the conversation when the user says goodbye. The end_conversation function will be added to tools.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
@@ -641,7 +641,7 @@ class NavTalk_Admin {
         ?>
         <input type="text" name="navtalk_auto_hangup_description" id="navtalk_auto_hangup_description"
                value="<?php echo esc_attr($description); ?>" class="large-text" placeholder="Call this function when the user says goodbye">
-        <p class="description"><?php esc_html_e('Description for the end_conversation tool. Customize to define when the AI should trigger hangup (e.g. when the user says goodbye or thanks).', 'digital-human-for-navtalk'); ?></p>
+        <p class="description"><?php esc_html_e('Description for the end_conversation tool. Customize to define when the AI should trigger hangup (e.g. when the user says goodbye or thanks).', 'navtalk-digital-human'); ?></p>
         <?php
     }
     
@@ -659,7 +659,7 @@ class NavTalk_Admin {
             add_settings_error(
                 'navtalk_messages',
                 'navtalk_message',
-                __('Settings saved successfully.', 'digital-human-for-navtalk'),
+                __('Settings saved successfully.', 'navtalk-digital-human'),
                 'updated'
             );
         }
@@ -670,8 +670,8 @@ class NavTalk_Admin {
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
             
             <div class="navtalk-admin-header" style="margin: 20px 0; padding: 20px; background: #fff; border-left: 4px solid #667eea;">
-                <h2 style="margin-top: 0;"><?php esc_html_e('Welcome to Digital Human for NavTalk', 'digital-human-for-navtalk'); ?></h2>
-                <p><?php esc_html_e('Integrate real-time AI avatar conversations into your WordPress site.', 'digital-human-for-navtalk'); ?></p>
+                <h2 style="margin-top: 0;"><?php esc_html_e('Welcome to NavTalk Digital Human', 'navtalk-digital-human'); ?></h2>
+                <p><?php esc_html_e('Integrate real-time AI avatar conversations into your WordPress site.', 'navtalk-digital-human'); ?></p>
             </div>
             
             <form action="options.php" method="post">
@@ -724,7 +724,7 @@ class NavTalk_Admin {
                     <h3 style="font-size: 16px; margin-bottom: 10px;">Step 1: Find the widgets</h3>
                     <div style="margin: 15px 0; padding: 10px; background: #f5f5f5; border-radius: 6px; text-align: center;">
                         <div style="width: 100%; height: 600px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 4px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 14px; border: 2px dashed #fff;">
-                           <img src="<?php echo esc_url(NAVTALK_PLUGIN_URL); ?>public/images/widget.png" alt="<?php echo esc_attr__('Elementor widgets for NavTalk', 'digital-human-for-navtalk'); ?>" style="max-width: 90%; max-height: 90%; object-fit: contain;">
+                           <img src="<?php echo esc_url(NAVTALK_PLUGIN_URL); ?>public/images/widget.png" alt="<?php echo esc_attr__('Elementor widgets for NavTalk', 'navtalk-digital-human'); ?>" style="max-width: 90%; max-height: 90%; object-fit: contain;">
                         </div>
                         <p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">Shows Elementor left sidebar with the &quot;NavTalk integration&quot; category and two widgets</p>
                     </div>
@@ -1095,7 +1095,7 @@ class NavTalk_Admin {
                 </h4>
                 
                 <p style="margin: 0 0 12px 0; font-size: 12px; color: <?php echo esc_attr($is_available ? '#4caf50' : '#999'); ?>; font-weight: 500;">
-                    <?php echo esc_html($is_available ? __('● Available', 'digital-human-for-navtalk') : __('● Unavailable', 'digital-human-for-navtalk')); ?>
+                    <?php echo esc_html($is_available ? __('● Available', 'navtalk-digital-human') : __('● Unavailable', 'navtalk-digital-human')); ?>
                 </p>
                 
                 <div style="margin-bottom: 10px;">
@@ -1870,7 +1870,7 @@ add_action('wp_ajax_navtalk_refresh_avatars', function() {
     $avatars = isset($data['data']) && is_array($data['data']) ? $data['data'] : [];
 
     // Generate dropdown options HTML
-    $dropdown_html = '<option value="">' . esc_html__('— Please Select —', 'digital-human-for-navtalk') . '</option>';
+    $dropdown_html = '<option value="">' . esc_html__('— Please Select —', 'navtalk-digital-human') . '</option>';
     foreach ($avatars as $avatar) {
         $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
         $name = isset($avatar['name']) ? $avatar['name'] : '';
@@ -1882,7 +1882,7 @@ add_action('wp_ajax_navtalk_refresh_avatars', function() {
         
         $dropdown_html .= '<option value="' . esc_attr($avatar_id) . '">' . 
                           esc_html($display ?: $avatar_id) . 
-                          ($available ? '' : ' (' . esc_html__('Unavailable', 'digital-human-for-navtalk') . ')') . 
+                          ($available ? '' : ' (' . esc_html__('Unavailable', 'navtalk-digital-human') . ')') . 
                           '</option>';
     }
 

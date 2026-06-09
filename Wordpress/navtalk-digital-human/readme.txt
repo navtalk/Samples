@@ -1,9 +1,9 @@
-=== Digital Human for NavTalk ===
+=== NavTalk Digital Human ===
 Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.0
+Stable tag: 1.1.1
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -12,7 +12,7 @@ Third-party integration: connect your WordPress site to NavTalk for real-time AI
 
 == Description ==
 
-Digital Human for NavTalk is a WordPress plugin that enables you to embed interactive AI avatars on your website. Users can have real-time voice and video conversations with AI-powered digital humans directly from your WordPress pages. This plugin is not affiliated with or endorsed by WordPress.
+NavTalk Digital Human is a WordPress plugin that enables you to embed interactive AI avatars on your website. Users can have real-time voice and video conversations with AI-powered digital humans directly from your WordPress pages. This plugin is not affiliated with or endorsed by WordPress.
 
 The plugin itself is free and the full plugin code is included in this package. Avatar and conversation features are provided by the NavTalk cloud service (Software as a Service); a NavTalk account and license key are required to use that service—this is not hidden or trial-locked code inside the plugin.
 
@@ -43,12 +43,12 @@ The plugin itself is free and the full plugin code is included in this package. 
 
 1. Log in to your WordPress admin panel
 2. Go to Plugins > Add New
-3. Search for "Digital Human for NavTalk"
+3. Search for "NavTalk Digital Human"
 4. Click "Install Now" and then "Activate"
 
 = Manual Installation =
 
-1. Download the plugin ZIP file (folder must be `digital-human-for-navtalk` with main file `digital-human-for-navtalk.php` inside)
+1. Download the plugin ZIP file (folder must be `navtalk-digital-human` with main file `navtalk-digital-human.php` inside)
 2. Go to Plugins > Add New > Upload Plugin
 3. Choose the ZIP file and click "Install Now"
 4. Click "Activate Plugin"
@@ -56,14 +56,14 @@ The plugin itself is free and the full plugin code is included in this package. 
 = Configuration =
 
 1. Get your license key from [NavTalk Console](https://console.navtalk.ai/#/projects)
-2. Go to Settings > Digital Human for NavTalk
+2. Go to Settings > NavTalk Digital Human
 3. Enter your license key
 4. Click "Test Connection" (optional)
 5. Click "Save Settings"
 
 == Frequently Asked Questions ==
 
-= What is Digital Human for NavTalk? =
+= What is NavTalk Digital Human? =
 
 It connects your site to NavTalk so you can embed AI-powered avatars that have real-time voice and video conversations with visitors.
 
@@ -116,10 +116,14 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.1 =
+* WordPress.org review: plugin display name, text domain, package root and main bootstrap file updated to `navtalk-digital-human` / `navtalk-digital-human.php` to match the approved slug.
+* Compatibility: existing `navtalk_` options, shortcodes, CSS classes, JavaScript handles and AJAX actions are unchanged so current site settings and embedded shortcodes continue to work after update.
+
 = 1.1.0 =
-* Packaging: plugin folder renamed to `digital-human-for-navtalk` to match the plugin slug and main bootstrap file, aligning with WordPress.org guidelines.
+* Packaging: plugin folder renamed to `navtalk-digital-human` to match the plugin slug and main bootstrap file, aligning with WordPress.org guidelines.
 * Encoding: source files normalized to UTF-8 (without BOM) and line endings standardized for better cross-platform compatibility and editor support.
-* Maintenance: documentation refreshed (README, install/shortcodes docs) and version metadata kept in sync across `digital-human-for-navtalk.php`, `readme.txt` and the installed-version option.
+* Maintenance: documentation refreshed (README, install/shortcodes docs) and version metadata kept in sync across `navtalk-digital-human.php`, `readme.txt` and the installed-version option.
 * Compatibility: tested up to WordPress 7.0; verified shortcodes, admin settings, AJAX (test connection / refresh avatars), floating widget and Elementor widgets on WP 7.0. No breaking changes to existing shortcodes, settings or Elementor widgets.
 
 = 1.0.7 =
@@ -130,13 +134,13 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 = 1.0.6 =
 * Plugin Check: limit readme tags to five; prefix globals in uninstall.php; SVG preview uses sanitize_svg_field; drop redundant load_plugin_textdomain (WordPress.org-hosted translations load automatically since WP 4.6).
-* Note for scans: run Plugin Check with the plugin folder named `digital-human-for-navtalk` so the expected text domain matches the slug.
+* Note for scans: run Plugin Check with the plugin folder named `navtalk-digital-human` so the expected text domain matches the slug.
 
 = 1.0.5 =
-* Release build for WordPress.org: `Stable tag` aligned with `NAVTALK_VERSION`; package root folder `digital-human-for-navtalk` with main file `digital-human-for-navtalk.php` (no functional change from 1.0.4).
+* Release build for WordPress.org: `Stable tag` aligned with `NAVTALK_VERSION`; package root folder `navtalk-digital-human` with main file `navtalk-digital-human.php` (no functional change from 1.0.4).
 
 = 1.0.4 =
-* WordPress.org review: plugin display name and text domain updated (Digital Human for NavTalk / `digital-human-for-navtalk`); main bootstrap file renamed to `digital-human-for-navtalk.php`
+* WordPress.org review: plugin display name and text domain updated (NavTalk Digital Human / `navtalk-digital-human`); main bootstrap file renamed to `navtalk-digital-human.php`
 * Removed plugin settings field that stored custom CSS; use the theme Customizer "Additional CSS" (or Site Editor) instead
 * Elementor copy updated to clarify third-party NavTalk integration
 * Minor escaping and user-visible error label consistency
@@ -175,7 +179,7 @@ Uninstalling removes all settings stored in WordPress (including the license key
 == Upgrade Notice ==
 
 = 1.1.0 =
-Maintenance release: plugin folder renamed to `digital-human-for-navtalk` to match the slug, source files normalized to UTF-8, and documentation refreshed. Now tested with WordPress 7.0. No changes to shortcodes or saved settings; safe to update.
+Maintenance release: plugin folder renamed to `navtalk-digital-human` to match the slug, source files normalized to UTF-8, and documentation refreshed. Now tested with WordPress 7.0. No changes to shortcodes or saved settings; safe to update.
 
 = 1.0.7 =
 Security hardening to address WordPress.org Plugin Team review: explicit AJAX nonce/capability checks, late escaping of all dynamic output, and inline JS moved to a registered file.
@@ -187,7 +191,7 @@ Maintenance release for Plugin Check / tooling alignment.
 Version alignment and packaging for directory submission. No feature changes from 1.0.4.
 
 = 1.0.4 =
-Renamed plugin for WordPress.org naming guidelines; custom CSS is no longer saved in plugin settings—move any rules to Appearance > Customize > Additional CSS. After upload, confirm the plugin folder and main file match `digital-human-for-navtalk`.
+Renamed plugin for WordPress.org naming guidelines; custom CSS is no longer saved in plugin settings—move any rules to Appearance > Customize > Additional CSS. After upload, confirm the plugin folder and main file match `navtalk-digital-human`.
 
 = 1.0.3 =
 Adds translations loading, stricter admin AJAX nonces, uninstall cleanup, and privacy policy helper text. No change required to shortcodes; re-save settings if you use "Test Connection".

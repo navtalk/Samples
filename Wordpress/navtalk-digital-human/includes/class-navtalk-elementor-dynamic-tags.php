@@ -181,8 +181,8 @@ class NavTalk_Avatar_Status_Tag extends \Elementor\Core\DynamicTags\Tag {
         if (isset($post->is_available)) {
             echo esc_html(
                 $post->is_available
-                    ? __('Available', 'digital-human-for-navtalk')
-                    : __('Unavailable', 'digital-human-for-navtalk')
+                    ? __('Available', 'navtalk-digital-human')
+                    : __('Unavailable', 'navtalk-digital-human')
             );
         }
     }

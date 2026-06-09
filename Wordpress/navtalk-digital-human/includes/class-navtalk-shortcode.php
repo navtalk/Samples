@@ -204,7 +204,7 @@ class NavTalk_Shortcode {
             <button class="ntw-toggle-btn" 
                     id="ntw-toggle-widget" 
                     aria-expanded="true" 
-                    aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'digital-human-for-navtalk'); ?>">
+                    aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'navtalk-digital-human'); ?>">
                 <span class="ntw-toggle-icon"></span>
                 <span class="ntw-toggle-text"></span>
             </button>
@@ -281,7 +281,7 @@ class NavTalk_Shortcode {
         // Get license
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
-            return $this->render_error('NavTalk license key is not configured. Please configure it in Settings > Digital Human for NavTalk.');
+            return $this->render_error('NavTalk license key is not configured. Please configure it in Settings > NavTalk Digital Human.');
         }
 
         // Get avatar information from API
@@ -326,7 +326,7 @@ class NavTalk_Shortcode {
             '<div class="navtalk-error" style="padding: 15px; background: #fee; border: 1px solid #fcc; border-radius: 4px; color: #c33; margin: 10px 0;">
                 <strong>%s</strong> %s
             </div>',
-            esc_html(__('Error:', 'digital-human-for-navtalk')),
+            esc_html(__('Error:', 'navtalk-digital-human')),
             esc_html($message)
         );
     }
@@ -486,7 +486,7 @@ class NavTalk_Shortcode {
         
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
-            return $this->render_error('NavTalk license key is not configured. Please configure it in Settings > Digital Human for NavTalk.');
+            return $this->render_error('NavTalk license key is not configured. Please configure it in Settings > NavTalk Digital Human.');
         }
         
         // Get all avatars from API
@@ -531,7 +531,7 @@ class NavTalk_Shortcode {
         }
         
         if (empty($avatars)) {
-            return '<p>' . esc_html__('No avatars available.', 'digital-human-for-navtalk') . '</p>';
+            return '<p>' . esc_html__('No avatars available.', 'navtalk-digital-human') . '</p>';
         }
         
         $columns = intval($atts['columns']);
@@ -1078,7 +1078,7 @@ class NavTalk_Shortcode {
                     <?php if ($show_status && $status_position === 'info'): ?>
                         <p class="navtalk-avatar-status <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>">
                             <span class="status-indicator"></span>
-                            <?php echo esc_html($is_available ? __('Available', 'digital-human-for-navtalk') : __('Unavailable', 'digital-human-for-navtalk')); ?>
+                            <?php echo esc_html($is_available ? __('Available', 'navtalk-digital-human') : __('Unavailable', 'navtalk-digital-human')); ?>
                         </p>
                     <?php endif; ?>
 
