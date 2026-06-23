@@ -42,3 +42,8 @@ mvnw
 */node_modules
 
 */package-lock.json
+Wordpress/navtalk-digital-human.zip
+*.dll
+/Wordpress/tools
+Wordpress/navtalk-digital-human.zip
+/Wordpress/wporg-svn

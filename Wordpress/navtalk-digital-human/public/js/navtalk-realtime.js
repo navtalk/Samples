@@ -685,7 +685,7 @@
                     
                     if (navData && navData.content && navData.content.trim()) {
                         if (this.pendingUserMessageSpan) {
-                            this.pendingUserMessageSpan.innerHTML = '';
+                            this.pendingUserMessageSpan.textContent = '';
                             this.pendingUserMessageSpan.classList.remove('typing-indicator');
                             this.pendingUserMessageSpan.textContent = navData.content;
                             this.pendingUserMessageSpan = null;
@@ -721,7 +721,7 @@
                     }
                     
                     const fullContent = this.markdownBuffer.get(responseId);
-                    $(aiMessageSpan).html(fullContent);
+                    $(aiMessageSpan).text(fullContent);
                     
                     this.scrollChatToBottom();
                     break;

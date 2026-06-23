@@ -292,7 +292,7 @@ Customize the avatar display with these parameters:
 
 For detailed information about specific features, please refer to these documents:
 
-- **[Avatar Video & Button Style](AVATAR-VIDEO-BUTTON-STYLE.md)** - Preview video support and custom button styling
+- **[Avatar Video & Button Appearance](AVATAR-VIDEO-BUTTON-STYLE.md)** - Preview video support and controlled button appearance
 - **[Shortcode & Elementor Consistency](SHORTCODE-ELEMENTOR-CONSISTENCY.md)** - Complete guide on how shortcodes and Elementor components work identically
 - **[Elementor Widgets Guide](ELEMENTOR-WIDGETS.md)** - How to use NavTalk custom widgets in Elementor
 - **[Avatar Optimization](AVATAR-OPTIMIZATION.md)** - Avatar card display and responsive layout details
@@ -310,6 +310,16 @@ For support, please contact:
 - **Email**: support@navtalk.ai
 
 ## Changelog
+
+### Version 1.1.2 (2026-06-12)
+- WordPress.org review hardening: removed arbitrary button CSS and pasted icon markup inputs
+- Security: floating button background, color, size, position, modal dimensions, title tags, class names, and Elementor button appearance values now use stricter allowlists and sanitizers
+- Security: Custom HTML blocks are no longer filtered through shortcode parsing; use the WordPress Shortcode block or normal shortcode-capable content areas instead
+- Compatibility: existing `navtalk_` options, shortcodes, CSS classes, JavaScript handles and AJAX actions remain unchanged
+
+### Version 1.1.1
+- WordPress.org slug update: plugin display name, text domain, package root and main bootstrap file aligned with `navtalk-digital-human`
+- Compatibility: existing settings and shortcodes remain unchanged
 
 ### Version 1.1.0 (2026-05-19)
 - Packaging: plugin folder renamed to `navtalk-digital-human` to match the plugin slug and main bootstrap file (WordPress.org guideline alignment)

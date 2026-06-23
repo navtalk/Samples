@@ -22,6 +22,92 @@ class NavTalk_Shortcode {
     }
 
     /**
+     * Sanitize shared shortcode attributes before building HTML/data attributes.
+     *
+     * @param array $atts
+     * @return array
+     */
+    private function sanitize_avatar_atts($atts) {
+        $atts['avatarId'] = sanitize_text_field((string) ($atts['avatarId'] ?? ''));
+        $atts['width'] = NavTalk_Config::sanitize_dimension($atts['width'] ?? NavTalk_Config::DEFAULT_WIDTH, NavTalk_Config::DEFAULT_WIDTH);
+        $atts['height'] = NavTalk_Config::sanitize_dimension($atts['height'] ?? NavTalk_Config::DEFAULT_HEIGHT, NavTalk_Config::DEFAULT_HEIGHT);
+        $atts['button_text'] = sanitize_text_field((string) ($atts['button_text'] ?? NavTalk_Config::DEFAULT_BUTTON_TEXT));
+        $atts['modal_width'] = NavTalk_Config::sanitize_dimension($atts['modal_width'] ?? NavTalk_Config::DEFAULT_MODAL_WIDTH, NavTalk_Config::DEFAULT_MODAL_WIDTH);
+        $atts['modal_height'] = NavTalk_Config::sanitize_dimension($atts['modal_height'] ?? NavTalk_Config::DEFAULT_MODAL_HEIGHT, NavTalk_Config::DEFAULT_MODAL_HEIGHT);
+        $atts['modal_max_width'] = NavTalk_Config::sanitize_dimension($atts['modal_max_width'] ?? NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH, NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH);
+        $atts['modal_max_height'] = NavTalk_Config::sanitize_dimension($atts['modal_max_height'] ?? NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT, NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT);
+        $atts['modal_overlay_color'] = NavTalk_Config::sanitize_overlay_color($atts['modal_overlay_color'] ?? NavTalk_Config::DEFAULT_MODAL_OVERLAY_COLOR);
+        $atts['call_button_position'] = NavTalk_Config::sanitize_call_button_position($atts['call_button_position'] ?? NavTalk_Config::DEFAULT_CALL_BUTTON_POSITION);
+        $atts['layout'] = NavTalk_Config::sanitize_layout($atts['layout'] ?? 'overlay');
+        $atts['show_title'] = NavTalk_Config::sanitize_bool_string($atts['show_title'] ?? 'false');
+        $atts['show_status'] = NavTalk_Config::sanitize_bool_string($atts['show_status'] ?? 'false');
+        $atts['status_position'] = NavTalk_Config::sanitize_status_position($atts['status_position'] ?? 'corner');
+        $atts['show_call_button'] = NavTalk_Config::sanitize_bool_string($atts['show_call_button'] ?? 'true', 'true');
+        $atts['show_download_button'] = NavTalk_Config::sanitize_bool_string($atts['show_download_button'] ?? 'false');
+        $atts['download_url'] = esc_url_raw((string) ($atts['download_url'] ?? ''));
+        $atts['title_tag'] = NavTalk_Config::sanitize_title_tag($atts['title_tag'] ?? 'h6');
+        $atts['call_icon'] = esc_url_raw((string) ($atts['call_icon'] ?? ''));
+        $atts['download_icon'] = esc_url_raw((string) ($atts['download_icon'] ?? ''));
+        $atts['inline_mode'] = NavTalk_Config::sanitize_bool_string($atts['inline_mode'] ?? 'true', 'true');
+        $atts['voice'] = sanitize_text_field((string) ($atts['voice'] ?? ''));
+        $atts['tools'] = sanitize_textarea_field(str_replace(['<', '>'], ['[', ']'], (string) ($atts['tools'] ?? '')));
+        $atts['class'] = NavTalk_Config::sanitize_class_list($atts['class'] ?? '');
+        $atts['call_start_audio'] = esc_url_raw((string) ($atts['call_start_audio'] ?? ''));
+        $atts['call_end_audio'] = esc_url_raw((string) ($atts['call_end_audio'] ?? ''));
+
+        return $atts;
+    }
+
+    /**
+     * Sanitize floating shortcode attributes.
+     *
+     * @param array $atts
+     * @return array
+     */
+    private function sanitize_floating_atts($atts) {
+        $atts['avatarId'] = sanitize_text_field((string) $atts['avatarId']);
+        $atts['position'] = NavTalk_Config::sanitize_floating_position($atts['position']);
+        $atts['color'] = NavTalk_Config::sanitize_hex_color_with_default($atts['color'], '#667eea');
+        $atts['size'] = NavTalk_Config::sanitize_px_size($atts['size']);
+        $atts['modal_width'] = NavTalk_Config::sanitize_dimension($atts['modal_width'], NavTalk_Config::DEFAULT_MODAL_WIDTH);
+        $atts['modal_height'] = NavTalk_Config::sanitize_dimension($atts['modal_height'], NavTalk_Config::DEFAULT_MODAL_HEIGHT);
+        $atts['modal_max_width'] = NavTalk_Config::sanitize_dimension($atts['modal_max_width'], NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH);
+        $atts['modal_max_height'] = NavTalk_Config::sanitize_dimension($atts['modal_max_height'], NavTalk_Config::DEFAULT_MODAL_MAX_HEIGHT);
+        $atts['modal_overlay_color'] = NavTalk_Config::sanitize_overlay_color($atts['modal_overlay_color']);
+        $atts['call_button_position'] = NavTalk_Config::sanitize_call_button_position($atts['call_button_position']);
+        $atts['voice'] = sanitize_text_field((string) $atts['voice']);
+        $atts['tools'] = sanitize_textarea_field(str_replace(['<', '>'], ['[', ']'], (string) $atts['tools']));
+        $atts['class'] = NavTalk_Config::sanitize_class_list($atts['class']);
+        $atts['call_start_audio'] = esc_url_raw((string) $atts['call_start_audio']);
+        $atts['call_end_audio'] = esc_url_raw((string) $atts['call_end_audio']);
+
+        return $atts;
+    }
+
+    /**
+     * Sanitize avatar list shortcode attributes.
+     *
+     * @param array $atts
+     * @return array
+     */
+    private function sanitize_list_atts($atts) {
+        $atts = $this->sanitize_avatar_atts($atts);
+
+        $atts['columns'] = (string) max(1, min(6, absint($atts['columns'])));
+        $style = sanitize_key((string) $atts['style']);
+        $atts['style'] = in_array($style, ['grid', 'list', 'carousel'], true) ? $style : 'grid';
+        $filter = sanitize_key((string) $atts['filter']);
+        $atts['filter'] = in_array($filter, ['all', 'available', 'custom'], true) ? $filter : 'all';
+        $atts['limit'] = (string) max(1, min(100, absint($atts['limit'])));
+
+        $avatar_ids = array_filter(array_map('trim', explode(',', (string) $atts['avatarIds'])));
+        $avatar_ids = array_map('sanitize_text_field', $avatar_ids);
+        $atts['avatarIds'] = implode(',', $avatar_ids);
+
+        return $atts;
+    }
+
+    /**
      * Enqueue inline CSS/JS for the global floating widget via WordPress asset APIs.
      */
     public function enqueue_floating_inline_assets() {
@@ -101,28 +187,24 @@ class NavTalk_Shortcode {
         }
 
         // Get configuration options
-        $position = get_option('navtalk_floating_position', 'bottom-right');
+        $position = NavTalk_Config::sanitize_floating_position(get_option('navtalk_floating_position', 'bottom-right'));
         $show_toggle = get_option('navtalk_show_toggle_button', '1') === '1';
-        $button_size = get_option('navtalk_floating_button_size', '60px');
+        $button_size = NavTalk_Config::sanitize_px_size(get_option('navtalk_floating_button_size', '60px'));
         
-        // Get button background (gradient, solid color, or image)
         $bg_type = get_option('navtalk_floating_button_bg_type', 'gradient');
-        if ($bg_type === 'image') {
-            $bg_image = get_option('navtalk_floating_button_bg_image', '');
-            $button_background = $bg_image ? 'url(' . esc_url($bg_image) . ') center/cover' : 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)';
-        } else {
-            $button_background = get_option('navtalk_floating_button_background', 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)');
-            // Backward compatibility with legacy color option
-            if (empty($button_background)) {
-                $button_background = get_option('navtalk_floating_button_color', '#667eea');
-            }
+        $button_background = NavTalk_Config::get_safe_button_background(
+            $bg_type,
+            get_option('navtalk_floating_button_background', NavTalk_Config::DEFAULT_BUTTON_BACKGROUND),
+            get_option('navtalk_floating_button_bg_image', '')
+        );
+        if (empty($button_background)) {
+            $button_background = NavTalk_Config::sanitize_hex_color_with_default(get_option('navtalk_floating_button_color', '#667eea'), '#667eea');
         }
         
-        // Get icon color
-        $icon_color = get_option('navtalk_floating_button_icon_color', '#ffffff');
+        $icon_color = NavTalk_Config::sanitize_hex_color_with_default(get_option('navtalk_floating_button_icon_color', '#ffffff'), '#ffffff');
         
-        $voice = get_option('navtalk_floating_voice', '');
-        $model = get_option('navtalk_floating_model', '');
+        $voice = sanitize_text_field(get_option('navtalk_floating_voice', ''));
+        $model = sanitize_text_field(get_option('navtalk_floating_model', ''));
 
         // Get image/video URLs
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : (isset($avatar_info['url']) ? $avatar_info['url'] : '');
@@ -169,13 +251,11 @@ class NavTalk_Shortcode {
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
                                id="ntw-avatar-video"
-                               poster="<?php echo esc_url($image_url); ?>"
-                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                               poster="<?php echo esc_url($image_url); ?>"></video>
                         
                         <!-- Loading overlay for inline mode -->
                         <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay"
-                             data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
-                             style="display: none;">
+                             data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -252,7 +332,6 @@ class NavTalk_Shortcode {
             'call_icon' => '', // Custom call button icon URL
             'download_icon' => '', // Custom download button icon URL
             'inline_mode' => 'true', // true = inline video in card, false = modal popup
-            'button_style' => '', // Custom CSS styles for call button
             // Session configuration parameters
             'voice' => '', // Voice configuration
             'tools' => '', // Tools configuration (JSON string)
@@ -265,13 +344,7 @@ class NavTalk_Shortcode {
 
         // Normalize avatarId (WordPress lowercases shortcode attribute names to 'avatarid')
         $atts['avatarId'] =  $atts['avatarid'];
-
-        // Convert angle brackets to square brackets in tools parameter
-        if (!empty($atts['tools'])) {
-            $atts['tools'] = str_replace('<', '[', $atts['tools']);
-            $atts['tools'] = str_replace('>', ']', $atts['tools']);
-        }
-
+        $atts = $this->sanitize_avatar_atts($atts);
 
         // Validate required attribute
         if (empty($atts['avatarId'])) {
@@ -305,6 +378,9 @@ class NavTalk_Shortcode {
      * @return string HTML output
      */
     private function render_avatar_card($avatar_info, $atts) {
+        $atts = $this->sanitize_avatar_atts($atts);
+        $atts['call_button_css'] = NavTalk_Config::sanitize_call_button_css($atts['call_button_css'] ?? '');
+
         // Choose layout based on 'layout' parameter
         $layout = $atts['layout'];
         
@@ -361,12 +437,7 @@ class NavTalk_Shortcode {
 
         // Normalize avatarId
         $atts['avatarId'] =  $atts['avatarid'];
-
-        // Convert angle brackets to square brackets in tools parameter
-        if (!empty($atts['tools'])) {
-            $atts['tools'] = str_replace('<', '[', $atts['tools']);
-            $atts['tools'] = str_replace('>', ']', $atts['tools']);
-        }
+        $atts = $this->sanitize_floating_atts($atts);
         
         if (empty($atts['avatarId'])) {
             return $this->render_error('Avatar ID is required. Usage: [navtalk_floating avatarId="your-avatar-id"]');
@@ -389,9 +460,9 @@ class NavTalk_Shortcode {
         // Backward compatibility: Use thumbnailUrl if available, otherwise use url
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : (isset($avatar_info['url']) ? $avatar_info['url'] : '');
         $image_url = esc_url($api->get_full_image_url($thumbnail_url));
-        $position_class = 'navtalk-floating-' . esc_attr($atts['position']);
-        $size = esc_attr($atts['size']);
-        $color = esc_attr($atts['color']);
+        $position_class = 'navtalk-floating-' . $atts['position'];
+        $size = $atts['size'];
+        $color = $atts['color'];
         
         $status = isset($avatar_info['status']) ? $avatar_info['status'] : 'Unknown';
         $is_available = (strtoupper($status) === 'SUCCESS');
@@ -461,7 +532,6 @@ class NavTalk_Shortcode {
             'call_icon' => '', // Custom call button icon URL
             'download_icon' => '', // Custom download button icon URL
             'inline_mode' => 'false', // false = modal popup for list items
-            'button_style' => '', // Custom CSS styles for call button
             'width' => NavTalk_Config::DEFAULT_WIDTH,
             // Session configuration parameters
             'voice' => '',
@@ -477,12 +547,7 @@ class NavTalk_Shortcode {
         $atts['avatarIds'] = isset($atts['avatarIds']) && $atts['avatarIds'] !== '' 
             ? $atts['avatarIds'] 
             : (isset($atts['avatarids']) ? $atts['avatarids'] : '');
-        
-        // Convert angle brackets to square brackets in tools parameter
-        if (!empty($atts['tools'])) {
-            $atts['tools'] = str_replace('<', '[', $atts['tools']);
-            $atts['tools'] = str_replace('>', ']', $atts['tools']);
-        }
+        $atts = $this->sanitize_list_atts($atts);
         
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
@@ -576,23 +641,16 @@ class NavTalk_Shortcode {
      * @return string SVG HTML
      */
     private function get_phone_icon($custom_icon = '') {
-        // If custom icon URL provided via parameter
         if (!empty($custom_icon)) {
             if (filter_var($custom_icon, FILTER_VALIDATE_URL)) {
                 return '<img class="navtalk-phone-icon" src="' . esc_url($custom_icon) . '" alt="" width="24" height="24" aria-hidden="true">';
             }
-            return $custom_icon; // Direct SVG code
         }
         
         // Check global icon settings
         $icon_type = get_option('navtalk_floating_button_icon_type', 'default');
         
-        if ($icon_type === 'svg') {
-            $custom_svg = get_option('navtalk_floating_button_icon_svg', '');
-            if (!empty($custom_svg)) {
-                return $custom_svg;
-            }
-        } elseif ($icon_type === 'image') {
+        if ($icon_type === 'image') {
             $icon_image = get_option('navtalk_floating_button_icon_image', '');
             if (!empty($icon_image)) {
                 return '<img class="navtalk-phone-icon" src="' . esc_url($icon_image) . '" alt="" width="24" height="24" aria-hidden="true">';
@@ -654,8 +712,7 @@ class NavTalk_Shortcode {
         $show_call_button = ($atts['show_call_button'] === 'true') && $is_available;
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
-        $allowed_title_tags = ['h2', 'h3', 'h4', 'h5', 'h6'];
-        $title_tag = in_array(strtolower((string) $atts['title_tag']), $allowed_title_tags, true) ? strtolower((string) $atts['title_tag']) : 'h6';
+        $title_tag = NavTalk_Config::sanitize_title_tag($atts['title_tag']);
         $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
         $inline_mode = ($atts['inline_mode'] === 'true');
 
@@ -700,11 +757,10 @@ class NavTalk_Shortcode {
                     <?php if ($inline_mode): ?>
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
-                               poster="<?php echo esc_url($image_url); ?>"
-                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                               poster="<?php echo esc_url($image_url); ?>"></video>
 
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -738,8 +794,8 @@ class NavTalk_Shortcode {
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                                     data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
                                     data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
-                                    <?php if (!empty($atts['button_style'])): ?>
-                                    style="<?php echo esc_attr($atts['button_style']); ?>"
+                                    <?php if (!empty($atts['call_button_css'])): ?>
+                                    style="<?php echo esc_attr($atts['call_button_css']); ?>"
                                     <?php endif; ?>
                                     <?php if (!$inline_mode): ?>
                                     data-connect-immediately="true"
@@ -775,104 +831,35 @@ class NavTalk_Shortcode {
      */
     public static function allowed_icon_html() {
         return [
-            'svg'   => [
-                'class' => true, 'xmlns' => true, 'xmlns:xlink' => true, 'xml:space' => true,
-                'viewBox' => true, 'viewbox' => true, 'width' => true, 'height' => true, 
-                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-linecap' => true, 
-                'stroke-linejoin' => true, 'stroke-dasharray' => true, 'stroke-dashoffset' => true,
-                'aria-hidden' => true, 'aria-label' => true, 'role' => true, 'style' => true,
-                'preserveAspectRatio' => true, 'version' => true, 'baseProfile' => true, 'id' => true,
-                'x' => true, 'y' => true, 'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true
+            'svg'  => [
+                'class'       => true,
+                'xmlns'       => true,
+                'viewBox'     => true,
+                'viewbox'     => true,
+                'width'       => true,
+                'height'      => true,
+                'fill'        => true,
+                'stroke'      => true,
+                'stroke-width' => true,
+                'stroke-linecap' => true,
+                'stroke-linejoin' => true,
+                'aria-hidden' => true,
             ],
-            'path'  => [
-                'd' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true, 
-                'stroke-linecap' => true, 'stroke-linejoin' => true, 'stroke-dasharray' => true,
-                'stroke-dashoffset' => true, 'transform' => true, 'fill-rule' => true, 
-                'clip-rule' => true, 'clip-path' => true, 'id' => true, 'class' => true,
-                'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
+            'path' => [
+                'd'               => true,
+                'fill'            => true,
+                'stroke'          => true,
+                'stroke-width'    => true,
+                'stroke-linecap'  => true,
+                'stroke-linejoin' => true,
             ],
-            'g'     => [
-                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
-                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
-                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true, 'clip-path' => true
-            ],
-            'circle' => [
-                'cx' => true, 'cy' => true, 'r' => true, 'fill' => true, 'stroke' => true,
-                'stroke-width' => true, 'stroke-dasharray' => true, 'transform' => true, 
-                'id' => true, 'class' => true, 'opacity' => true, 'fill-opacity' => true, 
-                'stroke-opacity' => true, 'style' => true
-            ],
-            'rect'   => [
-                'x' => true, 'y' => true, 'width' => true, 'height' => true, 'rx' => true, 'ry' => true,
-                'fill' => true, 'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
-                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
-                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
-            ],
-            'line'   => [
-                'x1' => true, 'y1' => true, 'x2' => true, 'y2' => true, 'stroke' => true,
-                'stroke-width' => true, 'stroke-linecap' => true, 'stroke-dasharray' => true,
-                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
-                'stroke-opacity' => true, 'style' => true
-            ],
-            'ellipse' => [
-                'cx' => true, 'cy' => true, 'rx' => true, 'ry' => true, 'fill' => true,
-                'stroke' => true, 'stroke-width' => true, 'stroke-dasharray' => true,
-                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
-                'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
-            ],
-            'polygon' => [
-                'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true,
-                'stroke-dasharray' => true, 'transform' => true, 'id' => true, 'class' => true, 
-                'opacity' => true, 'fill-opacity' => true, 'stroke-opacity' => true, 'style' => true
-            ],
-            'polyline' => [
-                'points' => true, 'fill' => true, 'stroke' => true, 'stroke-width' => true,
-                'stroke-linecap' => true, 'stroke-linejoin' => true, 'stroke-dasharray' => true,
-                'transform' => true, 'id' => true, 'class' => true, 'opacity' => true, 
-                'stroke-opacity' => true, 'style' => true
-            ],
-            'defs'   => ['id' => true, 'class' => true],
-            'use'    => [
-                'href' => true, 'xlink:href' => true, 'x' => true, 'y' => true, 
-                'transform' => true, 'id' => true, 'class' => true, 'fill' => true, 
-                'stroke' => true, 'opacity' => true
-            ],
-            'clipPath' => ['id' => true, 'class' => true, 'clipPathUnits' => true],
-            'mask' => ['id' => true, 'class' => true, 'maskUnits' => true, 'maskContentUnits' => true],
-            'pattern' => [
-                'id' => true, 'class' => true, 'x' => true, 'y' => true, 'width' => true, 
-                'height' => true, 'patternUnits' => true, 'patternContentUnits' => true, 
-                'patternTransform' => true, 'viewBox' => true
-            ],
-            'linearGradient' => [
-                'id' => true, 'class' => true, 'x1' => true, 'y1' => true, 'x2' => true, 
-                'y2' => true, 'gradientUnits' => true, 'gradientTransform' => true, 
-                'spreadMethod' => true
-            ],
-            'radialGradient' => [
-                'id' => true, 'class' => true, 'cx' => true, 'cy' => true, 'r' => true, 
-                'fx' => true, 'fy' => true, 'gradientUnits' => true, 'gradientTransform' => true, 
-                'spreadMethod' => true
-            ],
-            'stop' => [
-                'offset' => true, 'stop-color' => true, 'stop-opacity' => true, 'style' => true, 
-                'id' => true, 'class' => true
-            ],
-            'text' => [
-                'x' => true, 'y' => true, 'dx' => true, 'dy' => true, 'text-anchor' => true, 
-                'font-size' => true, 'font-family' => true, 'font-weight' => true, 'fill' => true, 
-                'stroke' => true, 'transform' => true, 'id' => true, 'class' => true, 'style' => true
-            ],
-            'tspan' => [
-                'x' => true, 'y' => true, 'dx' => true, 'dy' => true, 'text-anchor' => true, 
-                'font-size' => true, 'font-family' => true, 'font-weight' => true, 'fill' => true, 
-                'stroke' => true, 'id' => true, 'class' => true, 'style' => true
-            ],
-            'title' => ['id' => true],
-            'desc' => ['id' => true],
-            'img'   => [
-                'src' => true, 'alt' => true, 'class' => true, 'width' => true, 
-                'height' => true, 'aria-hidden' => true, 'aria-label' => true
+            'img'  => [
+                'src'         => true,
+                'alt'         => true,
+                'class'       => true,
+                'width'       => true,
+                'height'      => true,
+                'aria-hidden' => true,
             ],
         ];
     }
@@ -891,7 +878,6 @@ class NavTalk_Shortcode {
         $common_attrs = [
             'class'       => true,
             'id'          => true,
-            'style'       => true,
             'title'       => true,
             'aria-hidden' => true,
             'aria-label'  => true,
@@ -942,6 +928,7 @@ class NavTalk_Shortcode {
                 'type'          => true,
                 'disabled'      => true,
                 'aria-expanded' => true,
+                'style'         => true,
             ]),
             'img'    => array_merge($common_attrs, [
                 'src'    => true,
@@ -1004,8 +991,7 @@ class NavTalk_Shortcode {
         $show_call_button = ($atts['show_call_button'] === 'true') && $is_available;
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
-        $allowed_title_tags = ['h2', 'h3', 'h4', 'h5', 'h6'];
-        $title_tag = in_array(strtolower((string) $atts['title_tag']), $allowed_title_tags, true) ? strtolower((string) $atts['title_tag']) : 'h6';
+        $title_tag = NavTalk_Config::sanitize_title_tag($atts['title_tag']);
         $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
         $inline_mode = ($atts['inline_mode'] === 'true');
 
@@ -1049,11 +1035,10 @@ class NavTalk_Shortcode {
                     <?php if ($inline_mode): ?>
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
-                               poster="<?php echo esc_url($image_url); ?>"
-                               style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; display: none;"></video>
+                               poster="<?php echo esc_url($image_url); ?>"></video>
 
                         <!-- Loading overlay for inline mode -->
-                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>" style="display: none;">
+                        <div class="navtalk-connection-loading-overlay navtalk-inline-loading-overlay" data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>">
                             <div class="navtalk-loading-spinner">
                                 <div class="navtalk-spinner-ring"></div>
                                 <div class="navtalk-spinner-ring"></div>
@@ -1094,8 +1079,8 @@ class NavTalk_Shortcode {
                                     data-config-tools="<?php echo esc_attr($atts['tools']); ?>"
                                     data-call-start-audio="<?php echo esc_attr($atts['call_start_audio']); ?>"
                                     data-call-end-audio="<?php echo esc_attr($atts['call_end_audio']); ?>"
-                                    <?php if (!empty($atts['button_style'])): ?>
-                                    style="<?php echo esc_attr($atts['button_style']); ?>"
+                                    <?php if (!empty($atts['call_button_css'])): ?>
+                                    style="<?php echo esc_attr($atts['call_button_css']); ?>"
                                     <?php endif; ?>
                                     <?php if (!$inline_mode): ?>
                                     data-connect-immediately="true"
@@ -1126,4 +1111,3 @@ class NavTalk_Shortcode {
         return ob_get_clean();
     }
 }
-

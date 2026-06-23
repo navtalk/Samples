@@ -1,4 +1,4 @@
-﻿/**
+/**
  * NavTalk Digital Human Styles
  * Includes avatar card styles and chat modal styles
  */
@@ -429,7 +429,7 @@
     cursor: not-allowed;
 }
 
-/* Button Styles */
+/* Button Appearance */
 .navtalk-btn-primary {
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: #fff;
@@ -473,7 +473,7 @@
 }
 
 /* ==========================================================================
-   Floating Button Styles
+   Floating Button Appearance
    ========================================================================== */
 
 .navtalk-floating-button {

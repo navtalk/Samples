@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.1
+Stable tag: 1.1.2
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,12 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.2 =
+* WordPress.org review: removed shortcode/admin inputs that accepted arbitrary button CSS or pasted icon markup.
+* Security: floating button background, color, size, position, modal dimensions, title tags, class names, and Elementor button appearance values now use stricter allowlists and sanitizers.
+* Security: Custom HTML blocks are no longer filtered through shortcode parsing; use the WordPress Shortcode block or normal shortcode-capable content areas instead.
+* Compatibility: existing `navtalk_` options, shortcodes, CSS classes, JavaScript handles and AJAX actions are unchanged.
+
 = 1.1.1 =
 * WordPress.org review: plugin display name, text domain, package root and main bootstrap file updated to `navtalk-digital-human` / `navtalk-digital-human.php` to match the approved slug.
 * Compatibility: existing `navtalk_` options, shortcodes, CSS classes, JavaScript handles and AJAX actions are unchanged so current site settings and embedded shortcodes continue to work after update.
@@ -133,7 +139,7 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Refactor: the global floating-widget collapse-state script moved out of `wp_add_inline_script` into a registered file at `public/js/navtalk-floating-collapse.js`.
 
 = 1.0.6 =
-* Plugin Check: limit readme tags to five; prefix globals in uninstall.php; SVG preview uses sanitize_svg_field; drop redundant load_plugin_textdomain (WordPress.org-hosted translations load automatically since WP 4.6).
+* Plugin Check: limit readme tags to five; prefix globals in uninstall.php; icon preview handling hardened; drop redundant load_plugin_textdomain (WordPress.org-hosted translations load automatically since WP 4.6).
 * Note for scans: run Plugin Check with the plugin folder named `navtalk-digital-human` so the expected text domain matches the slug.
 
 = 1.0.5 =
@@ -171,12 +177,15 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Admin configuration panel
 * Elementor widgets integration
 * Global floating widget feature
-* Custom button styling options
+* Controlled button appearance options
 * Inline video mode support
 * Download button feature
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.2 =
+Review hardening release: removes arbitrary CSS/icon markup inputs, tightens style sanitization, and stops parsing shortcodes inside Custom HTML blocks. Use the Shortcode block for block-editor shortcode placement.
 
 = 1.1.0 =
 Maintenance release: plugin folder renamed to `navtalk-digital-human` to match the slug, source files normalized to UTF-8, and documentation refreshed. Now tested with WordPress 7.0. No changes to shortcodes or saved settings; safe to update.

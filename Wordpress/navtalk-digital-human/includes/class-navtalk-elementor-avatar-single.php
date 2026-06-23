@@ -245,8 +245,8 @@ class NavTalk_Elementor_Avatar_Single extends NavTalk_Elementor_Widget_Base {
         // Add icon controls
         $this->add_icon_controls();
         
-        // Add button style controls
-        $this->add_button_style_controls();
+        // Add call button appearance controls
+        $this->add_call_button_controls();
     }
     
     /**

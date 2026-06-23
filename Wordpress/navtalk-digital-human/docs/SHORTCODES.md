@@ -22,7 +22,7 @@ Fixed button at screen corner (instant connect).
 
 **Positions:** `bottom-right` (default), `bottom-left`, `top-right`, `top-left`
 **Color:** Any hex color (e.g., `#667eea`)
-**Size:** Any CSS size (e.g., `60px`, `70px`)
+**Size:** Controlled pixel size, 32px to 120px (e.g., `60px`, `70px`)
 
 **When to use:** Site-wide assistance, support pages
 
@@ -63,7 +63,7 @@ You can use multiple shortcodes on one page:
 ```
 
 ### Custom Styling
-Add CSS to customize appearance:
+Add CSS through WordPress Appearance > Customize > Additional CSS if your site needs theme-level overrides:
 ```css
 /* Customize button colors */
 .navtalk-btn-primary {
@@ -82,7 +82,6 @@ All shortcodes work in:
 - Block Editor (use Shortcode block)
 - Page Builders (Elementor, Divi, etc.)
 - Widgets
-- Custom HTML blocks
 
 ---
 

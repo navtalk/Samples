@@ -227,7 +227,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
                 'label' => __('Call Button Icon URL', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Leave empty to use default phone icon. Enter full URL to custom SVG/PNG image.', 'navtalk-digital-human'),
+                'description' => __('Leave empty to use the default phone icon. Enter a full URL to a custom icon image.', 'navtalk-digital-human'),
                 'label_block' => true,
             ]
         );
@@ -238,7 +238,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
                 'label' => __('Download Button Icon URL', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::TEXT,
                 'default' => '',
-                'description' => __('Leave empty to use default download icon. Enter full URL to custom SVG/PNG image.', 'navtalk-digital-human'),
+                'description' => __('Leave empty to use the default download icon. Enter a full URL to a custom icon image.', 'navtalk-digital-human'),
                 'label_block' => true,
             ]
         );
@@ -247,15 +247,15 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
     }
     
     /**
-     * Add button style configuration controls
+     * Add call button appearance controls
      * 
      * @param string $section_id Section ID for controls
      */
-    protected function add_button_style_controls($section_id = 'button_style_settings') {
+    protected function add_call_button_controls($section_id = 'call_button_settings') {
         $this->start_controls_section(
             $section_id,
             [
-                'label' => __('Call Button Style', 'navtalk-digital-human'),
+                'label' => __('Call Button Appearance', 'navtalk-digital-human'),
                 'tab' => \Elementor\Controls_Manager::TAB_STYLE,
             ]
         );
@@ -263,7 +263,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         $this->add_control(
             'button_preset',
             [
-                'label' => __('Button Style Preset', 'navtalk-digital-human'),
+                'label' => __('Button Preset', 'navtalk-digital-human'),
                 'type' => \Elementor\Controls_Manager::SELECT,
                 'options' => [
                     'default' => __('Default (Transparent)', 'navtalk-digital-human'),
@@ -334,10 +334,13 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
             'button_shadow',
             [
                 'label' => __('Box Shadow', 'navtalk-digital-human'),
-                'type' => \Elementor\Controls_Manager::TEXT,
-                'default' => '',
-                'placeholder' => '0 4px 8px rgba(0,0,0,0.2)',
-                'description' => __('CSS box-shadow value', 'navtalk-digital-human'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'none' => __('None', 'navtalk-digital-human'),
+                    'soft' => __('Soft', 'navtalk-digital-human'),
+                    'medium' => __('Medium', 'navtalk-digital-human'),
+                ],
+                'default' => 'none',
             ]
         );
         
@@ -368,47 +371,50 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
     }
     
     /**
-     * Generate CSS string from button style settings
+     * Generate CSS string from controlled button appearance settings.
      * 
      * @param array $settings Elementor settings
      * @return string CSS string
      */
-    protected function generate_button_style_css($settings) {
+    protected function generate_call_button_css($settings) {
         $css_parts = [];
+        $preset = isset($settings['button_preset']) ? sanitize_key($settings['button_preset']) : 'default';
         
         // Apply preset styles first
-        if (isset($settings['button_preset'])) {
-            switch ($settings['button_preset']) {
-                case 'gradient':
-                    $css_parts[] = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
-                    $css_parts[] = 'color: #fff';
-                    break;
-                case 'solid':
-                    if (!empty($settings['button_bg_color'])) {
-                        $css_parts[] = 'background: ' . $settings['button_bg_color'];
-                    }
-                    break;
-                case 'outline':
-                    $css_parts[] = 'background: transparent';
-                    if (!empty($settings['button_bg_color'])) {
-                        $css_parts[] = 'border: 2px solid ' . $settings['button_bg_color'];
-                    }
-                    break;
-                case 'default':
-                default:
-                    // Keep default transparent style
-                    break;
-            }
+        switch ($preset) {
+            case 'gradient':
+                $css_parts[] = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+                $css_parts[] = 'color: #fff';
+                break;
+            case 'solid':
+                $bg_color = !empty($settings['button_bg_color']) ? sanitize_hex_color($settings['button_bg_color']) : '';
+                if ($bg_color) {
+                    $css_parts[] = 'background: ' . $bg_color;
+                }
+                break;
+            case 'outline':
+                $css_parts[] = 'background: transparent';
+                $bg_color = !empty($settings['button_bg_color']) ? sanitize_hex_color($settings['button_bg_color']) : '';
+                if ($bg_color) {
+                    $css_parts[] = 'border: 2px solid ' . $bg_color;
+                }
+                break;
+            case 'default':
+            default:
+                break;
         }
         
         // Override with custom colors
         if (!empty($settings['button_text_color'])) {
-            $css_parts[] = 'color: ' . $settings['button_text_color'];
+            $text_color = sanitize_hex_color($settings['button_text_color']);
+            if ($text_color) {
+                $css_parts[] = 'color: ' . $text_color;
+            }
         }
         
         // Size
         if (!empty($settings['button_size'])) {
-            $size = intval($settings['button_size']);
+            $size = max(20, min(100, absint($settings['button_size'])));
             $css_parts[] = "min-width: {$size}px";
             $css_parts[] = "min-height: {$size}px";
             $css_parts[] = "width: {$size}px";
@@ -417,20 +423,28 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         
         // Border
         if (!empty($settings['button_border_width']) && $settings['button_border_width'] > 0) {
-            $width = intval($settings['button_border_width']);
-            $color = !empty($settings['button_border_color']) ? $settings['button_border_color'] : '#ccc';
+            $width = max(0, min(10, absint($settings['button_border_width'])));
+            $color = !empty($settings['button_border_color']) ? sanitize_hex_color($settings['button_border_color']) : '#cccccc';
+            $color = $color ?: '#cccccc';
             $css_parts[] = "border: {$width}px solid {$color}";
         }
         
         // Shadow
-        if (!empty($settings['button_shadow'])) {
-            $css_parts[] = 'box-shadow: ' . $settings['button_shadow'];
+        $shadow = isset($settings['button_shadow']) ? sanitize_key($settings['button_shadow']) : 'none';
+        $shadow_presets = [
+            'soft' => '0 4px 8px rgba(0,0,0,0.18)',
+            'medium' => '0 8px 16px rgba(0,0,0,0.22)',
+        ];
+        if (isset($shadow_presets[$shadow])) {
+            $css_parts[] = 'box-shadow: ' . $shadow_presets[$shadow];
         }
         
         // Animation
         if (!empty($settings['button_animation']) && $settings['button_animation'] !== 'none') {
-            $animation = $settings['button_animation'];
-            $css_parts[] = "animation: navtalk-{$animation} 2s infinite";
+            $animation = sanitize_key($settings['button_animation']);
+            if (in_array($animation, ['pulse', 'bounce'], true)) {
+                $css_parts[] = "animation: navtalk-{$animation} 2s infinite";
+            }
         }
         
         return implode('; ', $css_parts);
@@ -459,8 +473,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         // Create NavTalk_Shortcode instance
         $shortcode = new NavTalk_Shortcode();
         
-        // Generate button style CSS from Elementor settings
-        $button_style = $this->generate_button_style_css($settings);
+        $call_button_css = $this->generate_call_button_css($settings);
         
         $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : '');
 
@@ -478,7 +491,7 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
             'call_icon' => isset($settings['call_icon']) ? $settings['call_icon'] : '',
             'download_icon' => isset($settings['download_icon']) ? $settings['download_icon'] : '',
             'inline_mode' => (isset($settings['inline_mode']) && $settings['inline_mode']) ? 'true' : 'false',
-            'button_style' => $button_style,
+            'call_button_css' => $call_button_css,
             'modal_width' => isset($settings['modal_width']) ? $settings['modal_width'] : NavTalk_Config::DEFAULT_MODAL_WIDTH,
             'modal_height' => isset($settings['modal_height']) ? $settings['modal_height'] : NavTalk_Config::DEFAULT_MODAL_HEIGHT,
             'modal_max_width' => isset($settings['modal_max_width']) ? $settings['modal_max_width'] : NavTalk_Config::DEFAULT_MODAL_MAX_WIDTH,

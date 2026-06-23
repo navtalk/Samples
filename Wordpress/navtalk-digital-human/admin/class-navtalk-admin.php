@@ -29,65 +29,6 @@ class NavTalk_Admin {
     }
 
     /**
-     * Sanitize SVG code for safe storage and output
-     * Removes dangerous elements and attributes while preserving SVG functionality
-     * 
-     * @param string $svg Raw SVG code
-     * @return string Sanitized SVG code
-     */
-    public static function sanitize_svg_field($svg) {
-        if (empty($svg)) {
-            return '';
-        }
-
-        $svg = stripslashes($svg);
-        $svg = trim($svg);
-
-        $dangerous_patterns = [
-            '/<script\b[^>]*>.*?<\/script>/is',
-            '/on\w+\s*=\s*["\'][^"\']*["\']/i',
-            '/javascript:/i',
-            '/<\?php/i',
-            '/<%/i',
-        ];
-
-        foreach ($dangerous_patterns as $pattern) {
-            $svg = preg_replace($pattern, '', $svg);
-        }
-
-        $allowed_tags = [
-            'svg', 'path', 'g', 'circle', 'rect', 'line', 'ellipse', 'polygon', 'polyline',
-            'defs', 'use', 'clipPath', 'mask', 'pattern', 'linearGradient', 'radialGradient',
-            'stop', 'text', 'tspan', 'title', 'desc', 'animate', 'animateTransform',
-            'animateMotion', 'set', 'filter', 'feGaussianBlur', 'feOffset', 'feBlend',
-            'feColorMatrix', 'feComponentTransfer', 'feFuncR', 'feFuncG', 'feFuncB', 'feFuncA'
-        ];
-
-        $allowed_attrs = [
-            'class', 'id', 'xmlns', 'xmlns:xlink', 'xml:space', 'viewBox', 'viewbox',
-            'width', 'height', 'x', 'y', 'cx', 'cy', 'r', 'rx', 'ry', 'x1', 'y1', 'x2', 'y2',
-            'points', 'd', 'fill', 'stroke', 'stroke-width', 'stroke-linecap', 'stroke-linejoin',
-            'stroke-dasharray', 'stroke-dashoffset', 'opacity', 'fill-opacity', 'stroke-opacity',
-            'transform', 'style', 'preserveAspectRatio', 'version', 'baseProfile',
-            'fill-rule', 'clip-rule', 'clip-path', 'mask', 'filter',
-            'offset', 'stop-color', 'stop-opacity', 'gradientUnits', 'gradientTransform',
-            'x1', 'x2', 'y1', 'y2', 'href', 'xlink:href', 'role', 'aria-hidden', 'aria-label',
-            'font-size', 'font-family', 'text-anchor', 'alignment-baseline', 'dominant-baseline',
-            'stdDeviation', 'in', 'in2', 'result', 'mode', 'type', 'values'
-        ];
-
-        $allowed_html = [];
-        foreach ($allowed_tags as $tag) {
-            $allowed_html[$tag] = [];
-            foreach ($allowed_attrs as $attr) {
-                $allowed_html[$tag][$attr] = true;
-            }
-        }
-
-        return wp_kses($svg, $allowed_html);
-    }
-
-    /**
      * Register page/post "show digital human" metadata
      */
     public function register_navtalk_post_meta() {
@@ -191,24 +132,19 @@ class NavTalk_Admin {
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_position', [
             'type' => 'string',
-            'sanitize_callback' => function ($v) {
-                $allowed = ['bottom-right', 'bottom-left', 'top-right', 'top-left'];
-                $v = sanitize_text_field((string) $v);
-                return in_array($v, $allowed, true) ? $v : 'bottom-right';
-            },
+            'sanitize_callback' => ['NavTalk_Config', 'sanitize_floating_position'],
             'default' => 'bottom-right'
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_size', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => ['NavTalk_Config', 'sanitize_px_size'],
             'default' => '60px'
         ]);
         
-        // Button background: gradient, solid, or image
         register_setting('navtalk_options_group', 'navtalk_floating_button_background', [
             'type' => 'string',
-            'sanitize_callback' => 'wp_strip_all_tags',
-            'default' => 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)'
+            'sanitize_callback' => ['NavTalk_Config', 'sanitize_button_background'],
+            'default' => NavTalk_Config::DEFAULT_BUTTON_BACKGROUND
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_bg_image', [
             'type' => 'string',
@@ -217,23 +153,17 @@ class NavTalk_Admin {
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_bg_type', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => ['NavTalk_Config', 'sanitize_button_background_type'],
             'default' => 'gradient'
         ]);
         
         // Keep legacy option for backward compatibility
         register_setting('navtalk_options_group', 'navtalk_floating_button_color', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => function ($v) { return NavTalk_Config::sanitize_hex_color_with_default($v, '#667eea'); },
             'default' => '#667eea'
         ]);
-        
-        // Call button icon settings
-        register_setting('navtalk_options_group', 'navtalk_floating_button_icon_svg', [
-            'type' => 'string',
-            'sanitize_callback' => [__CLASS__, 'sanitize_svg_field'],
-            'default' => ''
-        ]);
+
         register_setting('navtalk_options_group', 'navtalk_floating_button_icon_image', [
             'type' => 'string',
             'sanitize_callback' => 'esc_url_raw',
@@ -241,12 +171,15 @@ class NavTalk_Admin {
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_icon_type', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => function ($v) {
+                $v = sanitize_key((string) $v);
+                return in_array($v, ['default', 'image'], true) ? $v : 'default';
+            },
             'default' => 'default'
         ]);
         register_setting('navtalk_options_group', 'navtalk_floating_button_icon_color', [
             'type' => 'string',
-            'sanitize_callback' => 'sanitize_text_field',
+            'sanitize_callback' => function ($v) { return NavTalk_Config::sanitize_hex_color_with_default($v, '#ffffff'); },
             'default' => '#ffffff'
         ]);
         
@@ -385,30 +318,35 @@ class NavTalk_Admin {
     }
 
     public function render_floating_button_background_field() {
-        $bg_type = get_option('navtalk_floating_button_bg_type', 'gradient');
-        $background = get_option('navtalk_floating_button_background', 'linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)');
+        $bg_type = NavTalk_Config::sanitize_button_background_type(get_option('navtalk_floating_button_bg_type', 'gradient'));
+        $background = NavTalk_Config::sanitize_button_background(get_option('navtalk_floating_button_background', NavTalk_Config::DEFAULT_BUTTON_BACKGROUND));
         $bg_image = get_option('navtalk_floating_button_bg_image', '');
+        $is_color_background = (bool) sanitize_hex_color($background);
+        $gradient_value = $is_color_background ? NavTalk_Config::DEFAULT_BUTTON_BACKGROUND : $background;
+        $color_value = $is_color_background ? $background : '#667eea';
         ?>
         <div class="navtalk-bg-field">
             <div style="margin-bottom: 15px;">
-                <label><input type="radio" name="navtalk_floating_button_bg_type" value="gradient" <?php checked($bg_type, 'gradient'); ?>> <?php esc_html_e('Gradient / solid', 'navtalk-digital-human'); ?></label>
+                <label><input type="radio" name="navtalk_floating_button_bg_type" value="gradient" <?php checked($bg_type, 'gradient'); ?>> <?php esc_html_e('Gradient preset', 'navtalk-digital-human'); ?></label>
+                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_bg_type" value="color" <?php checked($bg_type, 'color'); ?>> <?php esc_html_e('Solid color', 'navtalk-digital-human'); ?></label>
                 <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_bg_type" value="image" <?php checked($bg_type, 'image'); ?>> <?php esc_html_e('Image', 'navtalk-digital-human'); ?></label>
             </div>
             
-            <div class="navtalk-bg-color-section" style="<?php echo esc_attr($bg_type === 'image' ? 'display:none;' : ''); ?>">
+            <input type="hidden" name="navtalk_floating_button_background" id="navtalk_bg_input" value="<?php echo esc_attr($background); ?>">
+
+            <div class="navtalk-bg-gradient-section" style="<?php echo esc_attr($bg_type !== 'gradient' ? 'display:none;' : ''); ?>">
                 <select id="navtalk_bg_preset" style="width: 100%; margin-bottom: 10px;">
-                    <option value=""><?php esc_html_e('Custom', 'navtalk-digital-human'); ?></option>
-                    <option value="linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)"><?php esc_html_e('Blue purple gradient', 'navtalk-digital-human'); ?></option>
-                    <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)"><?php esc_html_e('Purple', 'navtalk-digital-human'); ?></option>
-                    <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)"><?php esc_html_e('Pink', 'navtalk-digital-human'); ?></option>
-                    <option value="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)"><?php esc_html_e('Cyan', 'navtalk-digital-human'); ?></option>
-                    <option value="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)"><?php esc_html_e('Green', 'navtalk-digital-human'); ?></option>
-                    <option value="#667eea"><?php esc_html_e('Solid blue', 'navtalk-digital-human'); ?></option>
-                    <option value="#e74c3c"><?php esc_html_e('Solid red', 'navtalk-digital-human'); ?></option>
-                    <option value="#2ecc71"><?php esc_html_e('Solid green', 'navtalk-digital-human'); ?></option>
+                    <option value="<?php echo esc_attr(NavTalk_Config::DEFAULT_BUTTON_BACKGROUND); ?>" <?php selected($gradient_value, NavTalk_Config::DEFAULT_BUTTON_BACKGROUND); ?>><?php esc_html_e('Blue purple gradient', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #667eea 0%, #764ba2 100%)" <?php selected($gradient_value, 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)'); ?>><?php esc_html_e('Purple', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #f093fb 0%, #f5576c 100%)" <?php selected($gradient_value, 'linear-gradient(135deg, #f093fb 0%, #f5576c 100%)'); ?>><?php esc_html_e('Pink', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" <?php selected($gradient_value, 'linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)'); ?>><?php esc_html_e('Cyan', 'navtalk-digital-human'); ?></option>
+                    <option value="linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)" <?php selected($gradient_value, 'linear-gradient(135deg, #43e97b 0%, #38f9d7 100%)'); ?>><?php esc_html_e('Green', 'navtalk-digital-human'); ?></option>
                 </select>
-                
-                <textarea name="navtalk_floating_button_background" id="navtalk_bg_input" rows="3" class="large-text code" placeholder="<?php esc_attr_e('e.g. linear-gradient(145deg, #38bdf8 0%, #6366f1 60%, #a855f7 100%)', 'navtalk-digital-human'); ?>"><?php echo esc_textarea($background); ?></textarea>
+            </div>
+
+            <div class="navtalk-bg-color-section" style="<?php echo esc_attr($bg_type !== 'color' ? 'display:none;' : ''); ?>">
+                <input type="color" id="navtalk_bg_color" value="<?php echo esc_attr($color_value); ?>">
+                <p class="description"><?php esc_html_e('Choose a solid color for the call button background.', 'navtalk-digital-human'); ?></p>
             </div>
             
             <div class="navtalk-bg-image-section" style="<?php echo esc_attr($bg_type !== 'image' ? 'display:none;' : ''); ?>">
@@ -433,40 +371,22 @@ class NavTalk_Admin {
                 ?>"></div>
             </div>
             
-            <p class="description"><?php esc_html_e('Supports solid colors (e.g. #667eea), linear-gradient(), or a background image.', 'navtalk-digital-human'); ?></p>
+            <p class="description"><?php esc_html_e('Choose a preset gradient, a solid hex color, or an uploaded background image.', 'navtalk-digital-human'); ?></p>
         </div>
         <?php
     }
 
     public function render_floating_button_icon_field() {
         $icon_type = get_option('navtalk_floating_button_icon_type', 'default');
-        $icon_svg = get_option('navtalk_floating_button_icon_svg', '');
+        $icon_type = in_array($icon_type, ['default', 'image'], true) ? $icon_type : 'default';
         $icon_image = get_option('navtalk_floating_button_icon_image', '');
         ?>
         <div class="navtalk-icon-field">
             <div style="margin-bottom: 15px;">
                 <label><input type="radio" name="navtalk_floating_button_icon_type" value="default" <?php checked($icon_type, 'default'); ?>> <?php esc_html_e('Default icon', 'navtalk-digital-human'); ?></label>
-                <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="svg" <?php checked($icon_type, 'svg'); ?>> <?php esc_html_e('SVG code', 'navtalk-digital-human'); ?></label>
                 <label style="margin-left: 15px;"><input type="radio" name="navtalk_floating_button_icon_type" value="image" <?php checked($icon_type, 'image'); ?>> <?php esc_html_e('Image', 'navtalk-digital-human'); ?></label>
             </div>
-            
-            <div class="navtalk-icon-svg-section" style="<?php echo esc_attr($icon_type !== 'svg' ? 'display:none;' : ''); ?>">
-                <textarea name="navtalk_floating_button_icon_svg" id="navtalk_icon_svg_input" rows="6" class="large-text code" placeholder="<?php esc_attr_e('Paste SVG code…', 'navtalk-digital-human'); ?>"><?php echo esc_textarea($icon_svg); ?></textarea>
-                <div style="margin-top: 10px;">
-                    <button type="button" class="button" id="navtalk_copy_svg_btn"><?php esc_html_e('Copy SVG code', 'navtalk-digital-human'); ?></button>
-                    <strong style="margin-left: 15px;"><?php esc_html_e('Preview', 'navtalk-digital-human'); ?>:</strong>
-                    <div id="navtalk_svg_preview" style="width: 50px; height: 50px; border: 2px solid #ddd; border-radius: 8px; padding: 8px; display: inline-block; vertical-align: middle; margin-left: 10px;">
-                        <?php
-                        if (!empty($icon_svg)) {
-                            // SVG markup is filtered via wp_kses inside sanitize_svg_field().
-                            echo NavTalk_Admin::sanitize_svg_field($icon_svg); // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- SVG sanitized with wp_kses in sanitize_svg_field().
-                        }
-                        ?>
-                    </div>
-                </div>
-                <p class="description"><?php esc_html_e('Tip: use fill="currentColor" in your SVG to inherit the icon color setting below.', 'navtalk-digital-human'); ?></p>
-            </div>
-            
+
             <div class="navtalk-icon-image-section" style="<?php echo esc_attr($icon_type !== 'image' ? 'display:none;' : ''); ?>">
                 <input type="hidden" name="navtalk_floating_button_icon_image" id="navtalk_icon_image_url" value="<?php echo esc_attr($icon_image); ?>">
                 <button type="button" class="button" id="navtalk_upload_icon_image"><?php esc_html_e('Upload icon image', 'navtalk-digital-human'); ?></button>
@@ -482,11 +402,11 @@ class NavTalk_Admin {
     }
 
     public function render_floating_button_icon_color_field() {
-        $icon_color = get_option('navtalk_floating_button_icon_color', '#ffffff');
+        $icon_color = NavTalk_Config::sanitize_hex_color_with_default(get_option('navtalk_floating_button_icon_color', '#ffffff'), '#ffffff');
         ?>
         <input type="color" name="navtalk_floating_button_icon_color" id="navtalk_icon_color_picker" value="<?php echo esc_attr($icon_color); ?>" style="width: 60px; height: 40px;">
         <input type="text" id="navtalk_icon_color_text" value="<?php echo esc_attr($icon_color); ?>" class="small-text" placeholder="#ffffff" style="margin-left: 10px;">
-        <p class="description"><?php esc_html_e('Icon color (applies to the default and SVG code icons).', 'navtalk-digital-human'); ?></p>
+        <p class="description"><?php esc_html_e('Icon color applies to the default icon.', 'navtalk-digital-human'); ?></p>
         <?php
     }
     
@@ -553,14 +473,12 @@ class NavTalk_Admin {
             <?php foreach ($avatars as $avatar) :
                 $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
                 $name = isset($avatar['name']) ? $avatar['name'] : '';
-                $status = isset($avatar['status']) ? $avatar['status'] : '';
-                $available = (strtoupper($status) === 'SUCCESS');
                 $parts = explode('.', $name);
                 $display = isset($parts[1]) ? $parts[1] : $name;
-                if ('' === (string) $avatar_id) continue;
+                if ('' === (string) $avatar_id || !self::is_success_avatar($avatar)) continue;
             ?>
                 <option value="<?php echo esc_attr($avatar_id); ?>" <?php selected($current, $avatar_id); ?>>
-                    <?php echo esc_html($display ?: $avatar_id); ?><?php echo esc_html($available ? '' : ' (' . __('Unavailable', 'navtalk-digital-human') . ')'); ?>
+                    <?php echo esc_html($display ?: $avatar_id); ?>
                 </option>
             <?php endforeach; ?>
         </select>
@@ -971,11 +889,6 @@ class NavTalk_Admin {
                             </div>
                             
                             <div class="navtalk-form-row">
-                                <label for="modal-button-style">Button Style (CSS):</label>
-                                <input type="text" id="modal-button-style" name="button_style" placeholder="e.g., background: #ff0000; border-radius: 10px;">
-                            </div>
-
-                            <div class="navtalk-form-row">
                                 <label for="modal-call-icon">Custom Call Icon URL:</label>
                                 <input type="text" id="modal-call-icon" name="call_icon" placeholder="https://example.com/icon.svg">
                             </div>
@@ -1054,6 +967,14 @@ class NavTalk_Admin {
         }
         
         return [];
+    }
+
+    public static function is_success_avatar($avatar) {
+        if (!is_array($avatar) || !isset($avatar['status'])) {
+            return false;
+        }
+
+        return strtoupper(trim((string) $avatar['status'])) === 'SUCCESS';
     }
     
     /**
@@ -1349,24 +1270,30 @@ CSS;
     $('input[name="navtalk_floating_button_bg_type"]').on('change', function() {
         var type = $(this).val();
         if (type === 'image') {
-            $('.navtalk-bg-color-section').hide();
+            $('.navtalk-bg-gradient-section, .navtalk-bg-color-section').hide();
             $('.navtalk-bg-image-section').show();
-        } else {
+        } else if (type === 'color') {
+            $('.navtalk-bg-gradient-section, .navtalk-bg-image-section').hide();
             $('.navtalk-bg-color-section').show();
-            $('.navtalk-bg-image-section').hide();
+            $('#navtalk_bg_input').val($('#navtalk_bg_color').val());
+        } else {
+            $('.navtalk-bg-color-section, .navtalk-bg-image-section').hide();
+            $('.navtalk-bg-gradient-section').show();
+            $('#navtalk_bg_input').val($('#navtalk_bg_preset').val());
         }
         updateBgPreview();
     });
 
     $('#navtalk_bg_preset').on('change', function() {
         var value = $(this).val();
-        if (value) {
-            $('#navtalk_bg_input').val(value);
-            updateBgPreview();
-        }
+        $('#navtalk_bg_input').val(value);
+        updateBgPreview();
     });
 
-    $('#navtalk_bg_input').on('input', updateBgPreview);
+    $('#navtalk_bg_color').on('input change', function() {
+        $('#navtalk_bg_input').val($(this).val());
+        updateBgPreview();
+    });
 
     function updateBgPreview() {
         var type = $('input[name="navtalk_floating_button_bg_type"]:checked').val();
@@ -1377,9 +1304,10 @@ CSS;
             if (imageUrl) {
                 preview.css('background', 'url(' + imageUrl + ') center/cover');
             }
+        } else if (type === 'color') {
+            preview.css('background', $('#navtalk_bg_color').val());
         } else {
-            var bgValue = $('#navtalk_bg_input').val();
-            preview.css('background', bgValue);
+            preview.css('background', $('#navtalk_bg_preset').val());
         }
     }
 
@@ -1393,7 +1321,13 @@ CSS;
         frame.on('select', function() {
             var attachment = frame.state().get('selection').first().toJSON();
             $('#navtalk_bg_image_url').val(attachment.url);
-            $('#navtalk_bg_image_preview').html('<img src="' + attachment.url + '" style="max-width: 150px; border-radius: 8px; border: 2px solid #ddd;">');
+            $('#navtalk_bg_image_preview').empty().append(
+                $('<img>').attr('src', attachment.url).css({
+                    maxWidth: '150px',
+                    borderRadius: '8px',
+                    border: '2px solid #ddd'
+                })
+            );
             $('#navtalk_remove_bg_image').show();
             updateBgPreview();
         });
@@ -1402,7 +1336,7 @@ CSS;
 
     $('#navtalk_remove_bg_image').on('click', function() {
         $('#navtalk_bg_image_url').val('');
-        $('#navtalk_bg_image_preview').html('');
+        $('#navtalk_bg_image_preview').empty();
         $(this).hide();
         updateBgPreview();
     });
@@ -1410,37 +1344,9 @@ CSS;
     // Call button icon field JavaScript
     $('input[name="navtalk_floating_button_icon_type"]').on('change', function() {
         var type = $(this).val();
-        $('.navtalk-icon-svg-section, .navtalk-icon-image-section').hide();
-        if (type === 'svg') {
-            $('.navtalk-icon-svg-section').show();
-        } else if (type === 'image') {
+        $('.navtalk-icon-image-section').hide();
+        if (type === 'image') {
             $('.navtalk-icon-image-section').show();
-        }
-    });
-
-    // Init SVG preview on page load
-    if ($('#navtalk_icon_svg_input').length) {
-        $('#navtalk_svg_preview').html($('#navtalk_icon_svg_input').val());
-    }
-
-    // Update preview as user types
-    $('#navtalk_icon_svg_input').on('input', function() {
-        $('#navtalk_svg_preview').html($(this).val());
-    });
-
-    $('#navtalk_copy_svg_btn').on('click', function() {
-        var svg = $('#navtalk_icon_svg_input').val();
-        if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(svg).then(function() {
-                alert('SVG code copied to clipboard.');
-            });
-        } else {
-            var temp = $('<textarea>');
-            $('body').append(temp);
-            temp.val(svg).select();
-            document.execCommand('copy');
-            temp.remove();
-            alert('SVG code copied to clipboard.');
         }
     });
 
@@ -1462,7 +1368,13 @@ CSS;
         frame.on('select', function() {
             var attachment = frame.state().get('selection').first().toJSON();
             $('#navtalk_icon_image_url').val(attachment.url);
-            $('#navtalk_icon_image_preview').html('<img src="' + attachment.url + '" style="max-width: 80px; border-radius: 8px; border: 2px solid #ddd;">');
+            $('#navtalk_icon_image_preview').empty().append(
+                $('<img>').attr('src', attachment.url).css({
+                    maxWidth: '80px',
+                    borderRadius: '8px',
+                    border: '2px solid #ddd'
+                })
+            );
             $('#navtalk_remove_icon_image').show();
         });
         frame.open();
@@ -1470,7 +1382,7 @@ CSS;
 
     $('#navtalk_remove_icon_image').on('click', function() {
         $('#navtalk_icon_image_url').val('');
-        $('#navtalk_icon_image_preview').html('');
+        $('#navtalk_icon_image_preview').empty();
         $(this).hide();
     });
     
@@ -1492,7 +1404,7 @@ CSS;
         var license = $('#navtalk_license').val();
         
         button.prop('disabled', true).text('Testing...');
-        result.html('');
+        result.empty();
         
         $.ajax({
             url: ajaxurl,
@@ -1504,15 +1416,15 @@ CSS;
             },
             success: function(response) {
                 if (response.success) {
-                    result.html('<span style="color: green;">✓ ' + response.data.message + '</span>');
+                    result.empty().append($('<span>').css('color', 'green').text('Success: ' + response.data.message));
                     // Refresh avatar list and dropdown
                     refreshAvatars();
                 } else {
-                    result.html('<span style="color: red;">✗ ' + response.data.message + '</span>');
+                    result.empty().append($('<span>').css('color', 'red').text('Error: ' + response.data.message));
                 }
             },
             error: function() {
-                result.html('<span style="color: red;">✗ Connection test failed</span>');
+                result.empty().append($('<span>').css('color', 'red').text('Error: Connection test failed'));
             },
             complete: function() {
                 button.prop('disabled', false).text('Test Connection');
@@ -1874,15 +1786,12 @@ add_action('wp_ajax_navtalk_refresh_avatars', function() {
     foreach ($avatars as $avatar) {
         $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
         $name = isset($avatar['name']) ? $avatar['name'] : '';
-        $status = isset($avatar['status']) ? $avatar['status'] : '';
-        $available = (strtoupper($status) === 'SUCCESS');
         $parts = explode('.', $name);
         $display = isset($parts[1]) ? $parts[1] : $name;
-        if ('' === (string) $avatar_id) continue;
+        if ('' === (string) $avatar_id || !NavTalk_Admin::is_success_avatar($avatar)) continue;
         
         $dropdown_html .= '<option value="' . esc_attr($avatar_id) . '">' . 
                           esc_html($display ?: $avatar_id) . 
-                          ($available ? '' : ' (' . esc_html__('Unavailable', 'navtalk-digital-human') . ')') . 
                           '</option>';
     }
 
@@ -1928,7 +1837,7 @@ add_action('wp_ajax_navtalk_refresh_avatars', function() {
 /**
  * Data migration: Upgrade from old button_color to new background system
  */
-function navtalk_digital_human_migrate_button_styles() {
+function navtalk_digital_human_migrate_button_background_settings() {
     $old_color = get_option('navtalk_floating_button_color');
     $new_background = get_option('navtalk_floating_button_background');
     $bg_type = get_option('navtalk_floating_button_bg_type');
@@ -1939,4 +1848,4 @@ function navtalk_digital_human_migrate_button_styles() {
         update_option('navtalk_floating_button_bg_type', 'color');
     }
 }
-add_action('admin_init', 'navtalk_digital_human_migrate_button_styles');
+add_action('admin_init', 'navtalk_digital_human_migrate_button_background_settings');
