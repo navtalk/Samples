@@ -38,7 +38,9 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
             return
         }
         
-        configureAudioSessionToSpeakerForWebRTC()
+        //configureAudioSessionToSpeakerForWebRTC()
+        //Monitor Blutooth Air
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(notification:)), name: AVAudioSession.routeChangeNotification, object: nil)
       
         let config = RTCConfiguration()
         //config.iceServers = [RTCIceServer(urlStrings: ["stun:stun.l.google.com:19302"])]
@@ -156,6 +158,9 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
 
     //MARK: 6.PeerConnectionDelegate
     var webRTC_status: webRTCStatus = .NotConnected
+    var isConnectedForAudio: Bool {
+        return webRTC_status == .Connected || webRTC_status == .HaveRecieveRemoteVideoRender
+    }
     //MARK: 6.1.PeerConnection
     func peerConnection(_ peerConnection: RTCPeerConnection, didChange newState: RTCIceConnectionState) {
         print("peerConnection--RTCIceConnectionState--Changed--->\(newState.rawValue)")
@@ -167,13 +172,14 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
         case .connected:
             if peerConnection == self.peerConnection{
                 webRTC_status = .Connected
-                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
                 configureAudioSessionToSpeakerForWebRTC()
+                NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
             }
             break
         case .completed:
             if peerConnection == self.peerConnection{
                 webRTC_status = .Connected
+                configureAudioSessionToSpeakerForWebRTC()
                 NotificationCenter.default.post(name: NSNotification.Name(rawValue: "WebRTCManager_WebRTC_status_changed"), object: nil)
             }
             break
@@ -242,6 +248,7 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
         }
         if let remoteAudioTrack = stream.audioTracks.first {
             print("Audio Track: \(remoteAudioTrack)")
+            configureAudioSessionToSpeakerForWebRTC()
         }
     }
     
@@ -258,6 +265,43 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
             print("Set To Speaker Success")
         } catch {
             print("Set To Speaker Fail: \(error)")
+        }
+    }
+    //MARK: 6.Monitor Headphone plug/unplug event
+    @objc func handleRouteChange(notification: Notification) {
+        print("WebRTCManager--Headphone plug/unplug event：\(notification)")
+        updateAudioRoute()
+    }
+    func updateAudioRoute() {
+        let session = AVAudioSession.sharedInstance()
+        let route = session.currentRoute
+        
+        var hasHeadphones = false
+        
+        for output in route.outputs {
+            switch output.portType {
+            case .headphones,
+                 .bluetoothA2DP,
+                 .bluetoothHFP,
+                 .bluetoothLE:
+                hasHeadphones = true
+            default:
+                break
+            }
+        }
+        
+        do {
+            if hasHeadphones {
+                // 🎧
+                try session.overrideOutputAudioPort(.none)
+                print("Using headphones")
+            } else {
+                // 🔊
+                try session.overrideOutputAudioPort(.speaker)
+                print("Using speaker")
+            }
+        } catch {
+            print("Failed to switch audio route: \(error)")
         }
     }
     func peerConnection(_ peerConnection: RTCPeerConnection, didRemove stream: RTCMediaStream) {
@@ -351,14 +395,14 @@ class WebRTCManager: NSObject, RTCPeerConnectionDelegate, RTCVideoViewDelegate{
     
     //MARK: 5.6.Disconnect WebRTC
     func disconnectWebRTC(){
-        if webRTC_status == .Connected{
-            remoteVideoView.isHidden = true
-            remoteVideoView.removeFromSuperview()
-            peerConnection?.close()
-            peerConnection = nil
-            remoteVideoTrack = nil
-            targetSessionId = nil
-            iceServers = nil
-        }
+        remoteVideoView?.isHidden = true
+        remoteVideoView?.removeFromSuperview()
+        peerConnection?.close()
+        peerConnection = nil
+        remoteVideoTrack = nil
+        remoteVideoView = nil
+        targetSessionId = nil
+        iceServers = nil
+        webRTC_status = .NotConnected
     }
 }

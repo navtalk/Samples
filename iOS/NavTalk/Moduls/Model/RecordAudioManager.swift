@@ -16,30 +16,59 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
     }
     //MARK: 1.Start collecting audio data.
     func startRecordAudio(){
+        WebRTCManager.shared.configureAudioSessionToSpeakerForWebRTC()
         if audioUnit != nil{
+            if recordSatus != "yes" {
+                resetAudioUnit()
+                self.startRecordAudio()
+                return
+            }
             RecordAudioManager.shared.count = 0
             RecordAudioManager.shared.local_record_Array = [[String: Any]]()
-            AudioOutputUnitStart(audioUnit!)
+            if AudioOutputUnitStart(audioUnit!) == noErr{
+                print("Restart Audio Unit--Success")
+                self.recordSatus = "yes"
+                NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+            }else{
+                print("Restart Audio Unit--fail")
+                resetAudioUnit()
+                if WebSocketManager.shared.socket_status == .Connected{
+                    self.startRecordAudio()
+                }
+            }
             return
         }
         //0.1.Check microphone permission.：
-        AVAudioSession.sharedInstance().requestRecordPermission { granted in
-            if !granted {
-                print("The user denies microphone permission.")
-            }else{
-                print("The user has already granted microphone permission.")
+        let audioSession = AVAudioSession.sharedInstance()
+        switch audioSession.recordPermission {
+        case .undetermined:
+            audioSession.requestRecordPermission { granted in
+                DispatchQueue.main.async {
+                    if !granted {
+                        print("The user denies microphone permission.")
+                        self.recordSatus = "no"
+                        NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+                    }else{
+                        print("The user has already granted microphone permission.")
+                        self.startRecordAudio()
+                    }
+                }
             }
+            return
+        case .denied:
+            print("The user denies microphone permission.")
+            self.recordSatus = "no"
+            NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+            return
+        case .granted:
+            print("The user has already granted microphone permission.")
+        @unknown default:
+            break
         }
         //0.2.Set up the session.
-        do {
-            let audioSession = AVAudioSession.sharedInstance()
-            try audioSession.setCategory(.playAndRecord, mode: .default, options: [.defaultToSpeaker, .allowBluetooth])
-            try audioSession.overrideOutputAudioPort(AVAudioSession.PortOverride.speaker)
-            try audioSession.setActive(true)
-            print("Set up AVAudioSession1 success")
-        } catch {
-            print("Set up AVAudioSession1 fail: \(error)")
-        }
+        //Monitor Blutooth Air
+        NotificationCenter.default.addObserver(self, selector: #selector(handleRouteChange(notification:)), name: AVAudioSession.routeChangeNotification, object: nil)
+        
         //1.Initialize.
         var audioComponentDesc = AudioComponentDescription()
         //1.1AudioUnits are categorized into the following types：
@@ -118,6 +147,7 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             }else{
                 print("Start Audio Unit--fail")
                 print("Try record Audio again -- 1")
+                resetAudioUnit()
                 if WebSocketManager.shared.socket_status == .Connected{
                     self.startRecordAudio()
                 }
@@ -125,10 +155,20 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         }else{
             print("Initialize Audio Unit--fail")
             print("Try record Audio again -- 2")
+            resetAudioUnit()
             if WebSocketManager.shared.socket_status == .Connected{
                 self.startRecordAudio()
             }
         }
+    }
+    func resetAudioUnit(){
+        if let audioUnit = self.audioUnit{
+            AudioOutputUnitStop(audioUnit)
+            AudioUnitUninitialize(audioUnit)
+            AudioComponentInstanceDispose(audioUnit)
+        }
+        self.audioUnit = nil
+        self.recordSatus = "no"
     }
     //MARK: 2.Process the collected audio data.
     var count  = 0
@@ -211,7 +251,7 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         if WebSocketManager.shared.socket_status == .NotConnected || WebSocketManager.shared.socket_status == .Connectting{
             return
         }
-        if WebRTCManager.shared.webRTC_status != .Connected{
+        if !WebRTCManager.shared.isConnectedForAudio{
             if self.local_record_Array.count > 0{
                 self.local_record_Array.removeFirst()
             }
@@ -244,9 +284,10 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
             //Pause
             if AudioOutputUnitStop(audioUnit) == noErr{
                 print("Pause AudioUnit Success")
-                self.audioUnit = nil
+                self.resetAudioUnit()
             }else{
                 print("Pause AudioUnit Fail")
+                self.resetAudioUnit()
             }
         }
     }
@@ -260,5 +301,42 @@ class RecordAudioManager: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate
         self.local_record_Array.removeAll()
         self.recordSatus = "yes"
         NotificationCenter.default.post(name: NSNotification.Name("changeAudioRecordStatus"), object: nil)
+    }
+    //MARK: 6.Monitor Blutooth Air
+    @objc func handleRouteChange(notification: Notification) {
+        print("WebRTCManager--Headphone plug/unplug event：\(notification)")
+        updateAudioRoute()
+    }
+    func updateAudioRoute() {
+        let session = AVAudioSession.sharedInstance()
+        let route = session.currentRoute
+        
+        var hasHeadphones = false
+        
+        for output in route.outputs {
+            switch output.portType {
+            case .headphones,
+                 .bluetoothA2DP,
+                 .bluetoothHFP,
+                 .bluetoothLE:
+                hasHeadphones = true
+            default:
+                break
+            }
+        }
+        
+        do {
+            if hasHeadphones {
+                // 🎧
+                try session.overrideOutputAudioPort(.none)
+                print("Using headphones")
+            } else {
+                // 🔊
+                try session.overrideOutputAudioPort(.speaker)
+                print("Using speaker")
+            }
+        } catch {
+            print("Failed to switch audio route: \(error)")
+        }
     }
 }

@@ -35,18 +35,19 @@ class WebSocketManager: NSObject, WebSocketDelegate{
     //Your Api Kye
     let license = "********"
     //Option 1: Connect using character name
-    let characterName = "****"
+    let characterName = "********"
     //Option 2: Connect using avatarId (recommended, higher priority)
-    let characterId = "********************"
+    let characterId = "********"
+    //let characterId = ""
     /*
      The WebSocket connection URL requires one mandatory parameter and supports two query methods:
-       license: Your API key (required)
-       name: The name of the digital human character (query method 1)
-       avatarId: Direct avatar ID for precise lookup (query method 2, higher priority)
-       Query Priority: If both avatarId and name are provided, avatarId takes precedence.
-       Multiple Avatars Warning: If using name query and multiple avatars share the same name, the system will:
-         Automatically select the most recently updated avatar
-         Send a conversation.connected.warning event with the selected avatarId immediately after the connection success event
+     license: Your API key (required)
+     name: The name of the digital human character (query method 1)
+     avatarId: Direct avatar ID for precise lookup (query method 2, higher priority)
+     Query Priority: If both avatarId and name are provided, avatarId takes precedence.
+     Multiple Avatars Warning: If using name query and multiple avatars share the same name, the system will:
+       Automatically select the most recently updated avatar
+       Send a conversation.connected.warning event with the selected avatarId immediately after the connection success event
      */
 
     //Is or not save history chat message in local database

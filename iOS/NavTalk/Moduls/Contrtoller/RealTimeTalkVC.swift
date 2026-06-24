@@ -157,6 +157,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
         super.viewDidLoad()
         initUI()
         fetchAvatarDetailInformation()
+        startToMonifyHeadphonesConnectStatus()
     }
     
     func initUI(){
@@ -242,7 +243,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
                     print("Fetch Avatar Detail Information-Success")
                     print("\(result)")
                     if let avatar_data = result["data"] as? [String: Any],
-                       let avatar_image_url_string = avatar_data["url"] as? String,
+                       let avatar_image_url_string = avatar_data["thumbnailUrl"] as? String,
                        let avatar_image_url = URL(string: avatar_image_url_string),
                        let avatar_providerName = avatar_data["providerName"] as? String{
                         //providerName
@@ -323,6 +324,9 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
                 MBProgressHUD.removeCurrentMBProgressHUD()
                 self.talk_status = .connected
                 self.refreshNavTalkStatusUI()
+                if RecordAudioManager.shared.audioUnit == nil {
+                    RecordAudioManager.shared.startRecordAudio()
+                }
                 if self.WebRTCConnect_Timer != nil{
                     self.WebRTCConnect_Timer?.invalidate()
                     self.WebRTCConnect_Timer = nil
@@ -507,7 +511,7 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
             MBProgressHUD.showTextWithTitleAndSubTitleWithShortTime(title: "Please connect to the WebSocket first", subTitle: "", view: self.view)
             return
         }
-        if WebRTCManager.shared.webRTC_status != .Connected{
+        if !WebRTCManager.shared.isConnectedForAudio{
             MBProgressHUD.showTextWithTitleAndSubTitleWithShortTime(title: "Please connect to the WebRTC first", subTitle: "", view: self.view)
             return
         }
@@ -533,5 +537,20 @@ class RealTimeTalkVC: UIViewController, UITableViewDelegate, UITableViewDataSour
     }
     @objc func clickSwitchCameraPositionButton(){
         CameraCaptureManager.shared.switchCameraPosition()
+    }
+    //MARK: 5.Monify Headphones Connect Status
+    func startToMonifyHeadphonesConnectStatus(){
+        NotificationCenter.default.addObserver(forName: AVAudioSession.routeChangeNotification, object: nil, queue: nil) { notification in
+            let reason = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt
+            let routeChangeReason = AVAudioSession.RouteChangeReason(rawValue: reason!)
+            switch routeChangeReason! {
+            case .newDeviceAvailable:
+                print("Headphones connected")
+            case .oldDeviceUnavailable:
+                print("Headphones disconnected")
+            default:
+                break
+            }
+        }
     }
 }
