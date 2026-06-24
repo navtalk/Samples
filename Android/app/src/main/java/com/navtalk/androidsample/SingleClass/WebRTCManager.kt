@@ -47,7 +47,7 @@ object WebRTCManager{
         //查看当前音频类型：
         checkCurrentAudioType(context)
         //开启扬声器:
-        openSpeakerAudioType(context)
+        //openSpeakerAudioType(context)
         //查看当前音频类型：
         checkCurrentAudioType(context)
 

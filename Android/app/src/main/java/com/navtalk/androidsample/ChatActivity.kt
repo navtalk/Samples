@@ -1,5 +1,9 @@
 package com.navtalk.androidsample
 
+import androidx.constraintlayout.widget.ConstraintLayout
+import androidx.core.view.ViewCompat
+import androidx.core.view.WindowInsetsCompat
+
 import CameraCaptureManager
 import CameraStatus
 import NavTalkManager
@@ -51,6 +55,7 @@ class ChatActivity : AppCompatActivity() {
         enableEdgeToEdge()
         setContentView(R.layout.chat_activity)
         initUI()
+        updateBottomInsetOfSafeArea()
         fetchAvatarDetailInformation()
         addAllListenerOfNotificationCenter()
     }
@@ -106,7 +111,31 @@ class ChatActivity : AppCompatActivity() {
             clickBackIcon()
         }
     }
+    //适配页面底部的安全距离
+    fun updateBottomInsetOfSafeArea(){
+        val callStatusView: FrameLayout = findViewById(R.id.callStatusView)
+        val microphoneStatusView: FrameLayout = findViewById(R.id.microphoneStatusView)
+        val cameraStatusView: FrameLayout = findViewById(R.id.cameraStatusView)
+        val messagesListView: RecyclerView = findViewById(R.id.messagesListView)
+        applyBottomSafeMargin(callStatusView, 20)
+        applyBottomSafeMargin(microphoneStatusView, 20)
+        applyBottomSafeMargin(cameraStatusView, 20)
+        applyBottomSafeMargin(messagesListView, 110)
+    }
+    private fun dpToPx(dp: Int): Int {
+        return (dp * resources.displayMetrics.density).toInt()
+    }
+    fun applyBottomSafeMargin(view: View, bottomDp: Int) {
+        ViewCompat.setOnApplyWindowInsetsListener(view) { targetView, insets ->
+            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
+            val params = targetView.layoutParams as ConstraintLayout.LayoutParams
+            params.bottomMargin = systemBars.bottom + dpToPx(bottomDp)
+            targetView.layoutParams = params
+            insets
+        }
 
+        ViewCompat.requestApplyInsets(view)
+    }
     //2.获取Avatar详情
     fun fetchAvatarDetailInformation(){
         var urlString = ""
