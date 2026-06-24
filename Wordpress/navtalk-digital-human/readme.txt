@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.2
+Stable tag: 1.1.3
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.3 =
+* Fix: the floating digital human avatar selector now only shows successfully generated avatars, preventing draft or failed avatars from being selected and hidden on the front end.
+
 = 1.1.2 =
 * WordPress.org review: removed shortcode/admin inputs that accepted arbitrary button CSS or pasted icon markup.
 * Security: floating button background, color, size, position, modal dimensions, title tags, class names, and Elementor button appearance values now use stricter allowlists and sanitizers.
@@ -183,6 +186,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.3 =
+Fixes the floating avatar selector so draft or failed avatars are no longer available for selection.
 
 = 1.1.2 =
 Review hardening release: removes arbitrary CSS/icon markup inputs, tightens style sanitization, and stops parsing shortcodes inside Custom HTML blocks. Use the Shortcode block for block-editor shortcode placement.
