@@ -3,12 +3,12 @@ import org.webrtc.SurfaceViewRenderer
 object NavTalkManager{
     //1.参数：
     //1.1.licens(必要参数)
-    var license: String = "sk_navtalk_tcDB9SaqHKKe7pXc5tyt0Z7aNB0SgI3R"
+    var license: String = "*********"
     //1.2.characterName(必要参数)
     //var characterName: String = ""
-    var characterName: String = "Brain"
+    var characterName: String = "*********"
     // var characterId: String = ""
-    var characterId: String = "faab967a08e1731076b39edd9538636f"
+    var characterId: String = "*********"
 
 
     //Avatar Image URL
