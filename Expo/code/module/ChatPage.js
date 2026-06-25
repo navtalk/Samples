@@ -74,8 +74,6 @@ export default function ChatScreen({ navigation }){
         console.log("Received notification - FunctionCall related callback:", data);
         handleFunctionCallMessage(data);
      });
-     
-
      return (()=>{
         listener1.remove();
         listener2.remove();
@@ -84,6 +82,7 @@ export default function ChatScreen({ navigation }){
         listener5.remove();
         listener6.remove();
         listener7.remove();
+        listener8.remove();
      });
     },[]);
 
@@ -106,8 +105,8 @@ export default function ChatScreen({ navigation }){
             });
             const data = await response.json();
             console.log('Fetch avatar detail success:', data);
-            if (data.data?.url && data.data?.url?.length > 0 && data.data?.providerName && data.data?.providerName?.length > 0){
-               NavtalkManager.avatar_image_url = data.data?.url;
+            if (data.data?.thumbnailUrl && data.data?.thumbnailUrl?.length > 0 && data.data?.providerName && data.data?.providerName?.length > 0){
+               NavtalkManager.avatar_image_url = data.data?.thumbnailUrl;
                setBackgroundImageUrl(NavtalkManager.avatar_image_url);
                NavtalkManager.avatar_provider_type = data.data?.providerName;
                console.log('Avatar image url:', NavtalkManager.avatar_image_url);

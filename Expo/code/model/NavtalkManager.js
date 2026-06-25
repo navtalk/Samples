@@ -10,9 +10,9 @@ class NavtalkManager{
     
     //1.Params
     //1.1.required
-    license = "********"
-    characterName = "********"
-    characterId = "********"
+    license = "*********"
+    characterName = "*********"
+    characterId = "*********"
     
     //1.2.required param from api
     avatar_image_url = ""
