@@ -1,0 +1,1967 @@
+﻿<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>StepFun Stepwise Streaming Voice Call</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --bg: #f6f8fb;
+            --panel: #ffffff;
+            --panel-soft: #f0f5f3;
+            --text: #172033;
+            --muted: #637083;
+            --line: #d8e0e7;
+            --teal: #087f75;
+            --teal-dark: #075e58;
+            --amber: #b76b08;
+            --red: #b42318;
+            --shadow: 0 18px 45px rgba(33, 47, 70, 0.10);
+            font-family: "Segoe UI", Arial, sans-serif;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        button,
+        input,
+        select,
+        textarea {
+            font: inherit;
+        }
+
+        button {
+            border: 0;
+            cursor: pointer;
+        }
+
+        button:disabled {
+            cursor: not-allowed;
+            opacity: 0.55;
+        }
+
+        .app {
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .topbar {
+            display: grid;
+            grid-template-columns: minmax(260px, 1fr) auto;
+            gap: 18px;
+            align-items: center;
+            padding: 18px 0 14px;
+        }
+
+        .kicker {
+            margin: 0 0 4px;
+            color: var(--teal);
+            font-size: 13px;
+            font-weight: 700;
+            letter-spacing: 0;
+        }
+
+        h1,
+        h2,
+        p {
+            margin: 0;
+        }
+
+        h1 {
+            font-size: 26px;
+            line-height: 1.2;
+            letter-spacing: 0;
+        }
+
+        h2 {
+            font-size: 16px;
+            line-height: 1.25;
+        }
+
+        .controls {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .status-pill {
+            display: inline-flex;
+            align-items: center;
+            min-height: 38px;
+            gap: 8px;
+            padding: 0 12px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            color: var(--muted);
+            white-space: nowrap;
+        }
+
+        .dot {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+            background: #98a2b3;
+        }
+
+        .dot.live {
+            background: var(--teal);
+            box-shadow: 0 0 0 4px rgba(8, 127, 117, 0.14);
+        }
+
+        .dot.error {
+            background: var(--red);
+            box-shadow: 0 0 0 4px rgba(180, 35, 24, 0.12);
+        }
+
+        .primary,
+        .secondary,
+        .danger {
+            min-height: 38px;
+            padding: 0 15px;
+            border-radius: 8px;
+            font-weight: 700;
+        }
+
+        .primary {
+            background: var(--teal);
+            color: white;
+        }
+
+        .primary:hover:not(:disabled) {
+            background: var(--teal-dark);
+        }
+
+        .secondary {
+            border: 1px solid var(--line);
+            background: var(--panel);
+            color: var(--text);
+        }
+
+        .danger {
+            background: #fff1ef;
+            color: var(--red);
+            border: 1px solid #ffd3cc;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(170px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .field {
+            min-width: 0;
+            padding: 11px;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+        }
+
+        .field label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .help-badge {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 16px;
+            height: 16px;
+            flex: 0 0 16px;
+            border: 1px solid #9aa7b5;
+            border-radius: 50%;
+            color: #526173;
+            background: #fff;
+            font-size: 11px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: help;
+        }
+
+        .help-badge::after {
+            content: attr(data-tip);
+            position: absolute;
+            left: 50%;
+            bottom: calc(100% + 9px);
+            width: max-content;
+            max-width: 280px;
+            padding: 8px 10px;
+            border-radius: 6px;
+            background: #172033;
+            color: #fff;
+            box-shadow: 0 10px 24px rgba(16, 24, 40, 0.20);
+            font-size: 12px;
+            font-weight: 500;
+            line-height: 1.45;
+            white-space: normal;
+            opacity: 0;
+            pointer-events: none;
+            transform: translate(-50%, 4px);
+            transition: opacity 120ms ease, transform 120ms ease;
+            z-index: 30;
+        }
+
+        .help-badge:hover::after,
+        .help-badge:focus::after {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+
+        .field input,
+        .field select,
+        .field textarea {
+            width: 100%;
+            min-height: 34px;
+            border: 1px solid #cbd5df;
+            border-radius: 6px;
+            padding: 7px 8px;
+            background: #fff;
+            color: var(--text);
+            outline: none;
+        }
+
+        .field textarea {
+            min-height: 76px;
+            resize: vertical;
+        }
+
+        .field.wide {
+            grid-column: span 2;
+        }
+
+        .workbench {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 14px;
+            align-items: start;
+        }
+
+        .stage-row {
+            display: flex;
+            gap: 14px;
+            align-items: stretch;
+            min-width: 0;
+            height: clamp(480px, calc(100vh - 310px), 660px);
+            min-height: 0;
+            overflow: hidden;
+        }
+
+        .conversation-panel {
+            flex: 1 1 auto;
+            min-width: 0;
+            min-height: 0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .panel {
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            background: var(--panel);
+            box-shadow: var(--shadow);
+        }
+
+        .panel-head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            min-height: 54px;
+            padding: 14px 16px;
+            border-bottom: 1px solid var(--line);
+        }
+
+        .panel-head span {
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .conversation {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+        }
+
+        .avatar-stage {
+            display: none;
+            flex: 0 0 clamp(220px, 38%, 360px);
+            min-width: 0;
+            min-height: 0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        .stage-row.has-avatar .avatar-stage {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .avatar-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            display: flex;
+            align-items: stretch;
+            justify-content: center;
+            overflow: hidden;
+            background: linear-gradient(180deg, #f8fafb 0%, #eef3f6 100%);
+        }
+
+        .avatar-media {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center top; position: absolute; inset: 0;
+            display: block;
+        }
+
+        .avatar-stage .avatar-slot {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: stretch;
+            justify-content: center; overflow: hidden; position: relative;
+        }
+
+        .partial {
+            flex: 0 0 auto;
+            min-height: 48px;
+            padding: 10px 12px;
+            margin-bottom: 12px;
+            border: 1px dashed #9fb8b4;
+            border-radius: 8px;
+            background: var(--panel-soft);
+            color: #285b55;
+            line-height: 1.55;
+            display: grid;
+            grid-template-columns: auto minmax(0, 1fr);
+            gap: 10px;
+            align-items: start;
+        }
+
+        .partial-title {
+            color: #087f75;
+            font-size: 12px;
+            font-weight: 800;
+            white-space: nowrap;
+        }
+
+        .partial-value {
+            min-width: 0;
+            word-break: break-word;
+        }
+
+        .messages {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            min-height: 0;
+            flex: 1 1 auto;
+            overflow-y: auto;
+            padding-right: 4px;
+            scroll-behavior: smooth;
+        }
+
+        .message {
+            display: grid;
+            gap: 6px;
+            max-width: 86%;
+        }
+
+        .message.user {
+            align-self: flex-end;
+            text-align: right;
+        }
+
+        .role {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .bubble {
+            padding: 11px 13px;
+            border-radius: 8px;
+            line-height: 1.65;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .user .bubble {
+            background: #e8f4ff;
+            color: #12324f;
+        }
+
+        .assistant .bubble {
+            background: #f4f1ea;
+            color: #2c2418;
+        }
+
+        .tag {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 2px 6px;
+            border-radius: 6px;
+            background: #fff1ef;
+            color: var(--red);
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .side {
+            display: grid;
+            gap: 14px;
+        }
+
+        .meter-wrap {
+            padding: 16px;
+        }
+
+        .meter-row {
+            display: grid;
+            grid-template-columns: 86px 1fr 48px;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 14px;
+            color: var(--muted);
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .meter {
+            height: 12px;
+            border-radius: 999px;
+            background: #e3e9ef;
+            overflow: hidden;
+        }
+
+        .meter-fill {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, var(--teal), var(--amber));
+            transition: width 80ms linear;
+        }
+
+        .kv {
+            display: grid;
+            grid-template-columns: 108px 1fr;
+            gap: 10px;
+            padding: 0;
+            margin: 0;
+            font-size: 13px;
+        }
+
+        .kv div {
+            display: contents;
+        }
+
+        .kv dt {
+            color: var(--muted);
+        }
+
+        .kv dd {
+            margin: 0;
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .log {
+            height: 250px;
+            overflow: auto;
+            padding: 12px 16px 16px;
+            color: #344054;
+            font-family: Consolas, "Courier New", monospace;
+            font-size: 12px;
+            line-height: 1.55;
+        }
+
+        .log-line {
+            padding: 6px 0;
+            border-bottom: 1px solid #eef2f6;
+        }
+
+        @media (max-width: 1100px) {
+            .config-grid {
+                grid-template-columns: repeat(3, minmax(160px, 1fr));
+            }
+
+            .workbench {
+                grid-template-columns: 1fr;
+            }
+
+            .stage-row {
+                height: 560px;
+            }
+        }
+
+        @media (max-width: 720px) {
+            .app {
+                padding: 14px;
+            }
+
+            .topbar {
+                grid-template-columns: 1fr;
+            }
+
+            .controls {
+                justify-content: flex-start;
+            }
+
+            .config-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .field.wide {
+                grid-column: auto;
+            }
+
+            .message {
+                max-width: 100%;
+            }
+
+            .stage-row {
+                height: 520px;
+            }
+
+            .avatar-stage {
+                flex-basis: clamp(160px, 42%, 240px);
+            }
+
+            .partial {
+                grid-template-columns: 1fr;
+                gap: 4px;
+            }
+        }
+    </style>
+</head>
+<body>
+<main class="app">
+    <header class="topbar">
+        <div>
+            <p class="kicker">StepFun ASR + LLM + TTS</p>
+            <h1>Stepwise Streaming Voice Call</h1>
+        </div>
+        <div class="controls">
+            <div class="status-pill">
+                <span id="statusDot" class="dot"></span>
+                <span id="statusText">Disconnected</span>
+            </div>
+            <button id="startButton" class="primary" type="button">Start Call</button>
+            <button id="interruptButton" class="danger" type="button" disabled>Interrupt</button>
+            <button id="stopButton" class="secondary" type="button" disabled>Hang Up</button>
+        </div>
+    </header>
+
+    <section id="configGrid" class="config-grid" aria-label="Model settings">
+        <div class="field">
+            <label for="asrModel">ASR <span class="help-badge" tabindex="0" data-tip="StepFun .ai ASR SSE model. The proxy segments microphone audio locally and streams the transcription result back.">?</span></label>
+            <input id="asrModel" value="stepaudio-2.5-asr">
+        </div>
+        <div class="field">
+            <label for="llmModel">LLM <span class="help-badge" tabindex="0" data-tip="Large language model. It generates the assistant reply from the final ASR text.">?</span></label>
+            <input id="llmModel" value="step-3.7-flash">
+        </div>
+        <div class="field">
+            <label for="ttsModel">TTS <span class="help-badge" tabindex="0" data-tip="Streaming text-to-speech model. It converts assistant text into playable audio.">?</span></label>
+            <select id="ttsModel">
+                <option value="step-tts-2">step-tts-2</option>
+                <option value="stepaudio-2.5-tts">stepaudio-2.5-tts</option>
+                <option value="step-tts-mini">step-tts-mini</option>
+            </select>
+        </div>
+        <div class="field">
+            <label for="ttsVoice">Voice <span class="help-badge" tabindex="0" data-tip="Official voices available for the selected TTS model. The list is loaded from StepFun based on account permissions.">?</span></label>
+            <select id="ttsVoice"></select>
+        </div>
+        <div class="field">
+            <label for="vadSilence">Silence ms <span class="help-badge" tabindex="0" data-tip="How long local VAD waits before treating the user as finished. Higher values reduce premature cutoffs.">?</span></label>
+            <input id="vadSilence" type="number" min="200" max="3000" step="100" value="400">
+        </div>
+        <div class="field">
+            <label for="bargeInChars">Interrupt chars <span class="help-badge" tabindex="0" data-tip="When the assistant is replying or speaking, new ASR text must reach this many effective characters before interrupting. Higher values filter noise better but make real barge-in slightly slower.">?</span></label>
+            <input id="bargeInChars" type="number" min="1" max="12" step="1" value="2">
+        </div>
+        <div class="field">
+            <label for="temperature">Temperature <span class="help-badge" tabindex="0" data-tip="Controls LLM randomness. Lower is more stable; higher is more varied.">?</span></label>
+            <input id="temperature" type="number" min="0" max="2" step="0.1" value="0.5">
+        </div>
+    </section>
+
+    <section class="workbench">
+        <div id="stageRow" class="stage-row">
+            <section class="panel conversation-panel">
+                <div class="panel-head">
+                    <h2>Conversation</h2>
+                    <span id="turnStatus">Waiting for connection</span>
+                </div>
+                <div class="conversation">
+                    <div class="partial" aria-live="polite">
+                        <span class="partial-title">Speech Recognition</span>
+                        <span id="partialText" class="partial-value">Live transcript will appear here</span>
+                    </div>
+                    <div id="messages" class="messages"></div>
+                </div>
+            </section>
+
+            <section id="avatarStage" class="panel avatar-stage" aria-label="Avatar">
+                <div class="panel-head">
+                    <h2>Avatar</h2><span id="avatarStatus">Standby</span>
+                </div>
+                <div class="avatar-body">
+                    <div id="avatarSlot" class="avatar-slot">
+                        <img id="avatarImage" class="avatar-media" alt="Digital human placeholder" hidden>
+                        <video id="avatarVideo" class="avatar-media" autoplay playsinline hidden></video>
+                    </div></div>
+            </section>
+        </div>
+
+        <aside class="side">
+            <section class="panel">
+                <div class="panel-head">
+                    <h2>Status</h2>
+                    <span id="proxyUrl">ws://127.0.0.1:9876/ws/call</span>
+                </div>
+                <div class="meter-wrap">
+                    <div class="meter-row">
+                        <span>Microphone</span>
+                        <div class="meter"><div id="micFill" class="meter-fill"></div></div>
+                        <span id="micLevel">0%</span>
+                    </div>
+                    <div class="meter-row">
+                        <span>Playback Queue</span>
+                        <div class="meter"><div id="playFill" class="meter-fill"></div></div>
+                        <span id="playLevel">0.0s</span>
+                    </div>
+                    <dl class="kv">
+                        <div><dt>ASR model</dt><dd id="asrActive">-</dd></div>
+                        <div><dt>LLM model</dt><dd id="llmActive">-</dd></div>
+                        <div><dt>TTS model</dt><dd id="ttsActive">-</dd></div>
+                        <div><dt>Audio format</dt><dd id="audioFormat">pcm / 24000Hz</dd></div>
+                        <div><dt>Current turn</dt><dd id="turnId">-</dd></div>
+                    </dl>
+                </div>
+            </section>
+
+            <section class="panel">
+                <div class="panel-head">
+                    <h2>Events</h2>
+                    <span id="eventCount">0</span>
+                </div>
+                <div id="eventLog" class="log"></div>
+            </section>
+        </aside>
+    </section>
+</main>
+
+<script>
+// --- DOM refs and session state ---
+const startButton = document.getElementById("startButton");
+const stopButton = document.getElementById("stopButton");
+const interruptButton = document.getElementById("interruptButton");
+const statusDot = document.getElementById("statusDot");
+const statusText = document.getElementById("statusText");
+const turnStatus = document.getElementById("turnStatus");
+const partialText = document.getElementById("partialText");
+const messages = document.getElementById("messages");
+const eventLog = document.getElementById("eventLog");
+const eventCount = document.getElementById("eventCount");
+const proxyUrlEl = document.getElementById("proxyUrl");
+const micFill = document.getElementById("micFill");
+const micLevel = document.getElementById("micLevel");
+const playFill = document.getElementById("playFill");
+const playLevel = document.getElementById("playLevel");
+const asrActive = document.getElementById("asrActive");
+const llmActive = document.getElementById("llmActive");
+const ttsActive = document.getElementById("ttsActive");
+const audioFormat = document.getElementById("audioFormat");
+const turnId = document.getElementById("turnId");
+const stageRow = document.getElementById("stageRow");
+const avatarStage = document.getElementById("avatarStage");
+const avatarSlot = document.getElementById("avatarSlot");
+const avatarImage = document.getElementById("avatarImage");
+
+const AVATAR_CONFIG = {
+    enabled: true,
+    imageUrl: "https://navtalk.s3.us-east-2.amazonaws.com/uploadFiles/navtalk.Leo.png"
+};
+
+const asrModel = document.getElementById("asrModel");
+const llmModel = document.getElementById("llmModel");
+const ttsModel = document.getElementById("ttsModel");
+const ttsVoice = document.getElementById("ttsVoice");
+const vadSilence = document.getElementById("vadSilence");
+const bargeInChars = document.getElementById("bargeInChars");
+const temperature = document.getElementById("temperature");
+
+let ws = null;
+let mediaStream = null;
+let captureContext = null;
+let captureSource = null;
+let captureNode = null;
+let captureSink = null;
+let canSendAudio = false;
+let playbackContext = null;
+let nextPlaybackAt = 0;
+let activeSources = [];
+let audioQueueSeconds = 0;
+let activeBlobAudio = null;
+let blobQueue = [];
+let currentAssistant = null;
+let logCount = 0;
+let currentVoices = [];
+
+// --- UI text, voice catalog, and display helpers ---
+const TEXT = {
+    "status.disconnected": "Disconnected",
+    "status.connectingProxy": "Connecting proxy",
+    "status.connectionError": "Connection error",
+    "status.listening": "Listening",
+    "status.microphoneError": "Microphone error",
+    "status.recognizing": "Recognizing",
+    "status.speaking": "Speaking",
+    "status.error": "Error",
+    "state.connecting": "Connecting to StepFun",
+    "state.listening": "Listening",
+    "state.recognizing": "Recognizing",
+    "state.responding": "Responding",
+    "state.speaking": "Speaking",
+    "state.closed": "Closed",
+    "state.running": "Running",
+    "turn.waiting": "Waiting for connection",
+    "turn.listening": "Listening",
+    "turn.microphoneUnavailable": "Microphone unavailable",
+    "turn.speaking": "Speaking",
+    "turn.error": "Error",
+    "partial.placeholder": "Live transcript will appear here",
+    "partial.speechDetected": "Speech detected",
+    "partial.speechEnded": "Speech ended. Waiting for final transcript",
+    "gender.male": "Male",
+    "gender.female": "Female",
+    "gender.unknown": "Unknown",
+    "role.user": "You",
+    "role.assistant": "Assistant",
+    "tag.interrupted": "Interrupted",
+    "error.noMicApi": "This browser does not support microphone capture APIs.",
+    "log.audioInitFailed": "Audio playback initialization failed: {message}",
+    "log.websocketOpen": "browser websocket open",
+    "log.websocketError": "browser websocket error",
+    "log.micStartFailed": "Microphone startup failed: {message}",
+    "log.llmDone": "llm done",
+    "log.ttsReady": "tts ready: {model}",
+    "log.ttsDone": "tts done",
+    "log.turnInterrupted": "turn interrupted: {reason}",
+    "log.sessionError": "{stage}: {message}",
+    "log.playbackFailed": "Playback failed: {message}",
+    "log.voicesLoaded": "voices loaded: {model} / {count}",
+    "log.voicesFallback": "voices fallback: {message}"
+};
+
+const VOICE_CATALOG = [
+    {id: "cixingnansheng", name: "Magnetic Male", gender: "male", models: ["step-tts-2", "stepaudio-2.5-tts"]},
+    {id: "zhixingjiejie", name: "Knowledgeable Sister", gender: "female", models: ["step-tts-2", "step-tts-mini", "stepaudio-2.5-tts"]},
+    {id: "qingniandaxuesheng", name: "Young College Student", gender: "male", models: ["step-tts-2", "stepaudio-2.5-tts"]},
+    {id: "shaonv", name: "Young Girl", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "qingniandaxuesheng", name: "Young Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "zhixingjiejie", name: "Knowledgeable Sister", gender: "female", models: ["step-tts-mini"]},
+    {id: "linjiameimei", name: "Girl Next Door", gender: "female", models: ["step-tts-mini"]},
+    {id: "kefunvsheng", name: "Customer Support Female", gender: "female", models: ["step-tts-mini"]},
+    {id: "jilingshaonv", name: "Clever Girl", gender: "female", models: ["step-tts-mini"]},
+    {id: "rxh", name: "Enthusiastic Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "qrs", name: "Friendly Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "yyjw", name: "Calm Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "jrt", name: "Gentle Female", gender: "female", models: ["step-tts-mini"]},
+    {id: "yueyuesx", name: "Cantonese Female", gender: "female", models: ["step-tts-mini"]},
+    {id: "hyx", name: "Energetic Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "wky", name: "Warm Male", gender: "male", models: ["step-tts-mini"]},
+    {id: "vibrant-youth", name: "Vibrant Youth", gender: "male", models: ["stepaudio-2.5-tts"]},
+    {id: "sweet-girl-next-door", name: "Sweet Girl Next Door", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "soft-spoken-gentleman", name: "Soft-spoken Gentleman", gender: "male", models: ["stepaudio-2.5-tts"]},
+    {id: "magnetic-voiced-male", name: "Magnetic-voiced Male", gender: "male", models: ["stepaudio-2.5-tts"]},
+    {id: "lively-girl", name: "Lively Girl", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "willowy-senior-sister", name: "Willowy Senior Sister", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "warm-hearted-sister", name: "Warm-hearted Sister", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "bright-eyed-girl", name: "Bright-eyed Girl", gender: "female", models: ["stepaudio-2.5-tts"]},
+    {id: "calm-and-composed-male", name: "Calm and Composed Male", gender: "male", models: ["stepaudio-2.5-tts"]},
+    {id: "radiant-girl", name: "Radiant Girl", gender: "female", models: ["stepaudio-2.5-tts"]}
+];
+
+const VOICE_NAME_ALIASES = {
+    boyinnansheng: "Announcer Male",
+    cixingnansheng: "Magnetic Male",
+    "elegantgentle-female": "Elegant Gentle",
+    "energeticconfident-female": "Energetic Confident",
+    ganliannvsheng: "Crisp Female",
+    huolinvsheng: "Energetic Female",
+    jimingshaonv: "Clever Young Girl",
+    jingdiannvsheng: "Classic Female",
+    lengyanyujie: "Cool Mature Female",
+    linjiajiejie: "Neighbor Sister",
+    linjiameimei: "Girl Next Door",
+    "lively-girl": "Lively Girl",
+    "livelybreezy-female": "Lively Breezy",
+    qingchunshaonv: "Youthful Girl",
+    qingniandaxuesheng: "Young College Student",
+    shaonv: "Young Girl",
+    zhixingjiejie: "Knowledgeable Sister"
+};
+
+// --- AudioWorklet microphone capture ---
+const workletSource = `
+// AudioWorklet: downsample mic to 16 kHz PCM int16 for the proxy / StepFun ASR.
+class PcmCaptureProcessor extends AudioWorkletProcessor {
+    // Initialize downsampling buffers and listen for start/stop commands from the page.
+    constructor() {
+        super();
+        this.targetRate = 16000;
+        this.sourceRate = sampleRate;
+        this.ratio = this.sourceRate / this.targetRate;
+        this.input = [];
+        this.readIndex = 0;
+        this.output = [];
+        this.chunkSamples = 640;
+        this.enabled = false;
+        this.port.onmessage = (event) => {
+            if (event.data && event.data.type === "start") this.enabled = true;
+            if (event.data && event.data.type === "stop") {
+                this.enabled = false;
+                this.input = [];
+                this.output = [];
+                this.readIndex = 0;
+            }
+        };
+    }
+    // Receive browser mic frames, downsample them to 16 kHz, and flush fixed-size chunks.
+    process(inputs) {
+        if (!this.enabled) return true;
+        const channel = inputs[0] && inputs[0][0];
+        if (!channel) return true;
+        for (let i = 0; i < channel.length; i += 1) this.input.push(channel[i]);
+        while (this.readIndex + this.ratio <= this.input.length) {
+            const sample = this.input[Math.floor(this.readIndex)];
+            this.readIndex += this.ratio;
+            this.output.push(Math.max(-1, Math.min(1, sample)));
+            if (this.output.length >= this.chunkSamples) this.flush();
+        }
+        const drop = Math.floor(this.readIndex);
+        if (drop > 0) {
+            this.input = this.input.slice(drop);
+            this.readIndex -= drop;
+        }
+        return true;
+    }
+    // Convert one downsampled chunk to PCM16 and report RMS for the UI level meter.
+    flush() {
+        const samples = this.output.splice(0, this.chunkSamples);
+        const buffer = new ArrayBuffer(samples.length * 2);
+        const view = new DataView(buffer);
+        let energy = 0;
+        for (let i = 0; i < samples.length; i += 1) {
+            const sample = samples[i];
+            energy += sample * sample;
+            const value = sample < 0 ? sample * 0x8000 : sample * 0x7fff;
+            view.setInt16(i * 2, value, true);
+        }
+        this.port.postMessage({type: "audio", pcm: buffer, rms: Math.sqrt(energy / samples.length)}, [buffer]);
+    }
+}
+registerProcessor("pcm-capture", PcmCaptureProcessor);
+`;
+
+// --- UI state helpers and event wiring ---
+// Translate a UI text key and interpolate any named values.
+function tr(key, args = {}) {
+    const template = TEXT[key] || key;
+    return template.replace(/\{(\w+)\}/g, (_, name) => String(args[name] ?? ""));
+}
+
+// Update the main connection status with live/error styling.
+function setStatusKey(key, live, error = false, args = {}) {
+    setStatus(tr(key, args), live, error);
+}
+
+// Update the compact turn status label.
+function setTurnKey(key, args = {}) {
+    turnStatus.textContent = tr(key, args);
+}
+
+// Replace the live ASR preview with a translated placeholder or state label.
+function setPartialKey(key, args = {}) {
+    partialText.textContent = tr(key, args);
+}
+
+// Render raw ASR partial/final text in the live transcript area.
+function setPartialTranscript(text) {
+    partialText.textContent = text || "";
+}
+
+// Return the display label for a conversation message role.
+function roleLabel(role) {
+    return tr(role === "user" ? "role.user" : "role.assistant");
+}
+
+// Refresh a role label while preserving an existing interruption tag.
+function updateRoleLabel(roleEl) {
+    const tag = roleEl.querySelector(".tag");
+    roleEl.textContent = roleLabel(roleEl.dataset.role || "assistant");
+    if (tag) roleEl.appendChild(tag);
+}
+
+// Write a translated event line into the diagnostic log.
+function logEventKey(key, args = {}) {
+    logEvent(tr(key, args));
+}
+
+startButton.addEventListener("click", startCall);
+stopButton.addEventListener("click", stopCall);
+interruptButton.addEventListener("click", interruptTurn);
+
+ttsModel.addEventListener("change", async () => {
+    await refreshVoiceOptions(ttsVoice.value);
+    sendConfigUpdate();
+});
+
+[asrModel, llmModel, ttsVoice, vadSilence, bargeInChars, temperature].forEach((node) => {
+    node.addEventListener("change", sendConfigUpdate);
+});
+
+refreshVoiceOptions("magnetic-voiced-male");
+applyAvatarLayout();
+proxyUrlEl.textContent = proxyUrl();
+
+// --- Avatar placeholder and call lifecycle ---
+// Show or hide the reserved Avatar slot used by later NavTalk integration.
+function applyAvatarLayout() {
+    const showAvatar = Boolean(AVATAR_CONFIG.enabled && AVATAR_CONFIG.imageUrl);
+    stageRow.classList.toggle("has-avatar", showAvatar);
+    if (!showAvatar) {
+        avatarImage.hidden = true;
+        avatarImage.removeAttribute("src");
+        return;
+    }
+    avatarImage.src = AVATAR_CONFIG.imageUrl;
+    avatarImage.hidden = false;
+}
+
+// Build the local proxy WebSocket URL from the current page origin.
+function proxyUrl() {
+    if (!window.location.host) {
+        return "ws://127.0.0.1:9876/ws/call";
+    }
+    const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
+    return `${protocol}//${window.location.host}/ws/call`;
+}
+
+// Start a browser call session and request StepFun preparation through the proxy.
+async function startCall() {
+    // Open proxy WebSocket; mic starts only after session.ready.
+    if (!ttsVoice.value) {
+        await refreshVoiceOptions("magnetic-voiced-male");
+    }
+    resetUi();
+    setStatusKey("status.connectingProxy", false);
+    startButton.disabled = true;
+    stopButton.disabled = false;
+    interruptButton.disabled = false;
+
+    try {
+        await ensurePlaybackContext();
+    } catch (error) {
+        logEventKey("log.audioInitFailed", {message: messageOf(error)});
+    }
+
+    ws = new WebSocket(proxyUrl());
+    ws.binaryType = "arraybuffer";
+    ws.onopen = () => {
+        logEventKey("log.websocketOpen");
+        requestAvatarStart();
+        ws.send(JSON.stringify({type: "session.start", config: collectConfig()}));
+    };
+    ws.onmessage = (event) => handleProxyEvent(JSON.parse(event.data));
+    ws.onerror = () => {
+        setStatusKey("status.connectionError", false, true);
+        logEventKey("log.websocketError");
+    };
+    ws.onclose = () => {
+        canSendAudio = false;
+        cleanupCapture();
+        setStatusKey("status.disconnected", false);
+        startButton.disabled = false;
+        stopButton.disabled = true;
+        interruptButton.disabled = true;
+    };
+}
+
+function requestAvatarStart() {
+    if (!AVATAR_CONFIG.enabled || !ws || ws.readyState !== WebSocket.OPEN) return;
+    setAvatarStatus("Avatar connecting");
+    ws.send(JSON.stringify({type: "avatar.start"}));
+}
+
+// Stop capture, playback, and the browser-to-proxy WebSocket session.
+function stopCall() {
+    canSendAudio = false;
+    stopPlayback();
+    cleanupCapture();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "session.stop"}));
+        ws.close();
+    }
+}
+
+// Ask the proxy to interrupt the current assistant turn and clear local playback.
+function interruptTurn() {
+    stopPlayback();
+    markInterrupted();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "interrupt"}));
+    }
+}
+
+// Send changed model/tuning options to the proxy while a session is active.
+function sendConfigUpdate() {
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "config.update", config: collectConfig()}));
+    }
+}
+
+// Collect user-facing model and tuning values; secrets remain server-side.
+function collectConfig() {
+    // The browser sends only user-facing model and tuning options; endpoints and API keys stay in the proxy.
+    return {
+        asr_model: asrModel.value,
+        llm_model: llmModel.value,
+        tts_model: ttsModel.value,
+        tts_voice: ttsVoice.value,
+        tts_response_format: "pcm",
+        tts_sample_rate: 24000,
+        tts_mode: "default",
+        asr_silence_ms: Number(vadSilence.value || 400),
+        barge_in_min_chars: Number(bargeInChars.value || 2),
+        llm_temperature: Number(temperature.value || 0.5),
+        tts_instruction: "",
+        language: "en"
+    };
+}
+
+// --- Voice catalog loading and server config sync ---
+// Load StepFun system voices for the selected TTS model, with local fallback voices.
+async function loadVoicesForModel(model) {
+    try {
+        const response = await fetch(`/api/voices?model=${encodeURIComponent(model)}`, {cache: "no-store"});
+        if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+        }
+        const data = await response.json();
+        if (Array.isArray(data.voices) && data.voices.length > 0) {
+            logEventKey("log.voicesLoaded", {model, count: data.voices.length});
+            return data.voices.map((voice) => ({
+                id: voice.id,
+                name: voice.name || voice.id,
+                gender: voice.gender || "unknown",
+                models: [model]
+            }));
+        }
+    } catch (error) {
+        logEventKey("log.voicesFallback", {message: messageOf(error)});
+    }
+    return VOICE_CATALOG.filter((voice) => !voice.models || voice.models.includes(model));
+}
+
+// Rebuild the voice selector whenever the TTS model changes.
+async function refreshVoiceOptions(preferredVoiceId) {
+    const model = ttsModel.value;
+    const visibleVoices = await loadVoicesForModel(model);
+    currentVoices = visibleVoices;
+    const previous = preferredVoiceId || ttsVoice.value;
+    ttsVoice.textContent = "";
+    visibleVoices.forEach((voice) => {
+        const option = document.createElement("option");
+        option.value = voice.id;
+        option.textContent = voiceOptionText(voice);
+        option.title = voice.id;
+        ttsVoice.appendChild(option);
+    });
+    const selected = visibleVoices.find((voice) => voice.id === previous) || visibleVoices[0];
+    if (selected) {
+        ttsVoice.value = selected.id;
+    }
+    updateVoiceSummary();
+}
+
+// Find a voice definition from the current remote list or local fallback catalog.
+function voiceById(voiceId, model) {
+    return currentVoices.find((voice) => voice.id === voiceId)
+        || VOICE_CATALOG.find((voice) => voice.id === voiceId && (!voice.models || voice.models.includes(model)))
+        || VOICE_CATALOG.find((voice) => voice.id === voiceId);
+}
+
+// Detect CJK characters so raw Chinese labels are not duplicated in English display text.
+function hasCjk(value) {
+    return /[\u3400-\u9fff]/.test(String(value || ""));
+}
+
+// Normalize voice gender from StepFun metadata and voice ID naming patterns.
+function normalizedVoiceGender(voice) {
+    const lowerId = String(voice && voice.id ? voice.id : "").toLowerCase();
+    if (/(female|girl|sister|nvsheng|shaonv|meimei|jiejie|yujie|shunv|xuejie)/.test(lowerId)) return "female";
+    if (/(male|nansheng|nanyin|gentleman|gongzi)/.test(lowerId)) return "male";
+    const rawGender = String(voice && voice.gender ? voice.gender : "").toLowerCase();
+    if (rawGender.includes("female")) return "female";
+    if (rawGender.includes("male")) return "male";
+    return "unknown";
+}
+
+// Pick the clearest English voice name, preferring curated aliases over raw metadata.
+function voiceDisplayName(voice) {
+    if (!voice) return "";
+    const alias = VOICE_NAME_ALIASES[voice.id];
+    if (alias) return alias;
+    const rawName = String(voice.name || "").trim();
+    if (rawName && rawName !== voice.id && !hasCjk(rawName)) return rawName;
+    return "";
+}
+
+// Build one dropdown option label with gender, display name, and voice ID.
+function voiceOptionText(voice) {
+    const displayName = voiceDisplayName(voice);
+    const gender = genderLabel(normalizedVoiceGender(voice));
+    if (displayName) {
+        return `${gender} | ${displayName} | ${voice.id}`;
+    }
+    return `${gender} | ${voice.id}`;
+}
+
+// Build the active TTS summary shown in the right-side status panel.
+function voiceSummaryText(model, voice) {
+    if (!voice) return `${model} / -`;
+    const displayName = voiceDisplayName(voice);
+    const gender = genderLabel(normalizedVoiceGender(voice));
+    return displayName
+        ? `${model} / ${gender} / ${displayName} / ${voice.id}`
+        : `${model} / ${gender} / ${voice.id}`;
+}
+
+// Refresh the status panel after model or voice changes.
+function updateVoiceSummary() {
+    const voice = voiceById(ttsVoice.value, ttsModel.value);
+    if (!voice) return;
+    ttsActive.textContent = voiceSummaryText(ttsModel.value, voice);
+}
+
+// Convert a normalized gender value into a UI label.
+function genderLabel(gender) {
+    if (gender === "male") return tr("gender.male");
+    if (gender === "female") return tr("gender.female");
+    return tr("gender.unknown");
+}
+
+// --- Proxy event routing ---
+// Route proxy events into UI state, conversation messages, and TTS playback.
+async function handleProxyEvent(message) {
+    // Map proxy events to UI, playback, and local capture lifecycle.
+    switch (message.type) {
+        case "session.ready":
+            // The proxy has prepared ASR state, TTS WebSocket, and LLM warmup; mic can start.
+            applyServerConfig(message.config || {});
+            try {
+                await startCapture();
+                canSendAudio = true;
+                setStatusKey("status.listening", true);
+                setTurnKey("turn.listening");
+            } catch (error) {
+                setStatusKey("status.microphoneError", false, true);
+                setTurnKey("turn.microphoneUnavailable");
+                logEventKey("log.micStartFailed", {message: messageOf(error)});
+                closeLocalSession();
+            }
+            break;
+        case "session.state":
+            handleState(message.state);
+            break;
+        case "asr.speech_started":
+            setPartialKey("partial.speechDetected");
+            setStatusKey("status.recognizing", true);
+            break;
+        case "asr.speech_stopped":
+            setPartialKey("partial.speechEnded");
+            break;
+        case "asr.partial":
+            // Partial ASR text stays in the live transcript strip until a final result arrives.
+            setPartialTranscript(message.text || "");
+            break;
+        case "asr.final":
+            // Final ASR text becomes a user message and opens an assistant placeholder bubble.
+            setPartialKey("partial.placeholder");
+            if (message.text) {
+                addMessage("user", message.text);
+                currentAssistant = null;
+            }
+            break;
+        case "llm.delta":
+            // LLM deltas append immediately so the user sees streamed assistant text.
+            turnId.textContent = String(message.turn_id || "-");
+            appendAssistant(message.text || "");
+            break;
+        case "llm.done":
+            logEventKey("log.llmDone");
+            break;
+        case "tts.ready":
+            logEventKey("log.ttsReady", {model: message.model || ""});
+            break;
+        case "tts.started":
+            setStatusKey("status.speaking", true);
+            setTurnKey("turn.speaking");
+            break;
+        case "tts.audio":
+            // TTS audio deltas are scheduled for immediate browser playback.
+            await playTtsAudio(message);
+            break;
+        case "tts.done":
+            logEventKey("log.ttsDone");
+            break;
+        case "turn.interrupted":
+            // Barge-in or manual interrupt stops stale audio and labels the old assistant turn.
+            stopPlayback();
+            markInterrupted();
+            logEventKey("log.turnInterrupted", {reason: message.reason || ""});
+            break;
+        case "session.error":
+            setStatusKey("status.error", false, true);
+            setTurnKey("turn.error");
+            logEventKey("log.sessionError", {stage: message.stage || "session", message: message.message || "unknown error"});
+            if (["config", "asr", "browser"].includes(message.stage || "")) {
+                closeLocalSession();
+            }
+            break;
+        case "config.updated":
+            applyServerConfig(message.config || {});
+            break;
+        default:
+            if (message.type) logEvent(message.type);
+    }
+}
+
+// Close the local browser session when startup, permissions, or proxy errors require it.
+function closeLocalSession() {
+    canSendAudio = false;
+    cleanupCapture();
+    stopPlayback();
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "session.stop"}));
+        ws.close();
+    }
+    startButton.disabled = false;
+    stopButton.disabled = true;
+    interruptButton.disabled = true;
+}
+
+// Convert backend session state into status and turn labels.
+function handleState(state) {
+    const labels = {
+        connecting: "state.connecting",
+        listening: "state.listening",
+        recognizing: "state.recognizing",
+        responding: "state.responding",
+        speaking: "state.speaking",
+        closed: "state.closed"
+    };
+    const key = labels[state] || "state.running";
+    const args = labels[state] ? {} : {state: state || ""};
+    setStatusKey(key, state !== "closed", false, args);
+    setTurnKey(key, args);
+}
+
+// Mirror server-confirmed model and audio configuration into the status panel.
+function applyServerConfig(config) {
+    asrActive.textContent = config.asr_model || "-";
+    llmActive.textContent = config.llm_model || "-";
+    if (config.tts_model) {
+        const voice = voiceById(config.tts_voice, config.tts_model);
+        if (voice) {
+            ttsActive.textContent = voiceSummaryText(config.tts_model, voice);
+        } else {
+            ttsActive.textContent = `${config.tts_model} / ${config.tts_voice || "-"}`;
+        }
+    } else {
+        ttsActive.textContent = "-";
+    }
+    if (Number.isFinite(Number(config.barge_in_min_chars))) {
+        bargeInChars.value = config.barge_in_min_chars;
+    }
+    audioFormat.textContent = `${config.tts_response_format || "pcm"} / ${config.tts_sample_rate || 24000}Hz`;
+}
+
+// --- Microphone capture lifecycle ---
+// Request microphone permission and start sending 16 kHz PCM chunks to the proxy.
+async function startCapture() {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        throw new Error(tr("error.noMicApi"));
+    }
+    mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+            echoCancellation: true,
+            noiseSuppression: true,
+            autoGainControl: true,
+            channelCount: 1
+        }
+    });
+    captureContext = new AudioContext();
+    const blobUrl = URL.createObjectURL(new Blob([workletSource], {type: "application/javascript"}));
+    await captureContext.audioWorklet.addModule(blobUrl);
+    URL.revokeObjectURL(blobUrl);
+
+    captureSource = captureContext.createMediaStreamSource(mediaStream);
+    captureNode = new AudioWorkletNode(captureContext, "pcm-capture");
+    captureSink = captureContext.createGain();
+    captureSink.gain.value = 0;
+    captureNode.port.onmessage = (event) => {
+        if (!event.data || event.data.type !== "audio") return;
+        updateMicLevel(event.data.rms || 0);
+        if (canSendAudio && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(event.data.pcm);
+        }
+    };
+    captureSource.connect(captureNode);
+    captureNode.connect(captureSink);
+    captureSink.connect(captureContext.destination);
+    captureNode.port.postMessage({type: "start"});
+}
+
+// Stop microphone tracks, disconnect Web Audio nodes, and reset the mic meter.
+function cleanupCapture() {
+    canSendAudio = false;
+    if (captureNode) {
+        captureNode.port.postMessage({type: "stop"});
+        captureNode.disconnect();
+    }
+    if (captureSource) captureSource.disconnect();
+    if (captureSink) captureSink.disconnect();
+    if (mediaStream) mediaStream.getTracks().forEach((track) => track.stop());
+    if (captureContext) captureContext.close();
+    captureNode = null;
+    captureSource = null;
+    captureSink = null;
+    mediaStream = null;
+    captureContext = null;
+    updateMicLevel(0);
+}
+
+// --- TTS playback pipeline ---
+// Create or resume the AudioContext used for low-latency TTS playback.
+async function ensurePlaybackContext() {
+    if (!playbackContext) {
+        playbackContext = new AudioContext();
+        nextPlaybackAt = playbackContext.currentTime;
+    }
+    if (playbackContext.state === "suspended") {
+        await playbackContext.resume();
+    }
+}
+
+// Play one TTS audio event; PCM chunks are scheduled on a continuous timeline.
+async function playTtsAudio(message) {
+    // PCM: schedule chunks on a single AudioContext timeline for gapless playback.
+    await ensurePlaybackContext();
+    if ((message.format || "pcm") === "pcm") {
+        const bytes = base64ToBytes(message.audio || "");
+        const sampleRate = Number(message.sample_rate || 24000);
+        const buffer = playbackContext.createBuffer(1, bytes.length / 2, sampleRate);
+        const channel = buffer.getChannelData(0);
+        const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+        for (let i = 0; i < channel.length; i += 1) {
+            channel[i] = Math.max(-1, Math.min(1, view.getInt16(i * 2, true) / 32768));
+        }
+        const source = playbackContext.createBufferSource();
+        source.buffer = buffer;
+        source.connect(playbackContext.destination);
+        const startAt = Math.max(playbackContext.currentTime + 0.04, nextPlaybackAt);
+        source.start(startAt);
+        nextPlaybackAt = startAt + buffer.duration;
+        audioQueueSeconds = Math.max(0, nextPlaybackAt - playbackContext.currentTime);
+        activeSources.push(source);
+        source.onended = () => {
+            activeSources = activeSources.filter((item) => item !== source);
+            audioQueueSeconds = Math.max(0, nextPlaybackAt - playbackContext.currentTime);
+            updatePlaybackMeter();
+        };
+        updatePlaybackMeter();
+        return;
+    }
+    enqueueBlobAudio(message);
+}
+
+// Queue encoded non-PCM audio formats through object URLs.
+function enqueueBlobAudio(message) {
+    const bytes = base64ToBytes(message.audio || "");
+    const url = URL.createObjectURL(new Blob([bytes], {type: message.mime_type || "audio/mpeg"}));
+    blobQueue.push(url);
+    playNextBlob();
+}
+
+// Play queued blob audio clips sequentially for compressed TTS formats.
+function playNextBlob() {
+    if (activeBlobAudio || blobQueue.length === 0) return;
+    const url = blobQueue.shift();
+    activeBlobAudio = new Audio(url);
+    activeBlobAudio.onended = activeBlobAudio.onerror = () => {
+        URL.revokeObjectURL(url);
+        activeBlobAudio = null;
+        playNextBlob();
+    };
+    activeBlobAudio.play().catch((error) => logEventKey("log.playbackFailed", {message: messageOf(error)}));
+}
+
+// Stop all scheduled or queued TTS audio, used by hang-up and barge-in.
+function stopPlayback() {
+    // Used on interrupt / hang-up so stale TTS does not play after the turn is cancelled.
+    for (const source of activeSources) {
+        try {
+            source.stop();
+        } catch (error) {
+            // Source may already be stopped.
+        }
+    }
+    activeSources = [];
+    if (playbackContext) nextPlaybackAt = playbackContext.currentTime;
+    audioQueueSeconds = 0;
+    for (const url of blobQueue) URL.revokeObjectURL(url);
+    blobQueue = [];
+    if (activeBlobAudio) {
+        activeBlobAudio.pause();
+        if (activeBlobAudio.src) URL.revokeObjectURL(activeBlobAudio.src);
+        activeBlobAudio = null;
+    }
+    updatePlaybackMeter();
+}
+
+// Update the playback backlog meter from scheduled AudioContext time.
+function updatePlaybackMeter() {
+    const seconds = playbackContext ? Math.max(0, nextPlaybackAt - playbackContext.currentTime) : audioQueueSeconds;
+    const pct = Math.max(0, Math.min(100, seconds * 18));
+    playFill.style.width = `${pct}%`;
+    playLevel.textContent = `${seconds.toFixed(1)}s`;
+}
+
+setInterval(updatePlaybackMeter, 250);
+
+// Decode a base64 audio payload from the proxy into raw bytes.
+function base64ToBytes(base64) {
+    const binary = atob(base64);
+    const bytes = new Uint8Array(binary.length);
+    for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+    }
+    return bytes;
+}
+
+// --- Conversation rendering, logging, and UI reset helpers ---
+// Add a user or assistant message bubble to the conversation panel.
+function addMessage(role, text) {
+    const item = document.createElement("article");
+    item.className = `message ${role}`;
+
+    const roleEl = document.createElement("div");
+    roleEl.className = "role";
+    roleEl.dataset.role = role;
+    updateRoleLabel(roleEl);
+
+    const bubble = document.createElement("div");
+    bubble.className = "bubble";
+    bubble.textContent = text;
+
+    item.append(roleEl, bubble);
+    messages.appendChild(item);
+    scrollMessagesToBottom();
+    return {item, roleEl, bubble, interrupted: false};
+}
+
+// Append streamed LLM text to the active assistant bubble.
+function appendAssistant(text) {
+    if (!currentAssistant) currentAssistant = addMessage("assistant", "");
+    currentAssistant.bubble.textContent += text;
+    scrollMessagesToBottom();
+}
+
+// Keep the latest conversation message visible as streaming updates arrive.
+function scrollMessagesToBottom() {
+    requestAnimationFrame(() => {
+        messages.scrollTop = messages.scrollHeight;
+    });
+}
+
+// Mark the current assistant bubble as interrupted by barge-in or manual cancel.
+function markInterrupted() {
+    if (!currentAssistant || currentAssistant.interrupted) return;
+    const tag = document.createElement("span");
+    tag.className = "tag";
+    tag.textContent = tr("tag.interrupted");
+    currentAssistant.roleEl.appendChild(tag);
+    currentAssistant.interrupted = true;
+    currentAssistant = null;
+}
+
+// Reset visible call state before a new session starts.
+function resetUi() {
+    stopPlayback();
+    messages.textContent = "";
+    setPartialKey("partial.placeholder");
+    eventLog.textContent = "";
+    eventCount.textContent = "0";
+    logCount = 0;
+    currentAssistant = null;
+    turnId.textContent = "-";
+    setTurnKey("turn.waiting");
+    scrollMessagesToBottom();
+}
+
+// Set the main connection status text and live/error indicator classes.
+function setStatus(text, live, error = false) {
+    statusText.textContent = text;
+    statusDot.classList.toggle("live", Boolean(live) && !error);
+    statusDot.classList.toggle("error", Boolean(error));
+}
+
+// Render microphone RMS as a compact percentage-style level meter.
+function updateMicLevel(rms) {
+    const pct = Math.max(0, Math.min(100, Math.round(rms * 650)));
+    micFill.style.width = `${pct}%`;
+    micLevel.textContent = `${pct}%`;
+}
+
+// Prepend a timestamped diagnostic event to the event log.
+function logEvent(text) {
+    logCount += 1;
+    eventCount.textContent = String(logCount);
+    const line = document.createElement("div");
+    line.className = "log-line";
+    line.textContent = `[${new Date().toLocaleTimeString()}] ${text}`;
+    eventLog.prepend(line);
+}
+
+// Normalize thrown values into readable messages for logs and UI errors.
+function messageOf(error) {
+    return error && error.message ? error.message : String(error);
+}
+
+// --- NavTalk Avatar integration ---
+const avatarVideo = document.getElementById("avatarVideo");
+const avatarStatus = document.getElementById("avatarStatus");
+let avatarPeerConnection = null;
+let avatarPendingIceCandidates = [];
+let avatarConfigured = Boolean(AVATAR_CONFIG.enabled);
+let avatarFallback = false;
+let avatarMediaReady = false, avatarRemoteStream = null;
+let avatarAudioPrimary = false;
+let avatarPlaybackMonitor = null;
+let avatarPlaybackUnlocked = false;
+let avatarStatsCollecting = false;
+let avatarStatsSeq = 0;
+let avatarVideoFirstSeenAt = 0;
+let avatarVideoStallCount = 0;
+let avatarVideoStalled = false;
+let avatarLastStatsSentAt = 0;
+let avatarLastFrameSample = {at: 0, currentTime: 0, framesDecoded: 0, bytesReceived: 0};
+
+const originalHandleProxyEvent = handleProxyEvent;
+handleProxyEvent = async function wrappedHandleProxyEvent(message) {
+    if (await handleAvatarProxyEvent(message || {})) return;
+    return originalHandleProxyEvent(message);
+};
+
+const originalPlayTtsAudio = playTtsAudio;
+playTtsAudio = async function wrappedPlayTtsAudio(message) {
+    if (message && message.avatar_audio === true) return;
+    if (message && message.avatar_audio === false) return originalPlayTtsAudio(message);
+    if (shouldUseAvatarAudio()) return;
+    return originalPlayTtsAudio(message);
+};
+
+const originalStopPlayback = stopPlayback;
+stopPlayback = function wrappedStopPlayback() {
+    originalStopPlayback();
+    if (avatarVideo) avatarVideo.muted = false;
+};
+
+const originalStopCall = stopCall;
+stopCall = function wrappedStopCall() {
+    cleanupAvatarPeer();
+    return originalStopCall();
+};
+
+const originalCloseLocalSession = closeLocalSession;
+closeLocalSession = function wrappedCloseLocalSession() {
+    cleanupAvatarPeer();
+    return originalCloseLocalSession();
+};
+
+startButton.addEventListener("click", () => {
+    avatarPlaybackUnlocked = true;
+    if (avatarVideo) avatarVideo.muted = false;
+    ensureAvatarVideoPlayback();
+});
+
+document.addEventListener("pointerdown", () => {
+    avatarPlaybackUnlocked = true;
+    if (avatarVideo && avatarVideo.muted && hasLiveAvatarAudio()) {
+        avatarVideo.muted = false;
+        avatarAudioPrimary = true;
+        ensureAvatarVideoPlayback();
+    }
+});
+
+loadAvatarConfig();
+
+async function loadAvatarConfig() {
+    try {
+        const response = await fetch("/api/avatar-config", {cache: "no-store"});
+        if (!response.ok) throw new Error(`HTTP ${response.status}`);
+        const config = await response.json();
+        avatarConfigured = Boolean(config.enabled && config.configured);
+        AVATAR_CONFIG.enabled = Boolean(config.enabled);
+        if (config.image_url) AVATAR_CONFIG.imageUrl = config.image_url;
+        applyAvatarLayout();
+        setAvatarStatus(avatarConfigured ? "Ready" : "Fallback audio");
+    } catch (error) {
+        avatarConfigured = Boolean(AVATAR_CONFIG.enabled);
+        setAvatarStatus("Config unavailable");
+    }
+}
+
+async function handleAvatarProxyEvent(message) {
+    switch (message.type) {
+        case "avatar.state":
+            handleAvatarState(message);
+            return true;
+        case "avatar.offer":
+            await handleAvatarOffer(message);
+            return true;
+        case "avatar.iceCandidate":
+            await handleAvatarIceCandidate(message);
+            return true;
+        case "avatar.error":
+            avatarFallback = true;
+            avatarAudioPrimary = hasLiveAvatarAudio();
+            showAvatarFallbackIfNoVideo();
+            setAvatarStatus(message.message || "Avatar error");
+            logEvent(message.message ? `avatar error: ${message.message}` : "avatar error");
+            return true;
+        default:
+            return false;
+    }
+}
+
+function handleAvatarState(message) {
+    const state = message.state || "unknown";
+    avatarFallback = state === "disabled" || state === "unconfigured" || state === "error" || state === "closed";
+    avatarMediaReady = hasLiveAvatarVideo();
+    avatarAudioPrimary = hasLiveAvatarAudio();
+    if (state === "connecting" || state === "ready") avatarFallback = false;
+    if (avatarFallback) showAvatarFallbackIfNoVideo();
+    setAvatarStatus(message.message || state);
+}
+
+async function handleAvatarOffer(message) {
+    const sdp = message.sdp || message.data?.sdp;
+    if (!sdp) {
+        setAvatarStatus("Invalid offer");
+        return;
+    }
+    cleanupAvatarPeer();
+    avatarFallback = false;
+    avatarAudioPrimary = false;
+    setAvatarStatus("Connecting");
+    avatarPeerConnection = new RTCPeerConnection(message.configuration || {iceServers: message.iceServers || []});
+    avatarPeerConnection.onicecandidate = (event) => {
+        if (event.candidate && ws && ws.readyState === WebSocket.OPEN) {
+            ws.send(JSON.stringify({type: "avatar.iceCandidate", data: {candidate: event.candidate}}));
+        }
+    };
+    avatarPeerConnection.ontrack = (event) => {
+        const stream = event.streams && event.streams[0] ? event.streams[0] : (avatarRemoteStream || new MediaStream());
+        if (!event.streams.length && event.track && !stream.getTracks().includes(event.track)) stream.addTrack(event.track);
+        if (event.track) {
+            event.track.onended = () => {
+                avatarMediaReady = hasLiveAvatarVideo();
+                avatarAudioPrimary = hasLiveAvatarAudio();
+                showAvatarFallbackIfNoVideo();
+            };
+            event.track.onmute = () => {
+                avatarMediaReady = hasLiveAvatarVideo();
+                avatarAudioPrimary = hasLiveAvatarAudio();
+            };
+            event.track.onunmute = () => showAvatarStream(stream);
+        }
+        showAvatarStream(stream);
+    };
+    avatarPeerConnection.onconnectionstatechange = () => {
+        const state = avatarPeerConnection ? avatarPeerConnection.connectionState : "closed";
+        setAvatarStatus(state === "connected" ? "Live" : state);
+        if (state === "failed" || state === "disconnected") {
+            avatarFallback = true;
+            showAvatarFallbackIfNoVideo();
+        }
+    };
+    await avatarPeerConnection.setRemoteDescription(new RTCSessionDescription(sdp));
+    const answer = await avatarPeerConnection.createAnswer();
+    await avatarPeerConnection.setLocalDescription(answer);
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "avatar.answer", data: {sdp: avatarPeerConnection.localDescription}}));
+    }
+    await flushAvatarIceCandidates();
+}
+
+async function handleAvatarIceCandidate(message) {
+    const candidate = message.candidate || message.data?.candidate;
+    if (!candidate) return;
+    if (!avatarPeerConnection || !avatarPeerConnection.remoteDescription) {
+        avatarPendingIceCandidates.push(candidate);
+        return;
+    }
+    try {
+        await avatarPeerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+    } catch (error) {
+        logEvent(`avatar ice failed: ${messageOf(error)}`);
+    }
+}
+
+async function flushAvatarIceCandidates() {
+    if (!avatarPeerConnection || !avatarPeerConnection.remoteDescription) return;
+    const candidates = avatarPendingIceCandidates.splice(0);
+    for (const candidate of candidates) {
+        try {
+            await avatarPeerConnection.addIceCandidate(new RTCIceCandidate(candidate));
+        } catch (error) {
+            logEvent(`avatar pending ice failed: ${messageOf(error)}`);
+        }
+    }
+}
+
+function showAvatarStream(stream) {
+    if (!avatarVideo) return;
+    if (avatarVideo.srcObject !== stream) avatarVideo.srcObject = stream;
+    avatarRemoteStream = stream;
+    const hasVisibleVideo = hasLiveAvatarVideo(stream);
+    if (hasVisibleVideo && !avatarVideoFirstSeenAt) avatarVideoFirstSeenAt = performance.now();
+    avatarVideo.hidden = !hasVisibleVideo;
+    avatarVideo.muted = false;
+    avatarVideo.volume = 1;
+    avatarMediaReady = hasVisibleVideo;
+    avatarAudioPrimary = hasLiveAvatarAudio(stream);
+    if (avatarImage) avatarImage.hidden = hasVisibleVideo;
+    if (!hasVisibleVideo) {
+        showAvatarFallbackIfNoVideo();
+        setAvatarStatus("Waiting media");
+        return;
+    }
+    ensureAvatarVideoPlayback();
+    setAvatarStatus("Live");
+}
+
+function ensureAvatarVideoPlayback() {
+    if (!avatarVideo || !hasLiveAvatarVideo()) return;
+    avatarVideo.hidden = false;
+    if (avatarImage) avatarImage.hidden = true;
+    startAvatarPlaybackMonitor();
+    const playResult = avatarVideo.play();
+    if (playResult && typeof playResult.catch === "function") {
+        playResult.catch((error) => {
+            avatarMediaReady = hasLiveAvatarVideo();
+            avatarAudioPrimary = hasLiveAvatarAudio();
+            setAvatarStatus("Playback blocked");
+            logEvent(`avatar playback failed: ${messageOf(error)}`);
+        });
+    }
+}
+
+function startAvatarPlaybackMonitor() {
+    if (avatarPlaybackMonitor) return;
+    avatarPlaybackMonitor = window.setInterval(() => {
+        void monitorAvatarPlayback();
+    }, 1000);
+    void monitorAvatarPlayback();
+}
+
+function stopAvatarPlaybackMonitor() {
+    if (!avatarPlaybackMonitor) return;
+    window.clearInterval(avatarPlaybackMonitor);
+    avatarPlaybackMonitor = null;
+}
+
+async function monitorAvatarPlayback() {
+    if (avatarStatsCollecting) return;
+    avatarStatsCollecting = true;
+    try {
+        const stats = await collectAvatarVideoStats();
+        if (!stats.hasVideo) {
+            stopAvatarPlaybackMonitor();
+            showAvatarFallbackIfNoVideo();
+            sendAvatarVideoStats(stats, true);
+            return;
+        }
+        avatarMediaReady = stats.hasVideo;
+        avatarAudioPrimary = hasLiveAvatarAudio();
+        if (avatarVideo.hidden) avatarVideo.hidden = false;
+        if (avatarImage) avatarImage.hidden = true;
+        if (avatarVideo.paused) ensureAvatarVideoPlayback();
+        if (stats.stalled) {
+            setAvatarStatus("Video stalled");
+        } else if (avatarVideoStalled) {
+            setAvatarStatus("Live");
+        }
+        sendAvatarVideoStats(stats, stats.stalled !== avatarVideoStalled);
+        avatarVideoStalled = stats.stalled;
+    } finally {
+        avatarStatsCollecting = false;
+    }
+}
+
+async function collectAvatarVideoStats() {
+    const now = performance.now();
+    const hasVideo = hasLiveAvatarVideo();
+    const currentTime = avatarVideo ? Number(avatarVideo.currentTime || 0) : 0;
+    const stats = {
+        seq: ++avatarStatsSeq,
+        hasVideo,
+        currentTime: Number(currentTime.toFixed(3)),
+        readyState: avatarVideo ? avatarVideo.readyState : 0,
+        paused: avatarVideo ? Boolean(avatarVideo.paused) : true,
+        muted: avatarVideo ? Boolean(avatarVideo.muted) : false,
+        videoWidth: avatarVideo ? avatarVideo.videoWidth : 0,
+        videoHeight: avatarVideo ? avatarVideo.videoHeight : 0,
+        stalled: false
+    };
+    if (avatarPeerConnection && typeof avatarPeerConnection.getStats === "function") {
+        try {
+            const report = await avatarPeerConnection.getStats();
+            report.forEach((entry) => {
+                if (entry.type === "inbound-rtp" && (entry.kind === "video" || entry.mediaType === "video")) {
+                    stats.framesDecoded = Number(entry.framesDecoded || 0);
+                    stats.framesPerSecond = Number(entry.framesPerSecond || 0);
+                    stats.bytesReceived = Number(entry.bytesReceived || 0);
+                    stats.packetsLost = Number(entry.packetsLost || 0);
+                }
+            });
+        } catch (error) {
+            stats.statsError = messageOf(error);
+        }
+    }
+
+    const last = avatarLastFrameSample;
+    const hasPrevious = last.at > 0;
+    const frameProgress = stats.framesDecoded !== undefined && stats.framesDecoded > last.framesDecoded;
+    const timeProgress = currentTime > last.currentTime + 0.05;
+    const byteProgress = stats.bytesReceived !== undefined && stats.bytesReceived > last.bytesReceived;
+    const progressed = !hasPrevious || frameProgress || timeProgress || byteProgress;
+    const oldEnough = avatarVideoFirstSeenAt > 0 && now - avatarVideoFirstSeenAt > 2500;
+    if (hasVideo && oldEnough && !progressed && !stats.paused && stats.readyState >= 2) {
+        avatarVideoStallCount += 1;
+    } else if (progressed) {
+        avatarVideoStallCount = 0;
+    }
+    stats.stallCount = avatarVideoStallCount;
+    stats.stalled = hasVideo && oldEnough && avatarVideoStallCount >= 3;
+    avatarLastFrameSample = {
+        at: now,
+        currentTime,
+        framesDecoded: Number(stats.framesDecoded || 0),
+        bytesReceived: Number(stats.bytesReceived || 0)
+    };
+    return stats;
+}
+
+function sendAvatarVideoStats(stats, force = false) {
+    const now = performance.now();
+    if (!force && now - avatarLastStatsSentAt < 2000) return;
+    avatarLastStatsSentAt = now;
+    if (force) {
+        logEvent(`avatar video ${stats.stalled ? "stalled" : "stats"}: frames=${stats.framesDecoded ?? "-"} time=${stats.currentTime}`);
+    }
+    if (ws && ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({type: "avatar.video.stats", data: stats}));
+    }
+}
+
+function showAvatarFallback(preserveMedia = false) {
+    if (!preserveMedia) {
+        avatarMediaReady = false;
+        avatarAudioPrimary = false;
+    }
+    if (avatarVideo) {
+        if (!preserveMedia) avatarVideo.pause();
+        avatarVideo.hidden = true;
+    }
+    if (avatarImage && AVATAR_CONFIG.enabled) avatarImage.hidden = false;
+}
+
+function showAvatarFallbackIfNoVideo() {
+    if (!hasLiveAvatarVideo()) showAvatarFallback();
+}
+
+function hasLiveAvatarVideo(stream = avatarVideo ? avatarVideo.srcObject : null) {
+    return Boolean(stream && stream.getVideoTracks().some((track) => track.readyState === "live"));
+}
+
+function hasLiveAvatarAudio(stream = avatarVideo ? avatarVideo.srcObject : null) {
+    return Boolean(stream && stream.getAudioTracks().some((track) => track.readyState === "live"));
+}
+
+function cleanupAvatarPeer() {
+    stopAvatarPlaybackMonitor();
+    avatarPendingIceCandidates = []; avatarRemoteStream = null;
+    avatarMediaReady = false;
+    avatarAudioPrimary = false;
+    avatarStatsCollecting = false;
+    avatarVideoFirstSeenAt = 0;
+    avatarVideoStallCount = 0;
+    avatarVideoStalled = false;
+    avatarLastStatsSentAt = 0;
+    avatarLastFrameSample = {at: 0, currentTime: 0, framesDecoded: 0, bytesReceived: 0};
+    if (avatarPeerConnection) {
+        avatarPeerConnection.onicecandidate = null;
+        avatarPeerConnection.ontrack = null;
+        avatarPeerConnection.onconnectionstatechange = null;
+        avatarPeerConnection.close();
+        avatarPeerConnection = null;
+    }
+    if (avatarVideo) {
+        avatarVideo.pause();
+        avatarVideo.srcObject = null;
+        avatarVideo.hidden = true;
+    }
+    if (avatarImage && AVATAR_CONFIG.enabled) avatarImage.hidden = false;
+}
+
+function shouldUseAvatarAudio() {
+    return hasLiveAvatarAudio();
+}
+
+function setAvatarStatus(text) {
+    if (avatarStatus) avatarStatus.textContent = text;
+}
+</script>
+</body>
+</html>

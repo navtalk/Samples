@@ -1,0 +1,2 @@
+httpx>=0.28
+websockets>=13,<14
