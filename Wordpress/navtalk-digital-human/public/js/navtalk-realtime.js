@@ -39,7 +39,10 @@
             this.peerConnection = null;
             this.audioContext = null;
             this.audioProcessor = null;
+            this.microphoneSource = null;
             this.audioStream = null;
+            this.recordingPromise = null;
+            this.recordingGeneration = 0;
             this.currentAudioSource = null;
             this.audioQueue = [];
             this.isPlaying = false;
@@ -568,6 +571,7 @@
             
             this.socket.onerror = function(error) {
                 console.error("NavTalk: WebSocket error:", error);
+                self.stopRecording();
                 self.cleanupResources();
             };
             
@@ -904,68 +908,143 @@
         }
         
         startRecording() {
-            navigator.mediaDevices.getUserMedia({ audio: true })
+            const hasLiveTrack = this.audioStream && this.audioStream.getTracks().some(track => track.readyState === 'live');
+
+            if (hasLiveTrack) {
+                console.log("NavTalk: Recording is already active");
+                return Promise.resolve();
+            }
+
+            if (this.recordingPromise) {
+                console.log("NavTalk: Microphone request is already pending");
+                return this.recordingPromise;
+            }
+
+            const generation = this.recordingGeneration;
+            const recordingPromise = navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    this.audioContext = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 24000 });
+                    const callIsCurrent = generation === this.recordingGeneration;
+                    const socketIsOpen = this.socket && this.socket.readyState === WebSocket.OPEN;
+
+                    // getUserMedia() can resolve after the user has already hung
+                    // up. Stop that late stream immediately instead of attaching
+                    // it to an ended call.
+                    if (!callIsCurrent || !socketIsOpen) {
+                        stream.getTracks().forEach(track => track.stop());
+                        console.log("NavTalk: Discarded late microphone stream");
+                        return;
+                    }
+
+                    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+                    const audioContext = new AudioContextClass({ sampleRate: 24000 });
+                    const microphoneSource = audioContext.createMediaStreamSource(stream);
+                    const audioProcessor = audioContext.createScriptProcessor(8192, 1, 1);
+
+                    this.audioContext = audioContext;
                     this.audioStream = stream;
-                    const source = this.audioContext.createMediaStreamSource(stream);
-                    this.audioProcessor = this.audioContext.createScriptProcessor(8192, 1, 1);
-                    
-                    const self = this;
-                    
-                    this.audioProcessor.onaudioprocess = (event) => {
-                        if (self.socket && self.socket.readyState === WebSocket.OPEN) {
+                    this.microphoneSource = microphoneSource;
+                    this.audioProcessor = audioProcessor;
+
+                    audioProcessor.onaudioprocess = (event) => {
+                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
                             const inputBuffer = event.inputBuffer.getChannelData(0);
-                            const pcmData = self.floatTo16BitPCM(inputBuffer);
-                            const base64PCM = self.base64EncodeAudio(new Uint8Array(pcmData));
-                            
+                            const pcmData = this.floatTo16BitPCM(inputBuffer);
+                            const base64PCM = this.base64EncodeAudio(new Uint8Array(pcmData));
+
                             const chunkSize = 4096;
                             for (let i = 0; i < base64PCM.length; i += chunkSize) {
                                 const chunk = base64PCM.slice(i, i + chunkSize);
-                                self.sendAudioMessage(chunk);
+                                this.sendAudioMessage(chunk);
                             }
                         }
                     };
-                    
-                    source.connect(this.audioProcessor);
-                    this.audioProcessor.connect(this.audioContext.destination);
+
+                    microphoneSource.connect(audioProcessor);
+                    audioProcessor.connect(audioContext.destination);
                     console.log("NavTalk: Recording started");
                 })
                 .catch(error => {
+                    // Do not show a permission error for an obsolete request
+                    // belonging to a call that the user already ended.
+                    if (generation !== this.recordingGeneration) {
+                        console.log("NavTalk: Ignored obsolete microphone request error");
+                        return;
+                    }
+
                     console.error("NavTalk: Unable to access microphone:", error);
                     this.showError("Unable to access microphone. Please allow microphone access.");
+                })
+                .finally(() => {
+                    if (this.recordingPromise === recordingPromise) {
+                        this.recordingPromise = null;
+                    }
                 });
+
+            this.recordingPromise = recordingPromise;
+            return recordingPromise;
         }
         
         stopRecording() {
             console.log('NavTalk: Stopping recording...');
-            
+
+            // Invalidate both the current recording and any unresolved
+            // getUserMedia() request. A new call can then start independently.
+            this.recordingGeneration += 1;
+            this.recordingPromise = null;
+
             // Disconnect and clear audio processor
             if (this.audioProcessor) {
-                this.audioProcessor.disconnect();
+                const audioProcessor = this.audioProcessor;
                 this.audioProcessor = null;
+                audioProcessor.onaudioprocess = null;
+
+                try {
+                    audioProcessor.disconnect();
+                } catch (err) {
+                    console.warn('NavTalk: Audio processor was already disconnected:', err);
+                }
+
                 console.log('NavTalk: Audio processor disconnected');
             }
-            
+
+            // Disconnect the microphone source node so it no longer retains the
+            // MediaStream while the AudioContext is closing.
+            if (this.microphoneSource) {
+                const microphoneSource = this.microphoneSource;
+                this.microphoneSource = null;
+
+                try {
+                    microphoneSource.disconnect();
+                } catch (err) {
+                    console.warn('NavTalk: Microphone source was already disconnected:', err);
+                }
+            }
+
             // Stop all audio stream tracks
             if (this.audioStream) {
-                this.audioStream.getTracks().forEach(track => {
+                const audioStream = this.audioStream;
+                this.audioStream = null;
+
+                audioStream.getTracks().forEach(track => {
                     track.stop();
                     console.log('NavTalk: Audio track stopped:', track.kind);
                 });
-                this.audioStream = null;
             }
-            
+
             // Close and clear audio context
             if (this.audioContext) {
-                this.audioContext.close().then(() => {
-                    console.log('NavTalk: Audio context closed');
-                }).catch(err => {
-                    console.error('NavTalk: Error closing audio context:', err);
-                });
+                const audioContext = this.audioContext;
                 this.audioContext = null;
+
+                if (audioContext.state !== 'closed') {
+                    audioContext.close().then(() => {
+                        console.log('NavTalk: Audio context closed');
+                    }).catch(err => {
+                        console.error('NavTalk: Error closing audio context:', err);
+                    });
+                }
             }
-            
+
             console.log('NavTalk: Recording stopped');
         }
         

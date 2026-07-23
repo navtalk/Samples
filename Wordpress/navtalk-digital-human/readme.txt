@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.3
+Stable tag: 1.1.4
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,10 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.4 =
+* Fix: hanging up now invalidates pending microphone requests and stops late MediaStreams, so the browser no longer keeps recording after a call ends.
+* Fix: repeated session updates no longer open multiple microphone streams.
+
 = 1.1.3 =
 * Fix: the floating digital human avatar selector now only shows successfully generated avatars, preventing draft or failed avatars from being selected and hidden on the front end.
 
@@ -186,6 +190,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.4 =
+Fixes microphone capture remaining active after a real-time call is ended.
 
 = 1.1.3 =
 Fixes the floating avatar selector so draft or failed avatars are no longer available for selection.
