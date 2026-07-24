@@ -375,7 +375,7 @@ export default function ChatScreen({ navigation }){
                 // Convert HEIC to JPEG
                 const result = await RNHeicConverter.convert({
                     path: photoFile_path,
-                    quality: 1,
+                    quality: 0.3,
                     extension: 'jpg'
                 });
                 jpegPath = result.path;
