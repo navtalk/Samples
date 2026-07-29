@@ -121,6 +121,7 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Enhancement: added configurable assistant title and subtitle fields under Settings > NavTalk Digital Human.
 * Enhancement: aligned avatar lists and standalone avatar cards with the NavTalk avatars page using a 5:8 portrait ratio, 16px grid spacing, and 5/3/2 responsive columns.
 * Fix: avatar download buttons now use a same-origin WordPress attachment endpoint, so generated MP4 videos download instead of opening in the browser.
+* Enhancement: avatar lists now support searchable multi-select Include/Exclude controls for available avatars plus Name ASC/DESC sorting.
 
 = 1.1.4 =
 * Fix: hanging up now invalidates pending microphone requests and stops late MediaStreams, so the browser no longer keeps recording after a call ends.
@@ -198,7 +199,7 @@ Uninstalling removes all settings stored in WordPress (including the license key
 == Upgrade Notice ==
 
 = 1.1.5 =
-Adds the redesigned global floating assistant card, configurable title/subtitle settings, and NavTalk-style portrait avatar cards with a responsive 5/3/2 grid.
+Adds the redesigned global floating assistant card, configurable title/subtitle settings, NavTalk-style portrait avatar cards, searchable Include/Exclude controls, and Name sorting.
 
 = 1.1.4 =
 Fixes microphone capture remaining active after a real-time call is ended.

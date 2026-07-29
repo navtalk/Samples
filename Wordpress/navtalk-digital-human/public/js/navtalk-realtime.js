@@ -67,6 +67,8 @@
             this.currentInlineStaticImg = null;
             this.currentInlineVideo = null;
             this.currentInlineVideoElement = null; // Native DOM element for addEventListener
+            this.currentInlineContainer = null;
+            this.inlineLoadingTimeout = null;
             
             this.init();
         }
@@ -283,6 +285,20 @@
             }
         }
         
+        setInlineConnectingState($container, isConnecting) {
+            const $target = ($container && $container.length) ? $container : this.currentInlineContainer;
+            if ($target && $target.length) {
+                $target.toggleClass('ntw-is-connecting', Boolean(isConnecting));
+            }
+        }
+
+        clearInlineLoadingTimeout() {
+            if (this.inlineLoadingTimeout) {
+                clearTimeout(this.inlineLoadingTimeout);
+                this.inlineLoadingTimeout = null;
+            }
+        }
+
         async startInlineCall($button, avatarId, avatarImg, $container, $staticImg, $video) {
             console.log('NavTalk: Starting inline call for avatarId', avatarId);
             
@@ -291,6 +307,8 @@
             
             // Update button state
             $button.addClass('active');
+            this.currentInlineContainer = $container;
+            this.clearInlineLoadingTimeout();
             
             // Hide preview video (if exists)
             const $previewVideo = $container.find('.navtalk-avatar-preview-video');
@@ -305,21 +323,24 @@
             const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
             console.log('NavTalk: Showing inline loading overlay, found:', $loadingOverlay.length, 'for avatarId:', avatarId);
             if ($loadingOverlay.length) {
+                this.setInlineConnectingState($container, true);
                 $loadingOverlay.show().css('display', 'flex');
                 console.log('NavTalk: Inline loading overlay displayed');
                 
                 // Set timeout to auto-hide loading overlay after 10 seconds
-                setTimeout(() => {
+                this.inlineLoadingTimeout = setTimeout(() => {
                     if ($loadingOverlay.is(':visible')) {
                         console.warn('NavTalk: Loading overlay timeout - auto hiding after 10s');
                         $loadingOverlay.fadeOut(300);
                     }
+                    this.setInlineConnectingState($container, false);
+                    this.inlineLoadingTimeout = null;
                 }, 10000);
             } else {
+                this.setInlineConnectingState($container, false);
                 console.warn('NavTalk: Inline loading overlay not found in container');
             }
             this.currentLoadingOverlay = $loadingOverlay;
-            this.currentInlineContainer = $container;
             
             // Store inline call elements for later use
             this.currentInlineButton = $button;
@@ -349,6 +370,9 @@
             $container = $container || this.currentInlineContainer;
             $staticImg = $staticImg || this.currentInlineStaticImg;
             $video = $video || this.currentInlineVideo;
+
+            this.setInlineConnectingState($container, false);
+            this.clearInlineLoadingTimeout();
             
             // Validate we have required elements
             if (!$button || !$container || !$staticImg || !$video) {
@@ -461,6 +485,8 @@
                 console.log('NavTalk: Hiding loading overlay on stop');
                 this.currentLoadingOverlay.hide();
             }
+            this.setInlineConnectingState(null, false);
+            this.clearInlineLoadingTimeout();
             this.currentLoadingOverlay = null;
             
             // Stop recording
@@ -607,6 +633,8 @@
                             console.log('NavTalk: Hiding loading overlay due to connection error');
                             this.currentLoadingOverlay.hide();
                         }
+                        this.setInlineConnectingState(null, false);
+                        this.clearInlineLoadingTimeout();
                         this.currentLoadingOverlay = null;
 
                         this.stopRecording();
@@ -802,6 +830,9 @@
                         } else {
                             console.log('NavTalk: Loading overlay already hidden or not found');
                         }
+
+                        this.setInlineConnectingState(null, false);
+                        this.clearInlineLoadingTimeout();
                         
                         remoteVideo.removeEventListener('playing', hideLoadingOnPlay);
                     };
@@ -822,6 +853,8 @@
                                 console.log('NavTalk: Hiding loading overlay (fallback) due to play error');
                                 this.currentLoadingOverlay.hide();
                             }
+                            this.setInlineConnectingState(null, false);
+                            this.clearInlineLoadingTimeout();
                         });
                     }, 1000);
                 } else {
@@ -830,6 +863,8 @@
                     if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
                         this.currentLoadingOverlay.hide();
                     }
+                    this.setInlineConnectingState(null, false);
+                    this.clearInlineLoadingTimeout();
                 }
             };
             

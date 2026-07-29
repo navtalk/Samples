@@ -23,9 +23,10 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
     /**
      * Get available avatars as options array
      * 
+     * @param bool $available_only Whether to include only successfully generated avatars.
      * @return array
      */
-    protected function get_avatar_options() {
+    protected function get_avatar_options($available_only = false) {
         $license = get_option('navtalk_license', '');
         if (empty($license)) {
             return ['_error' => __('License not configured', 'navtalk-digital-human')];
@@ -52,6 +53,13 @@ abstract class NavTalk_Elementor_Widget_Base extends \Elementor\Widget_Base {
         
         $options = [];
         foreach ($data['data'] as $avatar) {
+            if ($available_only) {
+                $status = isset($avatar['status']) ? strtoupper(trim((string) $avatar['status'])) : '';
+                if ('SUCCESS' !== $status) {
+                    continue;
+                }
+            }
+
             $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
             $name = isset($avatar['name']) ? $avatar['name'] : '';
             if ('' === (string) $avatar_id) {

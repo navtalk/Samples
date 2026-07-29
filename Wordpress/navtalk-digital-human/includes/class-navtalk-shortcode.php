@@ -100,9 +100,16 @@ class NavTalk_Shortcode {
         $atts['filter'] = in_array($filter, ['all', 'available', 'custom'], true) ? $filter : 'all';
         $atts['limit'] = (string) max(1, min(100, absint($atts['limit'])));
 
-        $avatar_ids = array_filter(array_map('trim', explode(',', (string) $atts['avatarIds'])));
-        $avatar_ids = array_map('sanitize_text_field', $avatar_ids);
-        $atts['avatarIds'] = implode(',', $avatar_ids);
+        foreach (['avatarIds', 'include_avatar_ids', 'exclude_avatar_ids'] as $id_attribute) {
+            $avatar_ids = array_filter(array_map('trim', explode(',', (string) $atts[$id_attribute])));
+            $avatar_ids = array_map('sanitize_text_field', $avatar_ids);
+            $atts[$id_attribute] = implode(',', array_values(array_unique($avatar_ids)));
+        }
+
+        $orderby = sanitize_key((string) $atts['orderby']);
+        $atts['orderby'] = in_array($orderby, ['default', 'name'], true) ? $orderby : 'default';
+        $order = sanitize_key((string) $atts['order']);
+        $atts['order'] = in_array($order, ['asc', 'desc'], true) ? $order : 'asc';
 
         return $atts;
     }
@@ -518,6 +525,51 @@ class NavTalk_Shortcode {
     }
     
     /**
+     * Get the API identifier from an avatar row.
+     *
+     * @param array $avatar Avatar API row.
+     * @return string
+     */
+    private function get_avatar_row_id($avatar) {
+        $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+        return (string) $avatar_id;
+    }
+
+    /**
+     * Sort avatar rows by display name while preserving API order for ties.
+     *
+     * @param array  $avatars Avatar API rows.
+     * @param string $order   asc or desc.
+     * @return array
+     */
+    private function sort_avatars_by_name($avatars, $order) {
+        $decorated = [];
+        foreach (array_values($avatars) as $index => $avatar) {
+            $decorated[] = [
+                'index' => $index,
+                'avatar' => $avatar,
+            ];
+        }
+
+        $direction = 'desc' === $order ? -1 : 1;
+        usort($decorated, function($left, $right) use ($direction) {
+            $left_name = isset($left['avatar']['name']) ? $this->get_display_name((string) $left['avatar']['name']) : '';
+            $right_name = isset($right['avatar']['name']) ? $this->get_display_name((string) $right['avatar']['name']) : '';
+            $comparison = strnatcasecmp($left_name, $right_name);
+
+            if (0 === $comparison) {
+                return $left['index'] <=> $right['index'];
+            }
+
+            return $comparison * $direction;
+        });
+
+        return array_map(function($item) {
+            return $item['avatar'];
+        }, $decorated);
+    }
+
+    /**
      * Render avatar list - Grid of multiple avatars
      * 
      * @param array $atts Shortcode attributes
@@ -528,8 +580,12 @@ class NavTalk_Shortcode {
             'columns' => '5',
             'style' => 'grid', // grid, list, carousel
             'filter' => 'all', // all, available, custom
-            'avatarIds' => '', // comma-separated avatar IDs
+            'avatarIds' => '', // legacy comma-separated avatar IDs
             'avatarids' => '', // WordPress lowercases shortcode attribute names
+            'include_avatar_ids' => '', // comma-separated avatar IDs to include
+            'exclude_avatar_ids' => '', // comma-separated avatar IDs to exclude
+            'orderby' => 'default', // default, name
+            'order' => 'asc', // asc, desc
             'limit' => '20',
             'modal_width' => NavTalk_Config::DEFAULT_MODAL_WIDTH,
             'modal_height' => NavTalk_Config::DEFAULT_MODAL_HEIGHT,
@@ -593,23 +649,43 @@ class NavTalk_Shortcode {
         
         $avatars = $body['data'];
         
-        // Filter avatars based on parameters
-        if ($atts['filter'] === 'available') {
+        $custom_ids = array_values(array_filter(explode(',', $atts['avatarIds'])));
+        $include_ids = array_values(array_filter(explode(',', $atts['include_avatar_ids'])));
+        $exclude_ids = array_values(array_filter(explode(',', $atts['exclude_avatar_ids'])));
+
+        // Keep the legacy filter/custom-ID behavior before applying the new query controls.
+        if ('available' === $atts['filter']) {
             $avatars = array_filter($avatars, function($avatar) {
-                return isset($avatar['status']) && $avatar['status'] === 'SUCCESS';
+                $status = isset($avatar['status']) ? strtoupper(trim((string) $avatar['status'])) : '';
+                return 'SUCCESS' === $status;
             });
-        } elseif ($atts['filter'] === 'custom' && !empty($atts['avatarIds'])) {
-            $custom_ids = array_map('trim', explode(',', $atts['avatarIds']));
+        } elseif ('custom' === $atts['filter'] && !empty($custom_ids)) {
             $avatars = array_filter($avatars, function($avatar) use ($custom_ids) {
-                $aid = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
-                return '' !== $aid && in_array((string) $aid, $custom_ids, true);
+                return in_array($this->get_avatar_row_id($avatar), $custom_ids, true);
             });
         }
-        
-        // Limit number of avatars
+
+        if (!empty($include_ids)) {
+            $avatars = array_filter($avatars, function($avatar) use ($include_ids) {
+                return in_array($this->get_avatar_row_id($avatar), $include_ids, true);
+            });
+        }
+
+        // Exclude deliberately runs after Include so it takes priority.
+        if (!empty($exclude_ids)) {
+            $avatars = array_filter($avatars, function($avatar) use ($exclude_ids) {
+                return !in_array($this->get_avatar_row_id($avatar), $exclude_ids, true);
+            });
+        }
+
+        if ('name' === $atts['orderby']) {
+            $avatars = $this->sort_avatars_by_name($avatars, $atts['order']);
+        }
+
+        // Limit after filtering and sorting so the first items match the selected order.
         $limit = intval($atts['limit']);
         if ($limit > 0) {
-            $avatars = array_slice($avatars, 0, $limit);
+            $avatars = array_slice(array_values($avatars), 0, $limit);
         }
         
         if (empty($avatars)) {

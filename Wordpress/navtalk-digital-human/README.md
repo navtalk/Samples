@@ -108,11 +108,17 @@ Display a grid of all available avatars from your account:
 [navtalk_list]
 ```
 
+In Elementor, **Include Avatars** and **Exclude Avatars** are searchable multi-select controls populated with successfully generated avatars. Exclude takes priority when the same avatar is selected in both controls.
+
 **Parameters:**
-- `columns` (optional): Number of columns, default: `3`
+- `columns` (optional): Number of columns, default: `5`
 - `style` (optional): `grid` or `list`, default: `grid`
 - `filter` (optional): `all`, `available`, `custom`, default: `all`
-- `avatarIds` (optional): Comma-separated avatar IDs (when filter="custom")
+- `avatarIds` (optional): Legacy comma-separated avatar IDs (when filter="custom")
+- `include_avatar_ids` (optional): Comma-separated avatar IDs to include
+- `exclude_avatar_ids` (optional): Comma-separated avatar IDs to exclude; takes priority over Include
+- `orderby` (optional): `default` or `name`, default: `default`
+- `order` (optional): `asc` or `desc` when `orderby="name"`, default: `asc`
 - `limit` (optional): Maximum number of avatars to display, default: `20`
 
 **Examples:**
@@ -130,6 +136,11 @@ Specific avatars only:
 Limited to first 6 avatars:
 ```
 [navtalk_list limit="6" columns="2"]
+```
+
+Include selected avatars, exclude one of them, and sort the result by name:
+```
+[navtalk_list include_avatar_ids="id1,id2,id3" exclude_avatar_ids="id2" orderby="name" order="asc"]
 ```
 
 ### Available Avatars
@@ -316,6 +327,7 @@ For support, please contact:
 - Added configurable assistant title and subtitle settings
 - Aligned avatar lists and standalone avatar cards with the NavTalk avatars page using a 5:8 portrait ratio and a responsive 5/3/2 grid
 - Changed avatar download buttons to use a same-origin WordPress attachment endpoint, ensuring generated MP4 videos download instead of opening in the browser
+- Added searchable multi-select Include/Exclude controls for available avatars and optional Name ASC/DESC list sorting
 
 ### Version 1.1.2 (2026-06-12)
 - WordPress.org review hardening: removed arbitrary button CSS and pasted icon markup inputs

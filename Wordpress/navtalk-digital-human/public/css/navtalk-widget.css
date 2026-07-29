@@ -857,13 +857,20 @@ z-index: 99;
 }
 
 #ntw-widget-root .ntw-panel-body {
+    --ntw-panel-pad-x: 8px;
+    --ntw-panel-pad-top: 18px;
+    --ntw-panel-pad-bottom: 18px;
+    --ntw-panel-gap: 18px;
     position: relative;
     width: min(260px, calc(100vw - 32px));
     max-width: 260px;
     height: auto;
     min-height: 0;
     max-height: 620px;
-    padding: 18px 8px;
+    padding:
+        var(--ntw-panel-pad-top)
+        var(--ntw-panel-pad-x)
+        var(--ntw-panel-pad-bottom);
     border: 1px solid rgba(99, 102, 241, 0.42);
     border-radius: 20px;
     background:
@@ -874,7 +881,7 @@ z-index: 99;
         inset 0 1px 0 rgba(255, 255, 255, 0.06);
     display: flex;
     flex-direction: column;
-    gap: 18px;
+    gap: var(--ntw-panel-gap);
     overflow: hidden;
     pointer-events: auto;
     isolation: isolate;
@@ -958,6 +965,7 @@ z-index: 99;
 }
 
 #ntw-widget-root .ntw-character-box {
+    --ntw-media-radius: 18px;
     position: relative;
     inset: auto;
     width: 100%;
@@ -967,19 +975,19 @@ z-index: 99;
     aspect-ratio: 121 / 240;
     flex: 0 0 auto;
     overflow: hidden;
-    border-radius: 18px;
+    border-radius: var(--ntw-media-radius);
+    isolation: isolate;
+    transform: translateZ(0);
     background: #101826;
-    box-shadow:
-        0 20px 36px rgba(10, 15, 35, 0.38),
-        inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+    box-shadow: 0 20px 36px rgba(10, 15, 35, 0.38);
 }
 
 #ntw-widget-root .ntw-character-avatar {
     position: relative;
     width: 100%;
     height: 100%;
-    overflow: hidden;
-    border-radius: inherit;
+    overflow: visible;
+    border-radius: 0;
     background: #101826;
 }
 
@@ -992,6 +1000,51 @@ z-index: 99;
     height: 100% !important;
     object-fit: cover !important;
     object-position: 50% 5% !important;
+    border-radius: var(--ntw-media-radius);
+}
+
+#ntw-widget-root .navtalk-connection-loading-overlay {
+    /* Overscan removes the anti-aliased seam; the parent supplies the only rounded clip. */
+    inset: -1px;
+    width: auto;
+    height: auto;
+    box-sizing: border-box;
+    overflow: hidden;
+    border-radius: 0;
+    clip-path: none;
+    background: linear-gradient(
+        180deg,
+        rgba(10, 16, 35, 0.6) 0%,
+        rgba(8, 12, 24, 0.72) 100%
+    );
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+/*
+ * While the realtime stream is connecting, extend the loading surface across
+ * the panel gap and padding. The panel becomes the only rounded clipping layer,
+ * preventing a second set of rounded corners from showing above and below the
+ * avatar media.
+ */
+#ntw-widget-root.ntw-is-connecting .ntw-character-box {
+    overflow: visible;
+    border-radius: 0;
+    box-shadow: none;
+}
+
+#ntw-widget-root.ntw-is-connecting .ntw-character-avatar {
+    overflow: visible;
+    border-radius: 0;
+}
+
+#ntw-widget-root.ntw-is-connecting .navtalk-connection-loading-overlay {
+    inset:
+        calc(-1 * var(--ntw-panel-gap))
+        calc(-1 * var(--ntw-panel-pad-x))
+        calc(-1 * var(--ntw-panel-pad-bottom))
+        calc(-1 * var(--ntw-panel-pad-x));
+    border-radius: 0;
 }
 
 #ntw-widget-root .navtalk-call-btn {
@@ -1046,9 +1099,15 @@ z-index: 99;
     }
 
     #ntw-widget-root .ntw-panel-body {
+        --ntw-panel-pad-top: 16px;
+        --ntw-panel-pad-bottom: 14px;
+        --ntw-panel-gap: 14px;
         width: min(260px, calc(100vw - 24px));
-        padding: 16px 8px 14px;
-        gap: 14px;
+        padding:
+            var(--ntw-panel-pad-top)
+            var(--ntw-panel-pad-x)
+            var(--ntw-panel-pad-bottom);
+        gap: var(--ntw-panel-gap);
     }
 
     #ntw-widget-root .ntw-panel-header {

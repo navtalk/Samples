@@ -42,6 +42,13 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
      * Register widget controls
      */
     protected function register_controls() {
+        $available_avatar_options = $this->get_avatar_options(true);
+        $avatar_options_error = '';
+        if (isset($available_avatar_options['_error'])) {
+            $avatar_options_error = $available_avatar_options['_error'];
+            unset($available_avatar_options['_error']);
+        }
+
         // Content Section
         $this->start_controls_section(
             'content_section',
@@ -86,6 +93,63 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
                 'description' => __('Comma-separated list of avatar IDs to display.', 'navtalk-digital-human'),
                 'condition' => [
                     'filter' => 'custom',
+                ],
+            ]
+        );
+
+        $this->add_control(
+            'include_avatar_ids',
+            [
+                'label' => __('Include Avatars', 'navtalk-digital-human'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'options' => $available_avatar_options,
+                'multiple' => true,
+                'label_block' => true,
+                'description' => $avatar_options_error
+                    ? $avatar_options_error
+                    : __('Search and select avatars to include. Leave empty to include every avatar allowed by Filter.', 'navtalk-digital-human'),
+            ]
+        );
+
+        $this->add_control(
+            'exclude_avatar_ids',
+            [
+                'label' => __('Exclude Avatars', 'navtalk-digital-human'),
+                'type' => \Elementor\Controls_Manager::SELECT2,
+                'options' => $available_avatar_options,
+                'multiple' => true,
+                'label_block' => true,
+                'description' => $avatar_options_error
+                    ? $avatar_options_error
+                    : __('Search and select avatars to exclude. Exclude takes priority over Include.', 'navtalk-digital-human'),
+            ]
+        );
+
+        $this->add_control(
+            'orderby',
+            [
+                'label' => __('Order By', 'navtalk-digital-human'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'default' => __('Default API Order', 'navtalk-digital-human'),
+                    'name' => __('Name', 'navtalk-digital-human'),
+                ],
+                'default' => 'default',
+            ]
+        );
+
+        $this->add_control(
+            'order',
+            [
+                'label' => __('Order', 'navtalk-digital-human'),
+                'type' => \Elementor\Controls_Manager::SELECT,
+                'options' => [
+                    'asc' => __('Ascending', 'navtalk-digital-human'),
+                    'desc' => __('Descending', 'navtalk-digital-human'),
+                ],
+                'default' => 'asc',
+                'condition' => [
+                    'orderby' => 'name',
                 ],
             ]
         );
@@ -264,6 +328,77 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
     }
     
     /**
+     * Normalize an Elementor multi-select or comma-separated avatar ID value.
+     *
+     * @param mixed $value Raw control value.
+     * @return array
+     */
+    private function normalize_avatar_ids($value) {
+        if (is_string($value)) {
+            $value = explode(',', $value);
+        }
+
+        if (!is_array($value)) {
+            return [];
+        }
+
+        $ids = array_map(function($id) {
+            return sanitize_text_field(trim((string) $id));
+        }, $value);
+
+        $ids = array_filter($ids, function($id) {
+            return '' !== $id;
+        });
+
+        return array_values(array_unique($ids));
+    }
+
+    /**
+     * Get the API identifier from an avatar row.
+     *
+     * @param array $avatar Avatar API row.
+     * @return string
+     */
+    private function get_avatar_row_id($avatar) {
+        $avatar_id = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
+        return (string) $avatar_id;
+    }
+
+    /**
+     * Sort avatar rows by their display names while preserving API order for ties.
+     *
+     * @param array  $avatars Avatar API rows.
+     * @param string $order   asc or desc.
+     * @return array
+     */
+    private function sort_avatars_by_name($avatars, $order) {
+        $decorated = [];
+        foreach (array_values($avatars) as $index => $avatar) {
+            $decorated[] = [
+                'index' => $index,
+                'avatar' => $avatar,
+            ];
+        }
+
+        $direction = 'desc' === $order ? -1 : 1;
+        usort($decorated, function($left, $right) use ($direction) {
+            $left_name = isset($left['avatar']['name']) ? $this->get_display_name((string) $left['avatar']['name']) : '';
+            $right_name = isset($right['avatar']['name']) ? $this->get_display_name((string) $right['avatar']['name']) : '';
+            $comparison = strnatcasecmp($left_name, $right_name);
+
+            if (0 === $comparison) {
+                return $left['index'] <=> $right['index'];
+            }
+
+            return $comparison * $direction;
+        });
+
+        return array_map(function($item) {
+            return $item['avatar'];
+        }, $decorated);
+    }
+
+    /**
      * Render widget output
      */
     protected function render() {
@@ -301,25 +436,45 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
         $avatars = $data['data'];
 
         $filter = isset($settings['filter']) ? $settings['filter'] : 'all';
-        $avatar_ids = isset($settings['avatar_ids']) ? $settings['avatar_ids'] : '';
+        $custom_ids = $this->normalize_avatar_ids(isset($settings['avatar_ids']) ? $settings['avatar_ids'] : '');
+        $include_ids = $this->normalize_avatar_ids(isset($settings['include_avatar_ids']) ? $settings['include_avatar_ids'] : []);
+        $exclude_ids = $this->normalize_avatar_ids(isset($settings['exclude_avatar_ids']) ? $settings['exclude_avatar_ids'] : []);
+        $orderby = isset($settings['orderby']) && 'name' === $settings['orderby'] ? 'name' : 'default';
+        $order = isset($settings['order']) && 'desc' === $settings['order'] ? 'desc' : 'asc';
         $limit_val = isset($settings['limit']) ? intval($settings['limit']) : 20;
 
-        // Filter avatars based on parameters
-        if ($filter === 'available') {
+        // Keep legacy filter/custom-ID settings working before applying the new query controls.
+        if ('available' === $filter) {
             $avatars = array_filter($avatars, function($avatar) {
-                return isset($avatar['status']) && $avatar['status'] === 'SUCCESS';
+                $status = isset($avatar['status']) ? strtoupper(trim((string) $avatar['status'])) : '';
+                return 'SUCCESS' === $status;
             });
-        } elseif ($filter === 'custom' && !empty($avatar_ids)) {
-            $custom_ids = array_map('trim', explode(',', $avatar_ids));
+        } elseif ('custom' === $filter && !empty($custom_ids)) {
             $avatars = array_filter($avatars, function($avatar) use ($custom_ids) {
-                $aid = isset($avatar['avatarId']) ? $avatar['avatarId'] : (isset($avatar['id']) ? $avatar['id'] : '');
-                return '' !== $aid && in_array((string) $aid, $custom_ids, true);
+                return in_array($this->get_avatar_row_id($avatar), $custom_ids, true);
             });
         }
-        
-        // Limit number of avatars
+
+        if (!empty($include_ids)) {
+            $avatars = array_filter($avatars, function($avatar) use ($include_ids) {
+                return in_array($this->get_avatar_row_id($avatar), $include_ids, true);
+            });
+        }
+
+        // Exclude deliberately runs after Include so it always wins when an ID is in both lists.
+        if (!empty($exclude_ids)) {
+            $avatars = array_filter($avatars, function($avatar) use ($exclude_ids) {
+                return !in_array($this->get_avatar_row_id($avatar), $exclude_ids, true);
+            });
+        }
+
+        if ('name' === $orderby) {
+            $avatars = $this->sort_avatars_by_name($avatars, $order);
+        }
+
+        // Apply the limit after filters and sorting so the first visible items match the selected order.
         if ($limit_val > 0) {
-            $avatars = array_slice($avatars, 0, $limit_val);
+            $avatars = array_slice(array_values($avatars), 0, $limit_val);
         }
 
         if (empty($avatars)) {
