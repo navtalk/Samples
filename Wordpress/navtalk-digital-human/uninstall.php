@@ -13,6 +13,8 @@ $navtalk_option_names = [
     'navtalk_license',
     'navtalk_floating_enabled',
     'navtalk_floating_avatar',
+    'navtalk_floating_title',
+    'navtalk_floating_subtitle',
     'navtalk_floating_position',
     'navtalk_floating_button_size',
     'navtalk_floating_button_color',

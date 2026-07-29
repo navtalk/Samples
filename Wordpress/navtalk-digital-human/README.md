@@ -311,6 +311,12 @@ For support, please contact:
 
 ## Changelog
 
+### Version 1.1.5
+- Redesigned the global floating assistant to match the branded dark card layout
+- Added configurable assistant title and subtitle settings
+- Aligned avatar lists and standalone avatar cards with the NavTalk avatars page using a 5:8 portrait ratio and a responsive 5/3/2 grid
+- Changed avatar download buttons to use a same-origin WordPress attachment endpoint, ensuring generated MP4 videos download instead of opening in the browser
+
 ### Version 1.1.2 (2026-06-12)
 - WordPress.org review hardening: removed arbitrary button CSS and pasted icon markup inputs
 - Security: floating button background, color, size, position, modal dimensions, title tags, class names, and Elementor button appearance values now use stricter allowlists and sanitizers

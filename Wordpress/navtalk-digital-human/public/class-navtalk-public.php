@@ -16,6 +16,8 @@ class NavTalk_Public {
     public function init() {
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         add_action('wp_footer', [$this, 'render_chat_modal'], 999);
+        add_action('admin_post_navtalk_download_avatar', [$this, 'download_avatar']);
+        add_action('admin_post_nopriv_navtalk_download_avatar', [$this, 'download_avatar']);
     }
 
     /**
@@ -55,6 +57,7 @@ class NavTalk_Public {
             NAVTALK_VERSION,
             true
         );
+
         
         // Pass PHP configuration to JavaScript
         $license = get_option('navtalk_license', '');
@@ -77,6 +80,99 @@ class NavTalk_Public {
         ]);
     }
     
+    /**
+     * Stream the generated avatar MP4 through WordPress as an attachment.
+     */
+    public function download_avatar() {
+        $avatar_id = isset($_GET['avatar_id']) ? sanitize_text_field(wp_unslash($_GET['avatar_id'])) : '';
+        $nonce = isset($_GET['_navtalk_nonce']) ? sanitize_text_field(wp_unslash($_GET['_navtalk_nonce'])) : '';
+
+        if ('' === $avatar_id || !wp_verify_nonce($nonce, 'navtalk_download_avatar_' . $avatar_id)) {
+            wp_die(
+                esc_html__('This avatar download link is invalid or has expired.', 'navtalk-digital-human'),
+                esc_html__('Avatar Download Error', 'navtalk-digital-human'),
+                ['response' => 403]
+            );
+        }
+
+        $api = new NavTalk_API();
+        $avatar_info = $api->get_avatar_info($avatar_id);
+
+        if (!empty($avatar_info['error']) || empty($avatar_info['videoFile']) || empty($avatar_info['url'])) {
+            wp_die(
+                esc_html__('The MP4 video for this avatar is not available.', 'navtalk-digital-human'),
+                esc_html__('Avatar Download Error', 'navtalk-digital-human'),
+                ['response' => 404]
+            );
+        }
+
+        $remote_url = esc_url_raw($api->get_full_image_url($avatar_info['url']));
+        if (empty($remote_url) || !wp_http_validate_url($remote_url)) {
+            wp_die(
+                esc_html__('The MP4 video URL is invalid.', 'navtalk-digital-human'),
+                esc_html__('Avatar Download Error', 'navtalk-digital-human'),
+                ['response' => 400]
+            );
+        }
+
+        if (!function_exists('wp_tempnam')) {
+            require_once ABSPATH . 'wp-admin/includes/file.php';
+        }
+
+        $temporary_file = wp_tempnam($remote_url);
+        if (!$temporary_file) {
+            wp_die(
+                esc_html__('WordPress could not create a temporary download file.', 'navtalk-digital-human'),
+                esc_html__('Avatar Download Error', 'navtalk-digital-human'),
+                ['response' => 500]
+            );
+        }
+
+        $response = wp_safe_remote_get(
+            $remote_url,
+            [
+                'timeout'     => 300,
+                'redirection' => 5,
+                'sslverify'   => true,
+                'stream'      => true,
+                'filename'    => $temporary_file,
+                'headers'     => ['Accept' => 'video/mp4'],
+            ]
+        );
+        $response_code = is_wp_error($response) ? 0 : wp_remote_retrieve_response_code($response);
+        $file_size = file_exists($temporary_file) ? filesize($temporary_file) : 0;
+
+        if (is_wp_error($response) || $response_code < 200 || $response_code >= 300 || !$file_size) {
+            wp_delete_file($temporary_file);
+            wp_die(
+                esc_html__('The MP4 video could not be downloaded from NavTalk.', 'navtalk-digital-human'),
+                esc_html__('Avatar Download Error', 'navtalk-digital-human'),
+                ['response' => 502]
+            );
+        }
+
+        $avatar_name = isset($avatar_info['name']) ? (string) $avatar_info['name'] : 'navtalk-avatar';
+        $name_parts = explode('.', $avatar_name);
+        $display_name = isset($name_parts[1]) ? $name_parts[1] : $avatar_name;
+        $filename = sanitize_file_name(($display_name !== '' ? $display_name : 'navtalk-avatar') . '.mp4');
+
+        while (ob_get_level()) {
+            ob_end_clean();
+        }
+
+        nocache_headers();
+        status_header(200);
+        header('Content-Type: video/mp4');
+        header('Content-Transfer-Encoding: binary');
+        header('Content-Disposition: attachment; filename="' . $filename . '"; filename*=UTF-8\'\'' . rawurlencode($filename));
+        header('Content-Length: ' . (string) $file_size);
+        header('X-Content-Type-Options: nosniff');
+
+        readfile($temporary_file);
+        wp_delete_file($temporary_file);
+        exit;
+    }
+
     /**
      * Render chat modal in footer
      * This modal will be shown when user clicks "Start Chat" button

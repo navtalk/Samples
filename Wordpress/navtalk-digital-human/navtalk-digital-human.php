@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NavTalk Digital Human
  * Description: Third-party integration: connect your site to NavTalk for real-time digital human conversations. Add a license key and use [navtalk_avatar avatarId="your-avatar-id"] to embed avatars.
- * Version: 1.1.4
+ * Version: 1.1.5
  * Author: NavTalk
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('NAVTALK_VERSION', '1.1.4');
+define('NAVTALK_VERSION', '1.1.5');
 
 // Plugin directory path
 define('NAVTALK_PLUGIN_DIR', plugin_dir_path(__FILE__));
@@ -33,6 +33,8 @@ function navtalk_digital_human_activate() {
     // Global digital human assistant (floating) default options
     add_option('navtalk_floating_enabled', '0');
     add_option('navtalk_floating_avatar', '');
+    add_option('navtalk_floating_title', 'NavTalk Assistant');
+    add_option('navtalk_floating_subtitle', 'Ask me about NavTalk');
     add_option('navtalk_floating_position', 'bottom-right');
     add_option('navtalk_floating_button_size', '60px');
     add_option('navtalk_floating_button_color', '#667eea');
@@ -94,6 +96,8 @@ function navtalk_digital_human_maybe_upgrade() {
     delete_option('navtalk_floating_js_callbacks');
     delete_option('navtalk_custom_css');
     delete_option('navtalk_floating_button_icon_svg');
+    add_option('navtalk_floating_title', 'NavTalk Assistant');
+    add_option('navtalk_floating_subtitle', 'Ask me about NavTalk');
     update_option('navtalk_installed_version', NAVTALK_VERSION);
 }
 add_action('plugins_loaded', 'navtalk_digital_human_maybe_upgrade', 1);

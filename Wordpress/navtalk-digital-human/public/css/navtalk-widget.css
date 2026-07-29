@@ -846,3 +846,225 @@ z-index: 99;
 
 }
 
+/* ==========================================================================
+   Branded global floating assistant card
+   Scoped to the global widget so shortcode and Elementor cards are unaffected.
+   ========================================================================== */
+
+#ntw-widget-root.ntw-container {
+    gap: 14px;
+    font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+#ntw-widget-root .ntw-panel-body {
+    position: relative;
+    width: min(260px, calc(100vw - 32px));
+    max-width: 260px;
+    height: auto;
+    min-height: 0;
+    max-height: 620px;
+    padding: 18px 8px;
+    border: 1px solid rgba(99, 102, 241, 0.42);
+    border-radius: 20px;
+    background:
+        radial-gradient(circle at 100% 0%, rgba(124, 103, 238, 0.2), transparent 42%),
+        linear-gradient(180deg, #263153 0%, #202846 58%, #29194d 100%);
+    box-shadow:
+        0 24px 54px rgba(4, 8, 24, 0.44),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    overflow: hidden;
+    pointer-events: auto;
+    isolation: isolate;
+    transition:
+        transform 0.3s ease,
+        opacity 0.25s ease,
+        padding 0.25s ease,
+        max-height 0.3s ease,
+        border-width 0.25s ease;
+}
+
+#ntw-widget-root .ntw-panel-body::after {
+    z-index: 0;
+    background: radial-gradient(circle at top right, rgba(148, 163, 255, 0.16), transparent 58%);
+}
+
+#ntw-widget-root .ntw-panel-body > * {
+    position: relative;
+    z-index: 1;
+}
+
+#ntw-widget-root .ntw-panel-header {
+    width: 100%;
+    min-height: 40px;
+    padding: 0 8px;
+    display: flex;
+    align-items: center;
+    flex: 0 0 auto;
+}
+
+#ntw-widget-root .ntw-panel-title {
+    width: 100%;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+#ntw-widget-root .ntw-status-indicator {
+    width: 11px;
+    height: 11px;
+    flex: 0 0 11px;
+    border-radius: 50%;
+    background: radial-gradient(circle, #38d9ff 0%, #0ea5e9 48%, #2563eb 100%);
+    box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
+}
+
+#ntw-widget-root .ntw-title-copy {
+    min-width: 0;
+    display: flex;
+    flex: 1 1 auto;
+    flex-direction: column;
+    gap: 3px;
+}
+
+#ntw-widget-root .ntw-title-text,
+#ntw-widget-root .ntw-title-sub {
+    display: block;
+    max-width: 100%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+#ntw-widget-root .ntw-title-text {
+    color: #f8fafc;
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: 0.01em;
+    text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+}
+
+#ntw-widget-root .ntw-title-sub {
+    color: rgba(226, 232, 240, 0.76);
+    font-size: 10px;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+}
+
+#ntw-widget-root .ntw-character-box {
+    position: relative;
+    inset: auto;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    max-height: none;
+    aspect-ratio: 121 / 240;
+    flex: 0 0 auto;
+    overflow: hidden;
+    border-radius: 18px;
+    background: #101826;
+    box-shadow:
+        0 20px 36px rgba(10, 15, 35, 0.38),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+#ntw-widget-root .ntw-character-avatar {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    border-radius: inherit;
+    background: #101826;
+}
+
+#ntw-widget-root .ntw-character-avatar > video,
+#ntw-widget-root .ntw-character-avatar > img,
+#ntw-widget-root .navtalk-avatar-preview-video,
+#ntw-widget-root .navtalk-avatar-static-img,
+#ntw-widget-root .navtalk-avatar-inline-video {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    object-position: 50% 5% !important;
+}
+
+#ntw-widget-root .navtalk-call-btn {
+    bottom: 16px !important;
+    z-index: 6 !important;
+    border: 1px solid rgba(129, 140, 248, 0.42);
+    box-shadow: 0 18px 38px rgba(56, 189, 248, 0.35) !important;
+}
+
+#ntw-widget-root .ntw-toggle-btn {
+    height: 54px;
+    min-width: 108px;
+    padding: 0 20px;
+    border: 1px solid rgba(99, 102, 241, 0.45);
+    border-radius: 999px;
+    background: linear-gradient(150deg, rgba(11, 17, 33, 0.96) 0%, rgba(46, 16, 101, 0.92) 100%);
+    color: #f1f5f9;
+    box-shadow: 0 14px 32px rgba(10, 16, 35, 0.45);
+}
+
+#ntw-widget-root .ntw-toggle-btn:hover {
+    background: linear-gradient(150deg, rgba(20, 28, 51, 0.98) 0%, rgba(70, 26, 134, 0.94) 100%);
+    border-color: rgba(129, 140, 248, 0.65);
+    box-shadow: 0 18px 36px rgba(10, 16, 35, 0.48);
+}
+
+#ntw-widget-root.ntw-container.ntw-collapsed .ntw-panel-body {
+    height: 0;
+    min-height: 0;
+    max-height: 0;
+    padding: 0;
+    border-width: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    transform: translateY(14px) scale(0.95);
+}
+
+#ntw-widget-root.ntw-container.ntw-collapsed {
+    gap: 0;
+}
+
+@media (max-width: 480px) {
+    #ntw-widget-root.ntw-container.bottom-right {
+        right: 12px !important;
+        bottom: 12px !important;
+    }
+
+    #ntw-widget-root.ntw-container.bottom-left {
+        left: 12px !important;
+        bottom: 12px !important;
+    }
+
+    #ntw-widget-root .ntw-panel-body {
+        width: min(260px, calc(100vw - 24px));
+        padding: 16px 8px 14px;
+        gap: 14px;
+    }
+
+    #ntw-widget-root .ntw-panel-header {
+        min-height: 38px;
+        padding: 0 7px;
+    }
+
+    #ntw-widget-root .ntw-title-text {
+        font-size: 15px;
+    }
+
+    #ntw-widget-root .ntw-title-sub {
+        font-size: 9px;
+    }
+
+    #ntw-widget-root .navtalk-call-btn {
+        bottom: 14px !important;
+    }
+}

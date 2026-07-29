@@ -205,6 +205,8 @@ class NavTalk_Shortcode {
         
         $voice = sanitize_text_field(get_option('navtalk_floating_voice', ''));
         $model = sanitize_text_field(get_option('navtalk_floating_model', ''));
+        $title = sanitize_text_field(get_option('navtalk_floating_title', 'NavTalk Assistant'));
+        $subtitle = sanitize_text_field(get_option('navtalk_floating_subtitle', 'Ask me about NavTalk'));
 
         // Get image/video URLs
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : (isset($avatar_info['url']) ? $avatar_info['url'] : '');
@@ -230,6 +232,21 @@ class NavTalk_Shortcode {
              data-model="<?php echo esc_attr($model); ?>">
             
             <div class="ntw-panel-body">
+                <?php if ('' !== $title || '' !== $subtitle): ?>
+                <header class="ntw-panel-header">
+                    <div class="ntw-panel-title">
+                        <span class="ntw-status-indicator" aria-hidden="true"></span>
+                        <div class="ntw-title-copy">
+                            <?php if ('' !== $title): ?>
+                            <span class="ntw-title-text"><?php echo esc_html($title); ?></span>
+                            <?php endif; ?>
+                            <?php if ('' !== $subtitle): ?>
+                            <span class="ntw-title-sub"><?php echo esc_html($subtitle); ?></span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </header>
+                <?php endif; ?>
                 <div class="ntw-character-box">
                     <div class="ntw-character-avatar">
                         <?php if ($has_video): ?>
@@ -508,7 +525,7 @@ class NavTalk_Shortcode {
      */
     public function render_avatar_list($atts) {
         $atts = shortcode_atts([
-            'columns' => '3',
+            'columns' => '5',
             'style' => 'grid', // grid, list, carousel
             'filter' => 'all', // all, available, custom
             'avatarIds' => '', // comma-separated avatar IDs
@@ -633,6 +650,28 @@ class NavTalk_Shortcode {
         $parts = explode('.', $avatar_name);
         return isset($parts[1]) ? $parts[1] : $avatar_name;
     }
+
+    /**
+     * Build a same-origin, nonce-protected MP4 download URL.
+     *
+     * @param string|int $avatar_id Avatar ID.
+     * @return string Download URL or an empty string when the ID is missing.
+     */
+    private function get_avatar_download_url($avatar_id) {
+        $avatar_id = sanitize_text_field((string) $avatar_id);
+        if ('' === $avatar_id) {
+            return '';
+        }
+
+        return add_query_arg(
+            [
+                'action'         => 'navtalk_download_avatar',
+                'avatar_id'      => $avatar_id,
+                '_navtalk_nonce' => wp_create_nonce('navtalk_download_avatar_' . $avatar_id),
+            ],
+            admin_url('admin-post.php')
+        );
+    }
     
     /**
      * Get SVG icon for phone
@@ -697,8 +736,9 @@ class NavTalk_Shortcode {
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : (isset($avatar_info['url']) ? $avatar_info['url'] : '');
         $image_url = $api->get_full_image_url($thumbnail_url);
 
-        // Check for video URL
-        $has_video = (bool)(isset($avatar_info['videoFile']) ? $avatar_info['videoFile'] : false);
+        // The avatar API returns the generated MP4 in `url` when `videoFile` is present.
+        $video_url = '';
+        $has_video = !empty($avatar_info['videoFile']) && !empty($avatar_info['url']);
         if ($has_video) {
             $video_url = $api->get_full_image_url($avatar_info['url']);
         }
@@ -713,7 +753,10 @@ class NavTalk_Shortcode {
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
         $title_tag = NavTalk_Config::sanitize_title_tag($atts['title_tag']);
-        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
+        $download_url = $has_video ? $this->get_avatar_download_url($avatar_id_value) : '';
+        $show_download_button = $show_download_button && !empty($download_url);
+        $download_name = $this->get_display_name($avatar_name_for_display);
+        $download_filename = sanitize_file_name(($download_name !== '' ? $download_name : 'navtalk-avatar') . '.mp4');
         $inline_mode = ($atts['inline_mode'] === 'true');
 
         $width = esc_attr(isset($atts['width']) ? $atts['width'] : NavTalk_Config::DEFAULT_WIDTH);
@@ -723,7 +766,7 @@ class NavTalk_Shortcode {
 
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
+        <div class="navtalk-avatar-container navtalk-layout-overlay <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>" style="--navtalk-avatar-width: <?php echo esc_attr($width); ?>;">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -813,7 +856,8 @@ class NavTalk_Shortcode {
                         <?php if ($show_download_button): ?>
                             <a class="navtalk-icon-button navtalk-download-btn"
                                href="<?php echo esc_url($download_url); ?>"
-                               download>
+                               download="<?php echo esc_attr($download_filename); ?>"
+                               aria-label="<?php esc_attr_e('Download avatar MP4 video', 'navtalk-digital-human'); ?>">
                                  <?php echo wp_kses($this->get_download_icon(isset($atts['download_icon']) ? $atts['download_icon'] : ''), self::allowed_icon_html()); ?>
                             </a>
                         <?php endif; ?>
@@ -976,8 +1020,9 @@ class NavTalk_Shortcode {
         $thumbnail_url = isset($avatar_info['thumbnailUrl']) ? $avatar_info['thumbnailUrl'] : (isset($avatar_info['url']) ? $avatar_info['url'] : '');
         $image_url = $api->get_full_image_url($thumbnail_url);
 
-        // Check for video URL
-        $has_video = (bool)(isset($avatar_info['videoFile']) ? $avatar_info['videoFile'] : false);
+        // The avatar API returns the generated MP4 in `url` when `videoFile` is present.
+        $video_url = '';
+        $has_video = !empty($avatar_info['videoFile']) && !empty($avatar_info['url']);
         if ($has_video) {
             $video_url = $api->get_full_image_url($avatar_info['url']);
         }
@@ -992,7 +1037,10 @@ class NavTalk_Shortcode {
         $show_download_button = ($atts['show_download_button'] === 'true');
         $status_position = $atts['status_position'];
         $title_tag = NavTalk_Config::sanitize_title_tag($atts['title_tag']);
-        $download_url = !empty($atts['download_url']) ? esc_url($atts['download_url']) : esc_url($image_url);
+        $download_url = $has_video ? $this->get_avatar_download_url($avatar_id_value) : '';
+        $show_download_button = $show_download_button && !empty($download_url);
+        $download_name = $this->get_display_name($avatar_name_for_display);
+        $download_filename = sanitize_file_name(($download_name !== '' ? $download_name : 'navtalk-avatar') . '.mp4');
         $inline_mode = ($atts['inline_mode'] === 'true');
 
         $width = esc_attr(isset($atts['width']) ? $atts['width'] : NavTalk_Config::DEFAULT_WIDTH);
@@ -1002,7 +1050,7 @@ class NavTalk_Shortcode {
 
         ob_start();
         ?>
-        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>">
+        <div class="navtalk-avatar-container navtalk-layout-bottom <?php echo esc_attr($inline_mode ? 'navtalk-inline-mode' : ''); ?> <?php echo esc_attr($atts['class']); ?>" id="<?php echo esc_attr($unique_id); ?>" style="--navtalk-avatar-width: <?php echo esc_attr($width); ?>;">
             <div class="navtalk-avatar-card">
                 <!-- Avatar Image/Video -->
                 <div class="navtalk-avatar-image">
@@ -1098,7 +1146,8 @@ class NavTalk_Shortcode {
                         <?php if ($show_download_button): ?>
                             <a class="navtalk-icon-button navtalk-download-btn"
                                href="<?php echo esc_url($download_url); ?>"
-                               download>
+                               download="<?php echo esc_attr($download_filename); ?>"
+                               aria-label="<?php esc_attr_e('Download avatar MP4 video', 'navtalk-digital-human'); ?>">
                                  <?php echo wp_kses($this->get_download_icon(isset($atts['download_icon']) ? $atts['download_icon'] : ''), self::allowed_icon_html()); ?>
                             </a>
                         <?php endif; ?>

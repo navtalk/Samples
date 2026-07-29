@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.4
+Stable tag: 1.1.5
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,12 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.5 =
+* Enhancement: redesigned the global floating assistant to match the branded dark card layout with a header, framed avatar and matching toggle button.
+* Enhancement: added configurable assistant title and subtitle fields under Settings > NavTalk Digital Human.
+* Enhancement: aligned avatar lists and standalone avatar cards with the NavTalk avatars page using a 5:8 portrait ratio, 16px grid spacing, and 5/3/2 responsive columns.
+* Fix: avatar download buttons now use a same-origin WordPress attachment endpoint, so generated MP4 videos download instead of opening in the browser.
+
 = 1.1.4 =
 * Fix: hanging up now invalidates pending microphone requests and stops late MediaStreams, so the browser no longer keeps recording after a call ends.
 * Fix: repeated session updates no longer open multiple microphone streams.
@@ -190,6 +196,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.5 =
+Adds the redesigned global floating assistant card, configurable title/subtitle settings, and NavTalk-style portrait avatar cards with a responsive 5/3/2 grid.
 
 = 1.1.4 =
 Fixes microphone capture remaining active after a real-time call is ended.

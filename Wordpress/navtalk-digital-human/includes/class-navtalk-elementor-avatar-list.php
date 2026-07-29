@@ -59,7 +59,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
                 'min' => 1,
                 'max' => 6,
                 'step' => 1,
-                'default' => 3,
+                'default' => 5,
             ]
         );
 
@@ -327,7 +327,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
             return;
         }
 
-        $columns = isset($settings['columns']) ? absint($settings['columns']) : 3;
+        $columns = isset($settings['columns']) ? absint($settings['columns']) : 5;
         
         // Render avatar list
         ?>
@@ -348,7 +348,7 @@ class NavTalk_Elementor_Avatar_List extends NavTalk_Elementor_Widget_Base {
     protected function content_template() {
         ?>
         <#
-        var columns = settings.columns || 3;
+        var columns = settings.columns || 5;
         #>
         <div class="navtalk-avatar-list" data-columns="{{ columns }}">
             <div class="navtalk-avatar-card" style="background: #f5f5f5; padding: 20px; text-align: center; border-radius: 8px;">

@@ -130,6 +130,16 @@ class NavTalk_Admin {
             'sanitize_callback' => 'sanitize_text_field',
             'default' => ''
         ]);
+        register_setting('navtalk_options_group', 'navtalk_floating_title', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => 'NavTalk Assistant'
+        ]);
+        register_setting('navtalk_options_group', 'navtalk_floating_subtitle', [
+            'type' => 'string',
+            'sanitize_callback' => 'sanitize_text_field',
+            'default' => 'Ask me about NavTalk'
+        ]);
         register_setting('navtalk_options_group', 'navtalk_floating_position', [
             'type' => 'string',
             'sanitize_callback' => ['NavTalk_Config', 'sanitize_floating_position'],
@@ -242,6 +252,20 @@ class NavTalk_Admin {
             'navtalk_floating_avatar',
             __('Select Digital Human Avatar', 'navtalk-digital-human'),
             [$this, 'render_floating_avatar_field'],
+            'navtalk-settings',
+            'navtalk_floating_section'
+        );
+        add_settings_field(
+            'navtalk_floating_title',
+            __('Assistant Title', 'navtalk-digital-human'),
+            [$this, 'render_floating_title_field'],
+            'navtalk-settings',
+            'navtalk_floating_section'
+        );
+        add_settings_field(
+            'navtalk_floating_subtitle',
+            __('Assistant Subtitle', 'navtalk-digital-human'),
+            [$this, 'render_floating_subtitle_field'],
             'navtalk-settings',
             'navtalk_floating_section'
         );
@@ -483,6 +507,26 @@ class NavTalk_Admin {
             <?php endforeach; ?>
         </select>
         <p class="description"><?php esc_html_e('Select an available digital human avatar from your Avatar list. Please save your License Key first and ensure avatars are available.', 'navtalk-digital-human'); ?></p>
+        <?php
+    }
+
+    public function render_floating_title_field() {
+        $title = get_option('navtalk_floating_title', 'NavTalk Assistant');
+        ?>
+        <input type="text" name="navtalk_floating_title" id="navtalk_floating_title"
+               value="<?php echo esc_attr($title); ?>" class="regular-text" maxlength="80"
+               placeholder="<?php esc_attr_e('NavTalk Assistant', 'navtalk-digital-human'); ?>">
+        <p class="description"><?php esc_html_e('Displayed above the floating avatar. Leave empty to hide the title.', 'navtalk-digital-human'); ?></p>
+        <?php
+    }
+
+    public function render_floating_subtitle_field() {
+        $subtitle = get_option('navtalk_floating_subtitle', 'Ask me about NavTalk');
+        ?>
+        <input type="text" name="navtalk_floating_subtitle" id="navtalk_floating_subtitle"
+               value="<?php echo esc_attr($subtitle); ?>" class="regular-text" maxlength="120"
+               placeholder="<?php esc_attr_e('Ask me about NavTalk', 'navtalk-digital-human'); ?>">
+        <p class="description"><?php esc_html_e('Displayed below the title. Leave empty to hide the subtitle.', 'navtalk-digital-human'); ?></p>
         <?php
     }
 
