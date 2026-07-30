@@ -2,7 +2,7 @@
 /**
  * Plugin Name: NavTalk Digital Human
  * Description: Third-party integration: connect your site to NavTalk for real-time digital human conversations. Add a license key and use [navtalk_avatar avatarId="your-avatar-id"] to embed avatars.
- * Version: 1.1.6
+ * Version: 1.1.7
  * Author: NavTalk
  * Author URI: https://navtalk.ai
  * License: GPL v2 or later
@@ -16,7 +16,7 @@ if (!defined('WPINC')) {
 }
 
 // Plugin version
-define('NAVTALK_VERSION', '1.1.6');
+define('NAVTALK_VERSION', '1.1.7');
 
 // Plugin directory path
 define('NAVTALK_PLUGIN_DIR', plugin_dir_path(__FILE__));

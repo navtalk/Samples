@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.6
+Stable tag: 1.1.7
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,11 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.7 =
+* Maintenance: prefixed all plugin-owned front-end and admin CSS classes with `navtalk-` to prevent collisions with themes and other plugins.
+* Cleanup: removed unused legacy widget/admin CSS and synchronized PHP markup, CSS selectors, and JavaScript state classes.
+* Compatibility: WordPress and Elementor framework classes plus user-provided shortcode classes remain unchanged. Custom CSS or JavaScript targeting old internal class names must be updated.
+
 = 1.1.6 =
 * Fix: strengthened call lifecycle cleanup so closing a modal, ending an inline call, leaving the page, or receiving a stale WebSocket callback cannot leave microphone streams active.
 * Fix: front-end styles and the real-time script now use file modification timestamps for cache busting after plugin updates.
@@ -202,6 +207,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.7 =
+Namespaces NavTalk-owned CSS classes to avoid theme/plugin conflicts and removes unused legacy styles. Update custom CSS or JavaScript that targets old internal classes.
 
 = 1.1.6 =
 Improves microphone and call cleanup, refreshes changed front-end assets reliably, and fixes icon styling conflicts with WordPress themes.

@@ -246,18 +246,18 @@
             });
             
             // Set call button position
-            $callButton.removeClass('position-center-bottom position-bottom-left position-bottom-right');
-            $callButton.addClass('position-' + callButtonPosition);
+            $callButton.removeClass('navtalk-position-center-bottom navtalk-position-bottom-left navtalk-position-bottom-right');
+            $callButton.addClass('navtalk-position-' + callButtonPosition);
             
             // Set avatar image
             $('#character-static-image').attr('src', avatarImg);
             $('#character-avatar-video').attr('poster', avatarImg);
             
             // Show modal
-            $modal.addClass('active').fadeIn(300);
+            $modal.addClass('navtalk-is-active').fadeIn(300);
             
             // Clear previous chat and hide it by default
-            $('.ah-character-chat').empty().hide();
+            $('.navtalk-realtime-chat').empty().hide();
             
             console.log('NavTalk: Opening chat for avatarId', avatarId);
             
@@ -289,7 +289,7 @@
             }
             
             // Hide modal
-            $('#navtalk-chat-modal').removeClass('active').fadeOut(300);
+            $('#navtalk-chat-modal').removeClass('navtalk-is-active').fadeOut(300);
             
             console.log('NavTalk: Chat modal closed');
         }
@@ -299,7 +299,7 @@
             const $staticImg = $container.find('.navtalk-avatar-static-img');
             const $video = $container.find('.navtalk-avatar-inline-video');
             
-            if ($button.hasClass('active')) {
+            if ($button.hasClass('navtalk-is-active')) {
                 // Stop call
                 this.stopInlineCall($button, $container, $staticImg, $video);
             } else {
@@ -311,7 +311,7 @@
         setInlineConnectingState($container, isConnecting) {
             const $target = ($container && $container.length) ? $container : this.currentInlineContainer;
             if ($target && $target.length) {
-                $target.toggleClass('ntw-is-connecting', Boolean(isConnecting));
+                $target.toggleClass('navtalk-is-connecting', Boolean(isConnecting));
             }
         }
 
@@ -388,18 +388,18 @@
             this.playCallAudio('start');
             
             // Update button state
-            $button.addClass('active');
+            $button.addClass('navtalk-is-active');
             this.currentInlineContainer = $container;
             this.clearInlineLoadingTimeout();
             
             // Hide preview video (if exists)
             const $previewVideo = $container.find('.navtalk-avatar-preview-video');
             if ($previewVideo.length) {
-                $previewVideo.hide().addClass('hidden');
+                $previewVideo.hide().addClass('navtalk-is-hidden');
             }
             
             // Hide static image
-            $staticImg.hide().addClass('hidden');
+            $staticImg.hide().addClass('navtalk-is-hidden');
             
             // Show loading overlay for inline mode
             const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
@@ -434,7 +434,7 @@
             $video.data('loadingOverlay', $loadingOverlay);
             
             // Show realtime call video
-            $video.show().addClass('active');
+            $video.show().addClass('navtalk-is-active');
             
             // Store current avatar info
             this.currentAvatarId = avatarId;
@@ -479,7 +479,7 @@
             this.playCallAudio('end');
             
             // Update button state
-            $button.removeClass('active');
+            $button.removeClass('navtalk-is-active');
             
             // Hide loading overlay if still visible
             const $loadingOverlay = $container.find('.navtalk-inline-loading-overlay');
@@ -490,7 +490,7 @@
             this.currentLoadingOverlay = null;
             
             // Hide realtime call video
-            $video.hide().removeClass('active');
+            $video.hide().removeClass('navtalk-is-active');
             
             // Stop and clear video source
             this.stopMediaStream($video[0]);
@@ -506,7 +506,7 @@
             const $previewVideo = $container.find('.navtalk-avatar-preview-video');
             if ($previewVideo.length) {
                 // Has preview video - show and resume autoplay if needed
-                $previewVideo.show().removeClass('hidden');
+                $previewVideo.show().removeClass('navtalk-is-hidden');
                 // Single avatar should have autoplay attribute - resume playing
                 if ($previewVideo.attr('autoplay') !== undefined) {
                     $previewVideo[0].play().catch(err => {
@@ -515,7 +515,7 @@
                 }
             } else {
                 // No preview video - show static image
-                $staticImg.show().removeClass('hidden');
+                $staticImg.show().removeClass('navtalk-is-hidden');
             }
             
             console.log('NavTalk: Inline call stopped');
@@ -524,7 +524,7 @@
         toggleCall() {
             const button = $('#btnRealtime');
             
-            if (button.hasClass('active')) {
+            if (button.hasClass('navtalk-is-active')) {
                 this.stopCall();
             } else {
                 this.startCall();
@@ -543,14 +543,14 @@
             this.playCallAudio('start');
             
             const button = $('#btnRealtime');
-            button.addClass('active');
+            button.addClass('navtalk-is-active');
             
             // Hide static image, show video
             $('#character-static-image').hide();
             $('#character-avatar-video').show();
             
             // Don't show chat messages automatically - user can click button to view
-            // $('.character-chat-item').show();
+            // $('.navtalk-chat-item').show();
             
             // Start WebSocket connection
             await this.startWebSocket(callGeneration);
@@ -566,7 +566,7 @@
             this.playCallAudio('end');
             
             const button = $('#btnRealtime');
-            button.removeClass('active');
+            button.removeClass('navtalk-is-active');
             
             // Hide loading overlay if still visible
             if (this.currentLoadingOverlay && this.currentLoadingOverlay.length) {
@@ -596,7 +596,7 @@
             this.isPlaying = false;
             
             // Hide chat messages (optional)
-            // $('.character-chat-item').hide();
+            // $('.navtalk-chat-item').hide();
         }
         
         async cleanupResources() {
@@ -774,7 +774,7 @@
 
                     if (this.currentInlineButton && this.currentInlineButton.length) {
                         this.stopInlineCall();
-                    } else if ($('#btnRealtime').length && $('#btnRealtime').hasClass('active')) {
+                    } else if ($('#btnRealtime').length && $('#btnRealtime').hasClass('navtalk-is-active')) {
                         void this.stopCall().catch((err) => console.error('NavTalk: stopCall after connection error', err));
                     }
                     break;
@@ -835,7 +835,7 @@
                     if (navData && navData.content && navData.content.trim()) {
                         if (this.pendingUserMessageSpan) {
                             this.pendingUserMessageSpan.textContent = '';
-                            this.pendingUserMessageSpan.classList.remove('typing-indicator');
+                            this.pendingUserMessageSpan.classList.remove('navtalk-typing-indicator');
                             this.pendingUserMessageSpan.textContent = navData.content;
                             this.pendingUserMessageSpan = null;
                         } else {
@@ -862,10 +862,10 @@
                     let aiMessageSpan = this.responseSpans.get(responseId);
                     
                     if (!aiMessageSpan) {
-                        const container = $('<div>').addClass('character-chat-item item-character');
-                        aiMessageSpan = $('<span>').addClass('markdown-content');
+                        const container = $('<div>').addClass('navtalk-chat-item navtalk-chat-item-assistant');
+                        aiMessageSpan = $('<span>').addClass('navtalk-markdown-content');
                         container.append(aiMessageSpan);
-                        $('.ah-character-chat').append(container);
+                        $('.navtalk-realtime-chat').append(container);
                         this.responseSpans.set(responseId, aiMessageSpan.get(0));
                     }
                     
@@ -1308,34 +1308,34 @@
         }
         
         addChatMessage(role, content) {
-            const container = $('<div>').addClass('character-chat-item');
-            container.addClass(role === 'user' ? 'item-user' : 'item-character');
+            const container = $('<div>').addClass('navtalk-chat-item');
+            container.addClass(role === 'user' ? 'navtalk-chat-item-user' : 'navtalk-chat-item-assistant');
             
             const message = $('<span>').text(content);
             container.append(message);
             
-            $('.ah-character-chat').append(container);
+            $('.navtalk-realtime-chat').append(container);
             this.scrollChatToBottom();
         }
         
         createTypingPlaceholder() {
-            const container = $('<div>').addClass('character-chat-item item-user');
-            const message = $('<span>').addClass('typing-indicator');
+            const container = $('<div>').addClass('navtalk-chat-item navtalk-chat-item-user');
+            const message = $('<span>').addClass('navtalk-typing-indicator');
             
             for (let i = 0; i < 3; i++) {
-                const dot = $('<span>').addClass('typing-dot');
+                const dot = $('<span>').addClass('navtalk-typing-dot');
                 message.append(dot);
             }
             
             container.append(message);
-            $('.ah-character-chat').append(container);
+            $('.navtalk-realtime-chat').append(container);
             this.scrollChatToBottom();
             
             return message.get(0);
         }
         
         scrollChatToBottom() {
-            const chatContainer = $('.ah-character-chat');
+            const chatContainer = $('.navtalk-realtime-chat');
             chatContainer.scrollTop(chatContainer.prop('scrollHeight'));
         }
         

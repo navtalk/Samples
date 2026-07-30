@@ -658,7 +658,7 @@ class NavTalk_Admin {
                         echo '<label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Avatar List Shortcode:</label>';
                         echo '<div style="display: flex; gap: 10px; align-items: center;">';
                         echo '<code style="flex: 1; padding: 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; font-size: 13px; color: #667eea;">[navtalk_list]</code>';
-                        echo '<button type="button" class="button button-primary copy-shortcode" data-shortcode="[navtalk_list]" style="height: 38px; padding: 0 20px;">Copy with Config</button>';
+                        echo '<button type="button" class="button button-primary navtalk-admin-copy-shortcode" data-shortcode="[navtalk_list]" style="height: 38px; padding: 0 20px;">Copy with Config</button>';
                         echo '</div>';
                         echo '<p class="description" style="margin-top: 8px;">Use this shortcode to display all your available avatars in a grid.</p>';
                         echo '</div>';
@@ -766,12 +766,12 @@ class NavTalk_Admin {
                         <div class="navtalk-config-section">
                             <h3>Basic Settings</h3>
                             
-                            <div class="navtalk-form-row list-only" style="display: none;">
+                            <div class="navtalk-form-row navtalk-admin-list-only" style="display: none;">
                                 <label for="modal-columns">Columns:</label>
                                 <input type="number" id="modal-columns" name="columns" min="1" max="6" placeholder="3">
                             </div>
 
-                             <div class="navtalk-form-row list-only" style="display: none;">
+                             <div class="navtalk-form-row navtalk-admin-list-only" style="display: none;">
                                  <label for="modal-filter">Filter:</label>
                                  <select id="modal-filter" name="filter">
                                      <option value="">All</option>
@@ -780,13 +780,13 @@ class NavTalk_Admin {
                                  </select>
                              </div>
 
-                             <div class="navtalk-form-row list-only filter-custom-only" style="display: none;">
+                             <div class="navtalk-form-row navtalk-admin-list-only navtalk-admin-filter-custom-only" style="display: none;">
                                  <label for="modal-avatar-ids">Avatar IDs:</label>
                                  <input type="text" id="modal-avatar-ids" name="avatarIds" placeholder="e.g., id1, id2, id3">
                                  <p class="description">Comma-separated list of avatar IDs to display.</p>
                              </div>
 
-                             <div class="navtalk-form-row list-only" style="display: none;">
+                             <div class="navtalk-form-row navtalk-admin-list-only" style="display: none;">
                                  <label for="modal-limit">Limit:</label>
                                  <input type="number" id="modal-limit" name="limit" min="1" placeholder="20">
                              </div>
@@ -1050,7 +1050,7 @@ class NavTalk_Admin {
                 <img src="<?php echo esc_url($image_url); ?>" 
                      alt="<?php echo esc_attr($display_name); ?>"
                      style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: 50% 5% !important ;">
-                <span class="status-badge" 
+                <span class="navtalk-admin-status-badge"
                       style="position: absolute; top: 10px; right: 10px; width: 12px; height: 12px; border-radius: 50%; background: <?php echo esc_attr($is_available ? '#4caf50' : '#f44336'); ?>; box-shadow: 0 2px 4px rgba(0,0,0,0.3);"></span>
             </div>
             
@@ -1072,7 +1072,7 @@ class NavTalk_Admin {
                                class="navtalk-shortcode-input"
                                style="flex: 1; font-size: 11px; font-family: monospace; padding: 6px 8px; border: 1px solid #ddd; border-radius: 4px; background: #fafafa;">
                         <button type="button" 
-                                class="button button-small copy-shortcode" 
+                                class="button button-small navtalk-admin-copy-shortcode"
                                 data-shortcode="<?php echo esc_attr($shortcode_avatar); ?>"
                                 style="padding: 4px 10px; font-size: 11px;">
                             Copy
@@ -1507,7 +1507,7 @@ CSS;
     
     // Copy shortcode handler
     function bindCopyEvents() {
-        $('.copy-shortcode').off('click').on('click', function() {
+        $('.navtalk-admin-copy-shortcode').off('click').on('click', function() {
             var button = $(this);
             var shortcode = button.data('shortcode');
             var avatarId = extractAvatarId(shortcode);
@@ -1541,15 +1541,15 @@ CSS;
         
         // Show/hide list-only fields
         if (shortcodeType === 'list') {
-            $('.list-only').show();
+            $('.navtalk-admin-list-only').show();
             if ($('#modal-filter').val() === 'custom') {
-                $('.filter-custom-only').show();
+                $('.navtalk-admin-filter-custom-only').show();
             } else {
-                $('.filter-custom-only').hide();
+                $('.navtalk-admin-filter-custom-only').hide();
             }
         } else {
-            $('.list-only').hide();
-            $('.filter-custom-only').hide();
+            $('.navtalk-admin-list-only').hide();
+            $('.navtalk-admin-filter-custom-only').hide();
         }
 
         // Show/hide status position
@@ -1576,9 +1576,9 @@ CSS;
         // Handle filter change for custom IDs
         $('#modal-filter').on('change', function() {
             if ($(this).val() === 'custom') {
-                $('.filter-custom-only').show();
+                $('.navtalk-admin-filter-custom-only').show();
             } else {
-                $('.filter-custom-only').hide();
+                $('.navtalk-admin-filter-custom-only').hide();
             }
         });
 
@@ -1661,9 +1661,9 @@ CSS;
     // Modal copy success
     function showModalCopySuccess(button) {
         var originalText = button.text();
-        button.text('✓ Copied!').addClass('button-success');
+        button.text('✓ Copied!').addClass('navtalk-admin-button-success');
         setTimeout(function() {
-            button.text(originalText).removeClass('button-success');
+            button.text(originalText).removeClass('navtalk-admin-button-success');
         }, 2000);
     }
     
@@ -1848,7 +1848,7 @@ add_action('wp_ajax_navtalk_refresh_avatars', function() {
         echo '<label style="display: block; margin-bottom: 8px; font-weight: 600; color: #333; font-size: 14px;">Avatar List Shortcode:</label>';
         echo '<div style="display: flex; gap: 10px; align-items: center;">';
         echo '<code style="flex: 1; padding: 10px; background: #f9f9f9; border: 1px solid #eee; border-radius: 4px; font-size: 13px; color: #667eea;">[navtalk_list]</code>';
-        echo '<button type="button" class="button button-primary copy-shortcode" data-shortcode="[navtalk_list]" style="height: 38px; padding: 0 20px;">Copy with Config</button>';
+        echo '<button type="button" class="button button-primary navtalk-admin-copy-shortcode" data-shortcode="[navtalk_list]" style="height: 38px; padding: 0 20px;">Copy with Config</button>';
         echo '</div>';
         echo '<p class="description" style="margin-top: 8px;">Use this shortcode to display all your available avatars in a grid.</p>';
         echo '</div>';

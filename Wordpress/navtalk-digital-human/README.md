@@ -322,6 +322,11 @@ For support, please contact:
 
 ## Changelog
 
+### Version 1.1.7
+- Namespaced all plugin-owned front-end and admin CSS classes with the `navtalk-` prefix to prevent theme and plugin collisions
+- Removed unused legacy widget/admin CSS and synchronized PHP markup, CSS selectors, and JavaScript state classes
+- Preserved WordPress/Elementor framework classes and user-provided shortcode classes; custom code targeting old internal classes must use the new names
+
 ### Version 1.1.6
 - Strengthened call lifecycle cleanup so modal, inline, page-leave, and stale WebSocket paths cannot leave microphone streams active
 - Added file modification timestamps to front-end style and real-time script versions for reliable cache refreshes after updates

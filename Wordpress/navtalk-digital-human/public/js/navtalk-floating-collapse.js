@@ -11,14 +11,14 @@
     try {
         var savedState = localStorage.getItem('navtalk_widget_state');
         if (savedState === 'collapsed') {
-            var widget = document.getElementById('ntw-widget-root');
-            var toggleBtn = document.getElementById('ntw-toggle-widget');
+            var widget = document.getElementById('navtalk-widget-root');
+            var toggleBtn = document.getElementById('navtalk-widget-toggle');
             if (widget) {
-                widget.classList.add('ntw-collapsed');
+                widget.classList.add('navtalk-is-collapsed');
             }
             if (toggleBtn) {
                 toggleBtn.setAttribute('aria-expanded', 'false');
-                var toggleText = toggleBtn.querySelector('.ntw-toggle-text');
+                var toggleText = toggleBtn.querySelector('.navtalk-widget-toggle-text');
                 if (toggleText) {
                     toggleText.textContent = 'Show';
                 }

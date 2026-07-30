@@ -1,13 +1,8 @@
-.online_support_container {
-position: fixed;
-bottom: 80px;
-right: 40px;
-z-index: 99;
-}
 
-/* Protection: Ensure .real-time-container is NOT affected by .ntw-container styles */
-/* Reset positioning that might be inherited or affected by .ntw-container */
-.real-time-container {
+
+/* Protection: Ensure .navtalk-realtime-container is NOT affected by .navtalk-widget-container styles */
+/* Reset positioning that might be inherited or affected by .navtalk-widget-container */
+.navtalk-realtime-container {
     position: relative !important;
     bottom: auto !important;
     right: auto !important;
@@ -20,14 +15,14 @@ z-index: 99;
 
 /* Protection: Ensure Elementor popup modal container is not affected */
 /* Only reset if it might be affected, don't override Elementor's own positioning */
-.elementor-popup-modal:not(.ntw-container) {
-    /* Don't override Elementor's positioning, just ensure .ntw-container doesn't affect it */
+.elementor-popup-modal:not(.navtalk-widget-container) {
+    /* Don't override Elementor's positioning, just ensure .navtalk-widget-container doesn't affect it */
     isolation: isolate;
 }
 
 /* Main container style - Fixed position for WordPress */
-#ntw-widget-root.ntw-container,
-.ntw-container {
+#navtalk-widget-root.navtalk-widget-container,
+.navtalk-widget-container {
     display: flex;
     flex-direction: column;
     align-items: flex-end;
@@ -45,8 +40,8 @@ z-index: 99;
 }
 
 /* Position classes - Allow customization of floating position */
-#ntw-widget-root.ntw-container.bottom-right,
-.ntw-container.bottom-right {
+#navtalk-widget-root.navtalk-widget-container.navtalk-position-bottom-right,
+.navtalk-widget-container.navtalk-position-bottom-right {
     bottom: 24px !important;
     right: 24px !important;
     top: auto !important;
@@ -54,8 +49,8 @@ z-index: 99;
     align-items: flex-end;
 }
 
-#ntw-widget-root.ntw-container.bottom-left,
-.ntw-container.bottom-left {
+#navtalk-widget-root.navtalk-widget-container.navtalk-position-bottom-left,
+.navtalk-widget-container.navtalk-position-bottom-left {
     bottom: 24px !important;
     left: 24px !important;
     top: auto !important;
@@ -63,8 +58,8 @@ z-index: 99;
     align-items: flex-start;
 }
 
-#ntw-widget-root.ntw-container.top-right,
-.ntw-container.top-right {
+#navtalk-widget-root.navtalk-widget-container.navtalk-position-top-right,
+.navtalk-widget-container.navtalk-position-top-right {
     top: 24px !important;
     right: 24px !important;
     bottom: auto !important;
@@ -72,8 +67,8 @@ z-index: 99;
     align-items: flex-end;
 }
 
-#ntw-widget-root.ntw-container.top-left,
-.ntw-container.top-left {
+#navtalk-widget-root.navtalk-widget-container.navtalk-position-top-left,
+.navtalk-widget-container.navtalk-position-top-left {
     top: 24px !important;
     left: 24px !important;
     bottom: auto !important;
@@ -81,17 +76,17 @@ z-index: 99;
     align-items: flex-start;
 }
 
-/* Only apply box-sizing to direct children of .ntw-container, not globally */
-#ntw-widget-root.ntw-container > *,
-.ntw-container > *,
-#ntw-widget-root.ntw-container .ntw-panel-body,
-.ntw-container .ntw-panel-body,
-#ntw-widget-root.ntw-container .ntw-panel-body *,
-.ntw-container .ntw-panel-body * {
+/* Only apply box-sizing to direct children of .navtalk-widget-container, not globally */
+#navtalk-widget-root.navtalk-widget-container > *,
+.navtalk-widget-container > *,
+#navtalk-widget-root.navtalk-widget-container .navtalk-widget-panel,
+.navtalk-widget-container .navtalk-widget-panel,
+#navtalk-widget-root.navtalk-widget-container .navtalk-widget-panel *,
+.navtalk-widget-container .navtalk-widget-panel * {
     box-sizing: border-box;
 }
 
-.ntw-panel-body {
+.navtalk-widget-panel {
     position: relative;
     width: 55vw;
     height: 0;
@@ -107,7 +102,7 @@ z-index: 99;
     transition: transform 0.3s ease, opacity 0.25s ease, padding 0.25s ease, max-height 0.25s ease;
 }
 
-.ntw-panel-body::after {
+.navtalk-widget-panel::after {
     content: "";
     position: absolute;
     inset: 0;
@@ -116,7 +111,7 @@ z-index: 99;
     background: radial-gradient(circle at top right, rgba(148, 163, 255, 0.18), transparent 60%);
 }
 
-.ntw-panel-header {
+.navtalk-widget-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -124,13 +119,13 @@ z-index: 99;
     z-index: 1;
 }
 
-.ntw-panel-title {
+.navtalk-widget-title {
     display: flex;
     align-items: center;
     gap: 12px;
 }
 
-.ntw-title-copy {
+.navtalk-widget-title-copy {
     display: flex;
     flex-direction: column;
     gap: 2px;
@@ -138,7 +133,7 @@ z-index: 99;
     flex: 1;
 }
 
-.ntw-status-indicator {
+.navtalk-widget-status-indicator {
     width: 12px;
     height: 12px;
     border-radius: 50%;
@@ -153,14 +148,14 @@ z-index: 99;
     50% { transform: scale(1.15); opacity: 1; }
 }
 
-.ntw-title-text {
+.navtalk-widget-title-text {
     font-size: 16px;
     font-weight: 600;
     letter-spacing: 0.015em;
     color: #f8fafc;
 }
 
-.ntw-title-sub {
+.navtalk-widget-subtitle {
     font-size: 10px;
     font-weight: 500;
     text-transform: uppercase;
@@ -171,176 +166,67 @@ z-index: 99;
     text-overflow: ellipsis;
 }
 
-.ntw-btn {
-    background: rgba(255, 255, 255, 0.16);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.25s ease;
-    backdrop-filter: blur(6px);
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.28);
-}
 
-.ntw-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 10px 18px rgba(15, 23, 42, 0.32);
-    background: rgba(255, 255, 255, 0.25);
-}
 
-.ntw-icon {
-    transition: all 0.3s ease;
-}
 
-/* Header button group */
-.ntw-agent-header {
-    display: none;
-}
 
-.ntw-btn {
-    background: rgba(255, 255, 255, 0.2);
-    border: none;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    transition: all 0.3s ease;
-    backdrop-filter: blur(5px);
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
 
-.ntw-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-}
 
-.ntw-icon {
-    transition: all 0.3s ease;
-}
+
+
+
+
+
+
+
 
 /* Character container */
-.ntw-character-box {
+.navtalk-widget-character-box {
     position: absolute;
     width: 100%;
     height: 100%;
 }
 
-.ntw-character-avatar{
+.navtalk-widget-character-avatar{
     width: 100%;
     height: 100%;
     overflow: hidden;
 }
-.ntw-character-avatar video{
+.navtalk-widget-character-avatar video{
     width: 100% !important;
     height: 100% !important;
     object-fit: cover;
     object-position: 50% 5% !important;
 }
 
-/* Character background */
-.ntw-character-bg {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    z-index: -1;
-    filter: blur(20px) brightness(0.6) saturate(1.2);
-    opacity: 0.85;
-    transform: scale(1.1);
-    transition: filter 0.3s ease, opacity 0.3s ease;
-}
-
-/* Chat container - Hidden, no need to display text */
-.ntw-character-chat {
-    display: none !important;
-    visibility: hidden !important;
-    opacity: 0 !important;
-}
-
-.ntw-character-chat-item {
-    max-width: 70%;
-    padding: 12px 18px;
-    border-radius: 18px;
-    font-size: 16px;
-    line-height: 1.4;
-    animation: fadeIn 0.3s ease-out;
-}
-
-.ntw-item-user {
-    align-self: flex-end;
-    background: linear-gradient(145deg, #38bdf8 0%, #6366f1 100%);
-    color: #fff;
-    border-bottom-right-radius: 4px;
-    box-shadow: 0 10px 18px rgba(56, 189, 248, 0.25);
-}
-
-.ntw-item-character {
-    align-self: flex-start;
-    background: rgba(15, 23, 42, 0.88);
-    color: #e2e8f0;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.28);
-}
-
-/* Scrollbar style */
-.ntw-character-chat::-webkit-scrollbar {
-    width: 6px;
-}
-
-.ntw-character-chat::-webkit-scrollbar-track {
-    background: rgba(0, 0, 0, 0.05);
-    border-radius: 10px;
-}
-
-.ntw-character-chat::-webkit-scrollbar-thumb {
-    background: rgba(0, 0, 0, 0.2);
-    border-radius: 10px;
-}
 
 
-/* Chat container */
-.ntw-item .ntw-item-content {
-    padding: 12px 18px;
-    border-radius: 18px;
-    font-size: 16px;
-    line-height: 1.4;
-    animation: fadeIn 0.3s ease-out;
-    margin-bottom: 15px;
-}
 
-.ntw-item {
-    display: flex;
-}
 
-.ntw-item.ntw-item-left {
-    justify-content: start;
-}
 
-.ntw-item.ntw-item-left .ntw-item-content {
-    background: rgba(15, 23, 42, 0.88);
-    color: #e2e8f0;
-    border-bottom-left-radius: 4px;
-    box-shadow: 0 6px 14px rgba(15, 23, 42, 0.28);
-}
 
-.ntw-item.ntw-item-right {
-    justify-content: end;
-}
 
-.ntw-item.ntw-item-right .ntw-item-content {
-    background: linear-gradient(145deg, #38bdf8 0%, #6366f1 100%);
-    color: #fff;
-    border-bottom-right-radius: 4px;
-    box-shadow: 0 10px 18px rgba(56, 189, 248, 0.25);
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 /* Animation definition */
@@ -356,68 +242,17 @@ z-index: 99;
     }
 }
 
-/* Connection loading overlay - Transition animation during connection */
-.ntw-connection-loading-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    /* Semi-transparent modal background, keep image visible */
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    z-index: 10;
-    /* Slight blur effect to highlight loading animation */
-    backdrop-filter: blur(2px);
-    animation: fadeIn 0.3s ease-in;
-}
 
-/* Loading spinner - Rotating rings */
-.ntw-loading-spinner {
-    position: relative;
-    width: 70px;
-    height: 70px;
-    margin-bottom: 20px;
-}
 
-.ntw-spinner-ring {
-    position: absolute;
-    width: 100%;
-    height: 100%;
-    border: 4px solid transparent;
-    border-top-color: #fff;
-    border-radius: 50%;
-    animation: spin 1.4s cubic-bezier(0.5, 0, 0.5, 1) infinite;
-}
 
-.ntw-spinner-ring:nth-child(1) {
-    animation-delay: -0.45s;
-    border-top-color: rgba(255, 255, 255, 1);
-    border-width: 4px;
-}
 
-.ntw-spinner-ring:nth-child(2) {
-    animation-delay: -0.3s;
-    border-top-color: rgba(255, 255, 255, 0.8);
-    border-width: 3px;
-    width: 75%;
-    height: 75%;
-    top: 12.5%;
-    left: 12.5%;
-}
 
-.ntw-spinner-ring:nth-child(3) {
-    animation-delay: -0.15s;
-    border-top-color: rgba(255, 255, 255, 0.6);
-    border-width: 2px;
-    width: 50%;
-    height: 50%;
-    top: 25%;
-    left: 25%;
-}
+
+
+
+
+
+
 
 @keyframes spin {
     0% {
@@ -428,18 +263,7 @@ z-index: 99;
     }
 }
 
-/* Loading pulse - Pulse animation */
-.ntw-loading-pulse {
-    position: absolute;
-    width: 100px;
-    height: 100px;
-    border-radius: 50%;
-    background: radial-gradient(circle, rgba(255, 255, 255, 0.3) 0%, rgba(255, 255, 255, 0) 70%);
-    animation: pulse 2s ease-in-out infinite;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-}
+
 
 @keyframes pulse {
     0% {
@@ -464,32 +288,32 @@ z-index: 99;
 
 /* Responsive adjustments - WordPress compatible */
 @media (max-width: 768px) {
-    .ntw-container {
+    .navtalk-widget-container {
         gap: 10px;
     }
     
     /* Responsive position classes */
-    .ntw-container.bottom-right {
+    .navtalk-widget-container.navtalk-position-bottom-right {
         bottom: 16px !important;
         right: 16px !important;
     }
     
-    .ntw-container.bottom-left {
+    .navtalk-widget-container.navtalk-position-bottom-left {
         bottom: 16px !important;
         left: 16px !important;
     }
     
-    .ntw-container.top-right {
+    .navtalk-widget-container.navtalk-position-top-right {
         top: 16px !important;
         right: 16px !important;
     }
     
-    .ntw-container.top-left {
+    .navtalk-widget-container.navtalk-position-top-left {
         top: 16px !important;
         left: 16px !important;
     }
 
-    .ntw-toggle-btn {
+    .navtalk-widget-toggle-button {
         height: 48px;
         padding: 0 16px;
     }
@@ -497,23 +321,18 @@ z-index: 99;
 
 /* Dark mode - Only apply to our container, not global body */
 @media (prefers-color-scheme: dark) {
-    .ntw-container .ntw-character-avatar {
+    .navtalk-widget-container .navtalk-widget-character-avatar {
         background: #1e1e1e;
     }
 
-    .ntw-container .ntw-item-character {
-        background: #2d2d2d;
-        color: #e0e0e0;
-    }
 
-    .ntw-container .ntw-btn {
-        background: rgba(30, 30, 30, 0.5);
-    }
+
+
 
 }
 
 /* Remove fullscreen styles, adapt to popup container */
-/* .ntw-character-box height is already defined above, no longer using 100vw */
+/* .navtalk-widget-character-box height is already defined above, no longer using 100vw */
 
 
 /* Video positioning in popup container - Fixed size 242x480 */
@@ -529,20 +348,13 @@ z-index: 99;
     object-fit: cover !important;
     }
 
-/* Adjust background element - Initially hidden, shown when call is active */
-.ntw-character-bg {
-    display: none;
-    /* Hide background image by default, shown via JavaScript when call starts */
-}
 
-/* Ensure background shows when JavaScript sets display: block */
-.ntw-character-bg[style*="display: block"] {
-    display: block !important;
-}
+
+
 
 /* z-index is already defined in respective styles, no need to repeat */
 
-.ntw-toggle-btn {
+.navtalk-widget-toggle-button {
     pointer-events: auto;
     display: inline-flex;
     align-items: center;
@@ -562,25 +374,25 @@ z-index: 99;
     overflow: hidden;
 }
 
-.ntw-toggle-btn:hover {
+.navtalk-widget-toggle-button:hover {
     transform: translateY(-1px);
     box-shadow: 0 0 24px -4px rgba(10, 16, 35, 0.2);
     background: linear-gradient(150deg, rgba(20, 28, 51, 0.96) 0%, rgba(26, 26, 26, 0.92) 100%);
 }
 
 /* Pause animations on hover for collapsed button */
-.ntw-container.ntw-collapsed .ntw-toggle-btn:hover {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-button:hover {
     animation-play-state: paused;
     transform: translateY(-1px) scale(1.08) !important;
     box-shadow: 0 20px 45px rgba(148, 163, 255, 0.5) !important;
 }
 
-.ntw-container.ntw-collapsed .ntw-toggle-btn:hover::before {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-button:hover::before {
     animation-play-state: paused;
     opacity: 0.8;
 }
 
-.ntw-toggle-icon {
+.navtalk-widget-toggle-icon {
     width: 16px;
     height: 16px;
     border-radius: 999px;
@@ -595,7 +407,7 @@ z-index: 99;
 }
 
 /* Up arrow icon when expanded (to hide/collapse) */
-.ntw-toggle-icon::before {
+.navtalk-widget-toggle-icon::before {
     content: "";
     position: absolute;
     width: 0;
@@ -608,7 +420,7 @@ z-index: 99;
 }
 
 /* Down arrow icon when collapsed (to show/expand) */
-.ntw-toggle-icon::after {
+.navtalk-widget-toggle-icon::after {
     content: "";
     position: absolute;
     width: 0;
@@ -622,28 +434,28 @@ z-index: 99;
 }
 
 /* When collapsed, show down arrow and hide up arrow */
-.ntw-container.ntw-collapsed .ntw-toggle-icon::before {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-icon::before {
     transform: translateY(-1px) scale(0);
     opacity: 0;
 }
 
-.ntw-container.ntw-collapsed .ntw-toggle-icon::after {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-icon::after {
     transform: translateY(1px) scale(1);
     opacity: 1;
 }
 
-.ntw-container.ntw-collapsed .ntw-toggle-icon {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-icon {
     box-shadow: inset 0 0 0 1px rgba(148, 163, 255, 0.8);
     border-color: rgba(148, 163, 255, 0.8);
     background: rgba(148, 163, 255, 0.2);
 }
 
 /* Make down arrow more prominent when collapsed */
-.ntw-container.ntw-collapsed .ntw-toggle-icon::after {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-icon::after {
     border-top-color: rgba(148, 163, 255, 1);
 }
 
-.ntw-container.ntw-collapsed .ntw-toggle-btn {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-button {
     background: linear-gradient(160deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.92) 100%);
     border-color: rgba(148, 163, 255, 0.25);
     animation: ntw-collapsed-shake 0.6s ease-in-out, ntw-collapsed-pulse 2s ease-in-out 0.6s infinite;
@@ -675,7 +487,7 @@ z-index: 99;
 }
 
 /* Glow effect for collapsed button - only show when collapsed */
-.ntw-toggle-btn::before {
+.navtalk-widget-toggle-button::before {
     content: '';
     position: absolute;
     inset: -2px;
@@ -688,7 +500,7 @@ z-index: 99;
     display: none;
 }
 
-.ntw-container.ntw-collapsed .ntw-toggle-btn::before {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-button::before {
     display: block;
     animation: ntw-collapsed-glow 2s ease-in-out 0.6s infinite;
 }
@@ -704,7 +516,7 @@ z-index: 99;
     }
 }
 
-.ntw-container.ntw-collapsed .ntw-panel-body {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-panel {
     pointer-events: none;
     opacity: 0;
     transform: translateY(14px) scale(0.95);
@@ -714,11 +526,11 @@ z-index: 99;
     min-height: 0;
 }
 
-.ntw-container.ntw-collapsed {
+.navtalk-widget-container.navtalk-is-collapsed {
     gap: 0;
 }
 
-.ntw-container .ntw-toggle-text {
+.navtalk-widget-container .navtalk-widget-toggle-text {
     position: relative;
     display: inline-flex;
     font-feature-settings: "liga" 1;
@@ -728,14 +540,14 @@ z-index: 99;
 }
 
 /* Make text more prominent when collapsed */
-.ntw-container.ntw-collapsed .ntw-toggle-text {
+.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-toggle-text {
     color: rgba(148, 163, 255, 0.95);
     text-shadow: 0 0 8px rgba(148, 163, 255, 0.3);
     font-weight: 700;
 }
 
 /* Call button - positioned relative to popup container */
-#ntw-widget-root .navtalk-call-btn {
+#navtalk-widget-root .navtalk-call-btn {
     position: absolute !important;
     bottom: 24px !important;
     left: 50% !important;
@@ -767,7 +579,7 @@ z-index: 99;
 }
 
 /* Pulse ring effect */
-#ntw-widget-root .navtalk-call-btn::before {
+#navtalk-widget-root .navtalk-call-btn::before {
     content: '';
     position: absolute;
     top: 50%;
@@ -795,7 +607,7 @@ z-index: 99;
 }
 
 /* Button positioning in Elementor Popup */
-#ntw-widget-root .navtalk-call-btn {
+#navtalk-widget-root .navtalk-call-btn {
     position: absolute !important;
     bottom: 30px !important;
     left: 50% !important;
@@ -803,31 +615,31 @@ z-index: 99;
     transform: translate(-50%, 0);
 }
 
-#ntw-widget-root .navtalk-call-btn:hover {
+#navtalk-widget-root .navtalk-call-btn:hover {
     animation-play-state: paused;
     transform: translate(-50%, -2px) scale(1.1) !important;
     box-shadow: 0 30px 55px rgba(56, 189, 248, 0.5) !important;
 }
 
 /* Ensure hover works with animation */
-#ntw-widget-root .navtalk-call-btn:hover::before {
+#navtalk-widget-root .navtalk-call-btn:hover::before {
     animation-play-state: paused;
 }
 
 /* Active state - Hang up state (red gradient) */
-#ntw-widget-root .navtalk-call-btn.active {
+#navtalk-widget-root .navtalk-call-btn.navtalk-is-active {
     background: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%) !important;
     box-shadow: 0 10px 20px rgba(255, 94, 98, 0.4) !important;
     animation: none !important;
 }
 
 /* Stop pulse ring when active */
-#ntw-widget-root .navtalk-call-btn.active::before {
+#navtalk-widget-root .navtalk-call-btn.navtalk-is-active::before {
     display: none;
 }
 
 /* Active state hover */
-#ntw-widget-root .navtalk-call-btn.active:hover {
+#navtalk-widget-root .navtalk-call-btn.navtalk-is-active:hover {
     background: linear-gradient(135deg, #ff4757 0%, #ff7675 100%) !important;
     box-shadow: 0 15px 25px rgba(255, 94, 98, 0.5) !important;
 }
@@ -835,7 +647,7 @@ z-index: 99;
 /* Responsive adjustments - WordPress compatible */
 @media (max-width: 768px) {
 
-    #ntw-widget-root .navtalk-call-btn {
+    #navtalk-widget-root .navtalk-call-btn {
         /* Allow inline styles for responsive sizing */
         bottom: 18px !important;
         left: 50% !important;
@@ -851,12 +663,12 @@ z-index: 99;
    Scoped to the global widget so shortcode and Elementor cards are unaffected.
    ========================================================================== */
 
-#ntw-widget-root.ntw-container {
+#navtalk-widget-root.navtalk-widget-container {
     gap: 14px;
     font-family: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
-#ntw-widget-root .ntw-panel-body {
+#navtalk-widget-root .navtalk-widget-panel {
     --ntw-panel-pad-x: 8px;
     --ntw-panel-pad-top: 18px;
     --ntw-panel-pad-bottom: 18px;
@@ -893,17 +705,17 @@ z-index: 99;
         border-width 0.25s ease;
 }
 
-#ntw-widget-root .ntw-panel-body::after {
+#navtalk-widget-root .navtalk-widget-panel::after {
     z-index: 0;
     background: radial-gradient(circle at top right, rgba(148, 163, 255, 0.16), transparent 58%);
 }
 
-#ntw-widget-root .ntw-panel-body > * {
+#navtalk-widget-root .navtalk-widget-panel > * {
     position: relative;
     z-index: 1;
 }
 
-#ntw-widget-root .ntw-panel-header {
+#navtalk-widget-root .navtalk-widget-header {
     width: 100%;
     min-height: 40px;
     padding: 0 8px;
@@ -912,7 +724,7 @@ z-index: 99;
     flex: 0 0 auto;
 }
 
-#ntw-widget-root .ntw-panel-title {
+#navtalk-widget-root .navtalk-widget-title {
     width: 100%;
     min-width: 0;
     display: flex;
@@ -920,7 +732,7 @@ z-index: 99;
     gap: 12px;
 }
 
-#ntw-widget-root .ntw-status-indicator {
+#navtalk-widget-root .navtalk-widget-status-indicator {
     width: 11px;
     height: 11px;
     flex: 0 0 11px;
@@ -929,7 +741,7 @@ z-index: 99;
     box-shadow: 0 0 12px rgba(34, 211, 238, 0.9);
 }
 
-#ntw-widget-root .ntw-title-copy {
+#navtalk-widget-root .navtalk-widget-title-copy {
     min-width: 0;
     display: flex;
     flex: 1 1 auto;
@@ -937,8 +749,8 @@ z-index: 99;
     gap: 3px;
 }
 
-#ntw-widget-root .ntw-title-text,
-#ntw-widget-root .ntw-title-sub {
+#navtalk-widget-root .navtalk-widget-title-text,
+#navtalk-widget-root .navtalk-widget-subtitle {
     display: block;
     max-width: 100%;
     overflow: hidden;
@@ -946,7 +758,7 @@ z-index: 99;
     white-space: nowrap;
 }
 
-#ntw-widget-root .ntw-title-text {
+#navtalk-widget-root .navtalk-widget-title-text {
     color: #f8fafc;
     font-size: 16px;
     font-weight: 700;
@@ -955,7 +767,7 @@ z-index: 99;
     text-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
 }
 
-#ntw-widget-root .ntw-title-sub {
+#navtalk-widget-root .navtalk-widget-subtitle {
     color: rgba(226, 232, 240, 0.76);
     font-size: 10px;
     font-weight: 600;
@@ -964,7 +776,7 @@ z-index: 99;
     text-transform: uppercase;
 }
 
-#ntw-widget-root .ntw-character-box {
+#navtalk-widget-root .navtalk-widget-character-box {
     --ntw-media-radius: 18px;
     position: relative;
     inset: auto;
@@ -982,7 +794,7 @@ z-index: 99;
     box-shadow: 0 20px 36px rgba(10, 15, 35, 0.38);
 }
 
-#ntw-widget-root .ntw-character-avatar {
+#navtalk-widget-root .navtalk-widget-character-avatar {
     position: relative;
     width: 100%;
     height: 100%;
@@ -991,11 +803,11 @@ z-index: 99;
     background: #101826;
 }
 
-#ntw-widget-root .ntw-character-avatar > video,
-#ntw-widget-root .ntw-character-avatar > img,
-#ntw-widget-root .navtalk-avatar-preview-video,
-#ntw-widget-root .navtalk-avatar-static-img,
-#ntw-widget-root .navtalk-avatar-inline-video {
+#navtalk-widget-root .navtalk-widget-character-avatar > video,
+#navtalk-widget-root .navtalk-widget-character-avatar > img,
+#navtalk-widget-root .navtalk-avatar-preview-video,
+#navtalk-widget-root .navtalk-avatar-static-img,
+#navtalk-widget-root .navtalk-avatar-inline-video {
     width: 100% !important;
     height: 100% !important;
     object-fit: cover !important;
@@ -1003,7 +815,7 @@ z-index: 99;
     border-radius: var(--ntw-media-radius);
 }
 
-#ntw-widget-root .navtalk-connection-loading-overlay {
+#navtalk-widget-root .navtalk-connection-loading-overlay {
     /* Overscan removes the anti-aliased seam; the parent supplies the only rounded clip. */
     inset: -1px;
     width: auto;
@@ -1027,18 +839,18 @@ z-index: 99;
  * preventing a second set of rounded corners from showing above and below the
  * avatar media.
  */
-#ntw-widget-root.ntw-is-connecting .ntw-character-box {
+#navtalk-widget-root.navtalk-is-connecting .navtalk-widget-character-box {
     overflow: visible;
     border-radius: 0;
     box-shadow: none;
 }
 
-#ntw-widget-root.ntw-is-connecting .ntw-character-avatar {
+#navtalk-widget-root.navtalk-is-connecting .navtalk-widget-character-avatar {
     overflow: visible;
     border-radius: 0;
 }
 
-#ntw-widget-root.ntw-is-connecting .navtalk-connection-loading-overlay {
+#navtalk-widget-root.navtalk-is-connecting .navtalk-connection-loading-overlay {
     inset:
         calc(-1 * var(--ntw-panel-gap))
         calc(-1 * var(--ntw-panel-pad-x))
@@ -1047,14 +859,14 @@ z-index: 99;
     border-radius: 0;
 }
 
-#ntw-widget-root .navtalk-call-btn {
+#navtalk-widget-root .navtalk-call-btn {
     bottom: 16px !important;
     z-index: 6 !important;
     border: 1px solid rgba(129, 140, 248, 0.42);
     box-shadow: 0 18px 38px rgba(56, 189, 248, 0.35) !important;
 }
 
-#ntw-widget-root .ntw-toggle-btn {
+#navtalk-widget-root .navtalk-widget-toggle-button {
     height: 54px;
     min-width: 108px;
     padding: 0 20px;
@@ -1065,13 +877,13 @@ z-index: 99;
     box-shadow: 0 14px 32px rgba(10, 16, 35, 0.45);
 }
 
-#ntw-widget-root .ntw-toggle-btn:hover {
+#navtalk-widget-root .navtalk-widget-toggle-button:hover {
     background: linear-gradient(150deg, rgba(20, 28, 51, 0.98) 0%, rgba(70, 26, 134, 0.94) 100%);
     border-color: rgba(129, 140, 248, 0.65);
     box-shadow: 0 18px 36px rgba(10, 16, 35, 0.48);
 }
 
-#ntw-widget-root.ntw-container.ntw-collapsed .ntw-panel-body {
+#navtalk-widget-root.navtalk-widget-container.navtalk-is-collapsed .navtalk-widget-panel {
     height: 0;
     min-height: 0;
     max-height: 0;
@@ -1083,22 +895,22 @@ z-index: 99;
     transform: translateY(14px) scale(0.95);
 }
 
-#ntw-widget-root.ntw-container.ntw-collapsed {
+#navtalk-widget-root.navtalk-widget-container.navtalk-is-collapsed {
     gap: 0;
 }
 
 @media (max-width: 480px) {
-    #ntw-widget-root.ntw-container.bottom-right {
+    #navtalk-widget-root.navtalk-widget-container.navtalk-position-bottom-right {
         right: 12px !important;
         bottom: 12px !important;
     }
 
-    #ntw-widget-root.ntw-container.bottom-left {
+    #navtalk-widget-root.navtalk-widget-container.navtalk-position-bottom-left {
         left: 12px !important;
         bottom: 12px !important;
     }
 
-    #ntw-widget-root .ntw-panel-body {
+    #navtalk-widget-root .navtalk-widget-panel {
         --ntw-panel-pad-top: 16px;
         --ntw-panel-pad-bottom: 14px;
         --ntw-panel-gap: 14px;
@@ -1110,20 +922,20 @@ z-index: 99;
         gap: var(--ntw-panel-gap);
     }
 
-    #ntw-widget-root .ntw-panel-header {
+    #navtalk-widget-root .navtalk-widget-header {
         min-height: 38px;
         padding: 0 7px;
     }
 
-    #ntw-widget-root .ntw-title-text {
+    #navtalk-widget-root .navtalk-widget-title-text {
         font-size: 15px;
     }
 
-    #ntw-widget-root .ntw-title-sub {
+    #navtalk-widget-root .navtalk-widget-subtitle {
         font-size: 9px;
     }
 
-    #ntw-widget-root .navtalk-call-btn {
+    #navtalk-widget-root .navtalk-call-btn {
         bottom: 14px !important;
     }
 }

@@ -12,10 +12,10 @@
     class NavTalkWidget {
         constructor() {
             this.STORAGE_KEY = 'navtalk_widget_state';
-            this.$container = $('#ntw-widget-root');
-            this.$toggleBtn = $('#ntw-toggle-widget');
-            this.$video = $('#ntw-avatar-video');
-            this.$characterAvatar = $('.ntw-character-avatar');
+            this.$container = $('#navtalk-widget-root');
+            this.$toggleBtn = $('#navtalk-widget-toggle');
+            this.$video = $('#navtalk-widget-avatar-video');
+            this.$characterAvatar = $('.navtalk-widget-character-avatar');
             this.isExpanded = this.loadState();
             this.isConnected = false;
             
@@ -34,11 +34,11 @@
             
             // Apply saved state
             if (!this.isExpanded) {
-                this.$container.addClass('ntw-collapsed');
+                this.$container.addClass('navtalk-is-collapsed');
                 this.$toggleBtn.attr('aria-expanded', 'false');
-                this.$toggleBtn.find('.ntw-toggle-text').text('Show');
+                this.$toggleBtn.find('.navtalk-widget-toggle-text').text('Show');
             }else {
-                this.$toggleBtn.find('.ntw-toggle-text').text('Hide');
+                this.$toggleBtn.find('.navtalk-widget-toggle-text').text('Hide');
             }
             
             // Bind toggle button event
@@ -64,11 +64,11 @@
          */
         toggle() {
             this.isExpanded = !this.isExpanded;
-            this.$container.toggleClass('ntw-collapsed');
+            this.$container.toggleClass('navtalk-is-collapsed');
             this.$toggleBtn.attr('aria-expanded', this.isExpanded);
             
             console.log('[NavTalk Widget] Toggled:', this.isExpanded ? 'expanded' : 'collapsed');
-            this.$toggleBtn.find('.ntw-toggle-text').text(this.isExpanded ? 'Hide' : 'Show');
+            this.$toggleBtn.find('.navtalk-widget-toggle-text').text(this.isExpanded ? 'Hide' : 'Show');
             
             // Save state to localStorage
             this.saveState(this.isExpanded);
@@ -135,7 +135,7 @@
             }
 
             // Show loading state
-            this.$characterAvatar.addClass('loading');
+            this.$characterAvatar.addClass('navtalk-is-loading');
 
             // Set poster image
             if (avatarImg) {
@@ -146,7 +146,7 @@
             // Check if navtalkConfig is available
             if (typeof navtalkConfig === 'undefined') {
                 console.error('[NavTalk Widget] navtalkConfig not found');
-                this.$characterAvatar.removeClass('loading');
+                this.$characterAvatar.removeClass('navtalk-is-loading');
                 return;
             }
 
@@ -180,7 +180,7 @@
             // NOTE: Actual WebRTC connection logic is handled by navtalk-realtime.js
             // The call button click will trigger the inline call mode
             setTimeout(() => {
-                this.$characterAvatar.removeClass('loading');
+                this.$characterAvatar.removeClass('navtalk-is-loading');
                 this.isConnected = true;
                 console.log('[NavTalk Widget] Avatar initialized (ready for call)');
             }, 1000);
@@ -218,7 +218,7 @@
      * Initialize widget after page load
      */
     $(document).ready(function() {
-        if ($('#ntw-widget-root').length) {
+        if ($('#navtalk-widget-root').length) {
             window.navtalkWidget = new NavTalkWidget();
         }
     });

@@ -226,39 +226,39 @@ class NavTalk_Shortcode {
         }
         
         // Generate unique container ID
-        $unique_id = 'ntw-widget-root';
+        $unique_id = 'navtalk-widget-root';
 
         $avatar_id_value = isset($avatar_info['avatarId']) ? $avatar_info['avatarId'] : (isset($avatar_info['id']) ? $avatar_info['id'] : $avatar_id);
         ?>
         <!-- NavTalk Global Floating Widget -->
         <div id="<?php echo esc_attr($unique_id); ?>"
-             class="ntw-container <?php echo esc_attr($position); ?> navtalk-inline-mode"
+             class="navtalk-widget-container <?php echo esc_attr('navtalk-position-' . $position); ?> navtalk-inline-mode"
              data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
              data-avatar-img="<?php echo esc_url($image_url); ?>"
              data-voice="<?php echo esc_attr($voice); ?>"
              data-model="<?php echo esc_attr($model); ?>">
             
-            <div class="ntw-panel-body">
+            <div class="navtalk-widget-panel">
                 <?php if ('' !== $title || '' !== $subtitle): ?>
-                <header class="ntw-panel-header">
-                    <div class="ntw-panel-title">
-                        <span class="ntw-status-indicator" aria-hidden="true"></span>
-                        <div class="ntw-title-copy">
+                <header class="navtalk-widget-header">
+                    <div class="navtalk-widget-title">
+                        <span class="navtalk-widget-status-indicator" aria-hidden="true"></span>
+                        <div class="navtalk-widget-title-copy">
                             <?php if ('' !== $title): ?>
-                            <span class="ntw-title-text"><?php echo esc_html($title); ?></span>
+                            <span class="navtalk-widget-title-text"><?php echo esc_html($title); ?></span>
                             <?php endif; ?>
                             <?php if ('' !== $subtitle): ?>
-                            <span class="ntw-title-sub"><?php echo esc_html($subtitle); ?></span>
+                            <span class="navtalk-widget-subtitle"><?php echo esc_html($subtitle); ?></span>
                             <?php endif; ?>
                         </div>
                     </div>
                 </header>
                 <?php endif; ?>
-                <div class="ntw-character-box">
-                    <div class="ntw-character-avatar">
+                <div class="navtalk-widget-character-box">
+                    <div class="navtalk-widget-character-avatar">
                         <?php if ($has_video): ?>
                             <!-- Avatar preview video (auto-loop) -->
-                            <video class="navtalk-avatar-preview-video ntw-preview-video"
+                            <video class="navtalk-avatar-preview-video navtalk-widget-preview-video"
                                    src="<?php echo esc_url($video_url); ?>"
                                    poster="<?php echo esc_url($image_url); ?>"
                                    autoplay
@@ -274,7 +274,7 @@ class NavTalk_Shortcode {
                         
                         <!-- Inline realtime call video element (hidden by default) -->
                         <video class="navtalk-avatar-inline-video"
-                               id="ntw-avatar-video"
+                               id="navtalk-widget-avatar-video"
                                poster="<?php echo esc_url($image_url); ?>"></video>
                         
                         <!-- Loading overlay for inline mode -->
@@ -289,7 +289,7 @@ class NavTalk_Shortcode {
                         </div>
                         
                         <!-- Call button overlay -->
-                        <button class="navtalk-icon-button navtalk-call-btn navtalk-inline-call ntw-call-button"
+                        <button class="navtalk-icon-button navtalk-call-btn navtalk-inline-call navtalk-widget-call-button"
                                 data-avatar-id="<?php echo esc_attr($avatar_id_value); ?>"
                                 data-avatar-img="<?php echo esc_url($image_url); ?>"
                                 data-inline-mode="true"
@@ -305,12 +305,12 @@ class NavTalk_Shortcode {
             
             <?php if ($show_toggle): ?>
             <!-- Toggle button to show/hide widget -->
-            <button class="ntw-toggle-btn" 
-                    id="ntw-toggle-widget" 
+            <button class="navtalk-widget-toggle-button"
+                    id="navtalk-widget-toggle"
                     aria-expanded="true" 
                     aria-label="<?php esc_attr_e('Hide Digital Human Panel', 'navtalk-digital-human'); ?>">
-                <span class="ntw-toggle-icon"></span>
-                <span class="ntw-toggle-text"></span>
+                <span class="navtalk-widget-toggle-icon"></span>
+                <span class="navtalk-widget-toggle-text"></span>
             </button>
             <?php endif; ?>
         </div>
@@ -894,7 +894,7 @@ class NavTalk_Shortcode {
 
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
-                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>"></span>
+                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'navtalk-status-available' : 'navtalk-status-unavailable'); ?>"></span>
                     <?php endif; ?>
                 </div>
 
@@ -1177,7 +1177,7 @@ class NavTalk_Shortcode {
 
                     <!-- Status Badge (corner) -->
                     <?php if ($show_status && $status_position === 'corner'): ?>
-                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>"></span>
+                        <span class="navtalk-status-badge <?php echo esc_attr($is_available ? 'navtalk-status-available' : 'navtalk-status-unavailable'); ?>"></span>
                     <?php endif; ?>
                 </div>
 
@@ -1188,8 +1188,8 @@ class NavTalk_Shortcode {
                     <?php endif; ?>
 
                     <?php if ($show_status && $status_position === 'info'): ?>
-                        <p class="navtalk-avatar-status <?php echo esc_attr($is_available ? 'status-available' : 'status-unavailable'); ?>">
-                            <span class="status-indicator"></span>
+                        <p class="navtalk-avatar-status <?php echo esc_attr($is_available ? 'navtalk-status-available' : 'navtalk-status-unavailable'); ?>">
+                            <span class="navtalk-status-indicator"></span>
                             <?php echo esc_html($is_available ? __('Available', 'navtalk-digital-human') : __('Unavailable', 'navtalk-digital-human')); ?>
                         </p>
                     <?php endif; ?>

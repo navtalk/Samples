@@ -144,7 +144,7 @@
     color: #666;
 }
 
-.status-indicator {
+.navtalk-status-indicator {
     display: inline-block;
     width: 8px;
     height: 8px;
@@ -152,12 +152,12 @@
     margin-right: 6px;
 }
 
-.status-available .status-indicator {
+.navtalk-status-available .navtalk-status-indicator {
     background: #4caf50;
     box-shadow: 0 0 6px rgba(76, 175, 80, 0.6);
 }
 
-.status-unavailable .status-indicator {
+.navtalk-status-unavailable .navtalk-status-indicator {
     background: #f44336;
 }
 
@@ -243,11 +243,11 @@
     box-shadow: 0 2px 6px rgba(0,0,0,0.3);
 }
 
-.navtalk-status-badge.status-available {
+.navtalk-status-badge.navtalk-status-available {
     background: #4caf50;
 }
 
-.navtalk-status-badge.status-unavailable {
+.navtalk-status-badge.navtalk-status-unavailable {
     background: #f44336;
 }
 
@@ -383,15 +383,15 @@
 }
 
 /* Hidden state helpers */
-.navtalk-inline-mode .navtalk-avatar-static-img.hidden {
+.navtalk-inline-mode .navtalk-avatar-static-img.navtalk-is-hidden {
     display: none !important;
 }
 
-.navtalk-inline-mode .navtalk-avatar-preview-video.hidden {
+.navtalk-inline-mode .navtalk-avatar-preview-video.navtalk-is-hidden {
     display: none !important;
 }
 
-.navtalk-inline-mode .navtalk-avatar-inline-video.active {
+.navtalk-inline-mode .navtalk-avatar-inline-video.navtalk-is-active {
     display: block !important;
 }
 
@@ -655,7 +655,7 @@
     justify-content: center;
 }
 
-.navtalk-modal.active {
+.navtalk-modal.navtalk-is-active {
     display: flex;
 }
 
@@ -711,7 +711,7 @@
    Real-time Container Styles (from demo.html)
    ========================================================================== */
 
-.real-time-container {
+.navtalk-realtime-container {
     display: flex;
     flex-direction: column;
     height: 100%;
@@ -720,7 +720,7 @@
     background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-.ah-character-box {
+.navtalk-realtime-character-box {
     position: relative;
     width: 100%;
     height: 100%;
@@ -729,7 +729,7 @@
     align-items: center;
 }
 
-.ah-character-avatar {
+.navtalk-realtime-character-avatar {
     width: 100% !important;
     height: 100% !important;
     border-radius: 0 !important;
@@ -768,7 +768,7 @@
 }
 
 /* Call button - positioned inside modal content */
-.btn-character-call {
+.navtalk-realtime-call-button {
     position: absolute;
     bottom: 30px;
     width: 60px;
@@ -786,27 +786,27 @@
 }
 
 /* Button position: center-bottom (default) */
-.btn-character-call.position-center-bottom {
+.navtalk-realtime-call-button.navtalk-position-center-bottom {
     left: 50%;
     transform: translateX(-50%);
 }
 
 /* Button position: bottom-left */
-.btn-character-call.position-bottom-left {
+.navtalk-realtime-call-button.navtalk-position-bottom-left {
     left: 30px;
 }
 
 /* Button position: bottom-right */
-.btn-character-call.position-bottom-right {
+.navtalk-realtime-call-button.navtalk-position-bottom-right {
     right: 30px;
 }
 
-.btn-character-call:hover {
+.navtalk-realtime-call-button:hover {
     /*transform: scale(1.1);*/
     box-shadow: 0 15px 25px rgba(118, 75, 162, 0.4);
 }
 
-.btn-character-call.active {
+.navtalk-realtime-call-button.navtalk-is-active {
     background: linear-gradient(135deg, rgb(255, 94, 98) 0%, rgb(255, 153, 102) 100%) !important;
     box-shadow: rgba(255, 94, 98, 0.4) 0 10px 20px !important;
     animation: pulse-red 1.5s ease-in-out infinite;
@@ -849,15 +849,15 @@
     display: block;
 }
 
-.navtalk-inline-mode .navtalk-avatar-static-img.hidden {
+.navtalk-inline-mode .navtalk-avatar-static-img.navtalk-is-hidden {
     display: none !important;
 }
 
-.navtalk-inline-mode .navtalk-avatar-inline-video.active {
+.navtalk-inline-mode .navtalk-avatar-inline-video.navtalk-is-active {
     display: block !important;
 }
 
-.navtalk-inline-mode .navtalk-call-btn.active {
+.navtalk-inline-mode .navtalk-call-btn.navtalk-is-active {
     background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%) !important;
     box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4) !important;
     animation: pulse-red-small 1.5s ease-in-out infinite;
@@ -872,7 +872,7 @@
     }
 }
 
-.ah-btn {
+.navtalk-realtime-button {
     background: rgba(255, 255, 255, 0.2);
     border: none;
     border-radius: 50%;
@@ -888,17 +888,17 @@
     box-shadow: rgba(118, 75, 162, 0.3) 0 10px 20px !important;
 }
 
-.ah-btn:hover {
+.navtalk-realtime-button:hover {
     /*transform: translateY(-2px);*/
     box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
 }
 
-.ah-icon {
+.navtalk-realtime-icon {
     transition: all 0.3s ease;
 }
 
 /* Chat container */
-.ah-character-chat {
+.navtalk-realtime-chat {
     position: fixed;
     bottom: 100px;
     left: 20px;
@@ -912,7 +912,7 @@
     z-index: 999;
 }
 
-.character-chat-item {
+.navtalk-chat-item {
     max-width: 70%;
     padding: 12px 18px;
     border-radius: 18px;
@@ -921,14 +921,14 @@
     animation: fadeIn 0.3s ease-out;
 }
 
-.item-user {
+.navtalk-chat-item-user {
     align-self: flex-end;
     background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     color: white;
     border-bottom-right-radius: 4px;
 }
 
-.item-character {
+.navtalk-chat-item-assistant {
     align-self: flex-start;
     background: white;
     color: #333;
@@ -937,29 +937,29 @@
 }
 
 /* Scrollbar style */
-.ah-character-chat::-webkit-scrollbar {
+.navtalk-realtime-chat::-webkit-scrollbar {
     width: 6px;
 }
 
-.ah-character-chat::-webkit-scrollbar-track {
+.navtalk-realtime-chat::-webkit-scrollbar-track {
     background: rgba(0, 0, 0, 0.05);
     border-radius: 10px;
 }
 
-.ah-character-chat::-webkit-scrollbar-thumb {
+.navtalk-realtime-chat::-webkit-scrollbar-thumb {
     background: rgba(0, 0, 0, 0.2);
     border-radius: 10px;
 }
 
 /* Typing animation */
-.typing-indicator {
+.navtalk-typing-indicator {
     display: inline-flex;
     align-items: center;
     gap: 4px;
     padding: 2px 0;
 }
 
-.typing-dot {
+.navtalk-typing-dot {
     width: 8px;
     height: 8px;
     background: currentColor;
@@ -968,15 +968,15 @@
     opacity: 0.6;
 }
 
-.typing-dot:nth-child(1) {
+.navtalk-typing-dot:nth-child(1) {
     animation-delay: 0s;
 }
 
-.typing-dot:nth-child(2) {
+.navtalk-typing-dot:nth-child(2) {
     animation-delay: 0.2s;
 }
 
-.typing-dot:nth-child(3) {
+.navtalk-typing-dot:nth-child(3) {
     animation-delay: 0.4s;
 }
 
@@ -1036,22 +1036,22 @@
         max-width: 100%;
     }
     
-    .ah-character-chat {
+    .navtalk-realtime-chat {
         bottom: 80px;
         max-height: 25vh;
     }
     
-    .btn-character-call {
+    .navtalk-realtime-call-button {
         width: 50px;
         height: 50px;
         bottom: 20px;
     }
     
-    .btn-character-call.position-bottom-left {
+    .navtalk-realtime-call-button.navtalk-position-bottom-left {
         left: 20px;
     }
     
-    .btn-character-call.position-bottom-right {
+    .navtalk-realtime-call-button.navtalk-position-bottom-right {
         right: 20px;
     }
     
@@ -1080,12 +1080,12 @@
         color: #999;
     }
     
-    .item-character {
+    .navtalk-chat-item-assistant {
         background: #2d2d2d;
         color: #e0e0e0;
     }
     
-    .ah-character-avatar {
+    .navtalk-realtime-character-avatar {
         background: #1e1e1e;
     }
 }
@@ -1110,7 +1110,7 @@
     pointer-events: none;
 }
 
-.navtalk-connection-loading-overlay.active {
+.navtalk-connection-loading-overlay.navtalk-is-active {
     display: flex;
 }
 
@@ -1201,7 +1201,7 @@
 .navtalk-floating-btn:focus,
 .navtalk-icon-button:focus,
 .navtalk-call-btn:focus,
-.btn-character-call:focus,
+.navtalk-realtime-call-button:focus,
 .navtalk-trigger-link:focus,
 .navtalk-modal-close:focus {
     outline-width:0;
