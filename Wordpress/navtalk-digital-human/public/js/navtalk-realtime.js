@@ -41,8 +41,11 @@
             this.audioProcessor = null;
             this.microphoneSource = null;
             this.audioStream = null;
+            this.activeMicrophoneStreams = new Set();
             this.recordingPromise = null;
             this.recordingGeneration = 0;
+            this.isCallActive = false;
+            this.callGeneration = 0;
             this.currentAudioSource = null;
             this.audioQueue = [];
             this.isPlaying = false;
@@ -69,6 +72,7 @@
             this.currentInlineVideoElement = null; // Native DOM element for addEventListener
             this.currentInlineContainer = null;
             this.inlineLoadingTimeout = null;
+            this.modalAutoStartTimeout = null;
             
             this.init();
         }
@@ -189,6 +193,13 @@
             $('#btnRealtime').on('click', function() {
                 self.toggleCall();
             });
+
+            // Always release the microphone when the page is being left.
+            $(window).on('pagehide.navtalk beforeunload.navtalk', function() {
+                self.invalidateCallLifecycle();
+                self.stopRecording();
+                self.closeCurrentSocket();
+            });
         }
         
         openChatModal(avatarId, avatarImg, connectImmediately = false, modalConfig = {}) {
@@ -253,15 +264,27 @@
             // If connect immediately is enabled, start the call automatically
             if (connectImmediately) {
                 const self = this;
-                setTimeout(function() {
+                this.clearModalAutoStartTimeout();
+                this.modalAutoStartTimeout = setTimeout(function() {
+                    self.modalAutoStartTimeout = null;
                     self.startCall();
                 }, 500); // Small delay to let modal animation complete
             }
         }
         
         closeChatModal() {
-            // Stop any active call
-            if (this.socket || this.peerConnection) {
+            this.clearModalAutoStartTimeout();
+
+            // A pending microphone request can outlive the socket. Clean up
+            // whenever any part of the call lifecycle is still active.
+            if (
+                this.isCallActive ||
+                this.socket ||
+                this.peerConnection ||
+                this.audioStream ||
+                this.recordingPromise ||
+                this.activeMicrophoneStreams.size
+            ) {
                 this.stopCall();
             }
             
@@ -299,7 +322,66 @@
             }
         }
 
+        clearModalAutoStartTimeout() {
+            if (this.modalAutoStartTimeout) {
+                clearTimeout(this.modalAutoStartTimeout);
+                this.modalAutoStartTimeout = null;
+            }
+        }
+
+        beginCallLifecycle() {
+            if (this.isCallActive) {
+                console.warn('NavTalk: Ignoring duplicate call start');
+                return null;
+            }
+
+            this.isCallActive = true;
+            this.callGeneration += 1;
+            return this.callGeneration;
+        }
+
+        invalidateCallLifecycle() {
+            this.isCallActive = false;
+            this.callGeneration += 1;
+        }
+
+        isCurrentCall(generation) {
+            return this.isCallActive && generation === this.callGeneration;
+        }
+
+        closeCurrentSocket() {
+            const socket = this.socket;
+            this.socket = null;
+
+            if (!socket) {
+                return;
+            }
+
+            // Prevent callbacks from a closing socket from cleaning up a newer
+            // call that may already have started.
+            socket.onopen = null;
+            socket.onmessage = null;
+            socket.onerror = null;
+            socket.onclose = null;
+
+            try {
+                if (
+                    socket.readyState === WebSocket.CONNECTING ||
+                    socket.readyState === WebSocket.OPEN
+                ) {
+                    socket.close();
+                }
+            } catch (err) {
+                console.warn('NavTalk: WebSocket was already closed:', err);
+            }
+        }
+
         async startInlineCall($button, avatarId, avatarImg, $container, $staticImg, $video) {
+            const callGeneration = this.beginCallLifecycle();
+            if (callGeneration === null) {
+                return;
+            }
+
             console.log('NavTalk: Starting inline call for avatarId', avatarId);
             
             // Play call start audio
@@ -359,7 +441,7 @@
             this.currentAvatarImg = avatarImg;
 
             // Start WebSocket connection
-            await this.startWebSocket();
+            await this.startWebSocket(callGeneration);
         }
 
         stopInlineCall($button, $container, $staticImg, $video) {
@@ -373,6 +455,18 @@
 
             this.setInlineConnectingState($container, false);
             this.clearInlineLoadingTimeout();
+
+            // Release call resources before touching the UI. This guarantees
+            // that even incomplete or removed markup cannot leave the
+            // microphone active.
+            this.invalidateCallLifecycle();
+            this.stopRecording();
+            this.closeCurrentSocket();
+
+            if (this.peerConnection) {
+                this.peerConnection.close();
+                this.peerConnection = null;
+            }
             
             // Validate we have required elements
             if (!$button || !$container || !$staticImg || !$video) {
@@ -394,20 +488,6 @@
                 $loadingOverlay.hide();
             }
             this.currentLoadingOverlay = null;
-            
-            // Stop recording
-            this.stopRecording();
-            
-            // Close connections
-            if (this.socket) {
-                this.socket.close();
-                this.socket = null;
-            }
-            
-            if (this.peerConnection) {
-                this.peerConnection.close();
-                this.peerConnection = null;
-            }
             
             // Hide realtime call video
             $video.hide().removeClass('active');
@@ -452,6 +532,11 @@
         }
         
         async startCall() {
+            const callGeneration = this.beginCallLifecycle();
+            if (callGeneration === null) {
+                return;
+            }
+
             console.log('NavTalk: Starting call...');
             
             // Play call start audio
@@ -468,11 +553,14 @@
             // $('.character-chat-item').show();
             
             // Start WebSocket connection
-            await this.startWebSocket();
+            await this.startWebSocket(callGeneration);
         }
         
         async stopCall() {
             console.log('NavTalk: Stopping call...');
+
+            this.clearModalAutoStartTimeout();
+            this.invalidateCallLifecycle();
             
             // Play call end audio
             this.playCallAudio('end');
@@ -492,11 +580,8 @@
             // Stop recording
             this.stopRecording();
             
-            // Close WebSocket
-            if (this.socket) {
-                this.socket.close();
-                this.socket = null;
-            }
+            // Close WebSocket and detach callbacks from the ended call.
+            this.closeCurrentSocket();
             
             // Clean up resources
             await this.cleanupResources();
@@ -505,7 +590,8 @@
             $('#character-static-image').show();
             $('#character-avatar-video').hide().get(0).pause();
             
-            // Clear audio queue
+            // Stop queued response audio as part of the same call teardown.
+            this.stopCurrentAudioPlayback();
             this.audioQueue = [];
             this.isPlaying = false;
             
@@ -537,7 +623,12 @@
             }
         }
         
-        async startWebSocket() {
+        async startWebSocket(callGeneration = this.callGeneration) {
+            if (!this.isCurrentCall(callGeneration)) {
+                console.log('NavTalk: Ignoring WebSocket start for an obsolete call');
+                return;
+            }
+
             const websocketUrl = `${navtalkConfig.websocketUrl}?license=${navtalkConfig.license}&avatarId=${this.currentAvatarId}`;
             
             console.log('NavTalk: Connecting to WebSocket...', websocketUrl);
@@ -565,12 +656,21 @@
                 $modalVideo.data('loadingOverlay', $loadingOverlay);
             }
             
-            this.socket = new WebSocket(websocketUrl);
-            this.socket.binaryType = 'arraybuffer';
+            const socket = new WebSocket(websocketUrl);
+            socket.binaryType = 'arraybuffer';
+            this.socket = socket;
             
             const self = this;
-            
-            this.socket.onmessage = (event) => {
+            const isStaleSocket = () => (
+                !self.isCurrentCall(callGeneration) ||
+                self.socket !== socket
+            );
+
+            socket.onmessage = (event) => {
+                if (isStaleSocket()) {
+                    return;
+                }
+
                 if (typeof event.data === 'string') {
                     try {
                         const data = JSON.parse(event.data);
@@ -583,7 +683,11 @@
                 }
             };
             
-            this.socket.onopen = function() {
+            socket.onopen = function() {
+                if (isStaleSocket()) {
+                    return;
+                }
+
                 console.log("NavTalk: WebSocket connection established");
                 
                 // Send session configuration immediately after connection
@@ -595,21 +699,34 @@
                 }
             };
             
-            this.socket.onerror = function(error) {
+            socket.onerror = function(error) {
+                if (isStaleSocket()) {
+                    return;
+                }
+
                 console.error("NavTalk: WebSocket error:", error);
+                self.invalidateCallLifecycle();
                 self.stopRecording();
+                self.closeCurrentSocket();
                 self.cleanupResources();
             };
             
-            this.socket.onclose = async function(event) {
+            socket.onclose = async function(event) {
+                if (isStaleSocket()) {
+                    return;
+                }
+
                 console.log("NavTalk: WebSocket connection closed", event.code, event.reason);
+
+                self.socket = null;
+                self.invalidateCallLifecycle();
+                self.stopRecording();
                 
                 if (event.reason === 'Insufficient points') {
                     self.showError("Insufficient points to complete this action.");
                 }
                 
                 await self.cleanupResources();
-                self.stopRecording();
                 self.responseSpans = new Map();
             };
         }
@@ -955,33 +1072,40 @@
                 return this.recordingPromise;
             }
 
-            const generation = this.recordingGeneration;
+            const recordingGeneration = this.recordingGeneration;
+            const callGeneration = this.callGeneration;
+            let acquiredStream = null;
+            let acquiredAudioContext = null;
+
             const recordingPromise = navigator.mediaDevices.getUserMedia({ audio: true })
                 .then(stream => {
-                    const callIsCurrent = generation === this.recordingGeneration;
+                    acquiredStream = stream;
+                    this.activeMicrophoneStreams.add(stream);
+
+                    const recordingIsCurrent = recordingGeneration === this.recordingGeneration;
+                    const callIsCurrent = this.isCurrentCall(callGeneration);
                     const socketIsOpen = this.socket && this.socket.readyState === WebSocket.OPEN;
 
                     // getUserMedia() can resolve after the user has already hung
                     // up. Stop that late stream immediately instead of attaching
                     // it to an ended call.
-                    if (!callIsCurrent || !socketIsOpen) {
-                        stream.getTracks().forEach(track => track.stop());
+                    if (!recordingIsCurrent || !callIsCurrent || !socketIsOpen) {
+                        this.stopAudioStream(stream);
                         console.log("NavTalk: Discarded late microphone stream");
                         return;
                     }
 
                     const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-                    const audioContext = new AudioContextClass({ sampleRate: 24000 });
-                    const microphoneSource = audioContext.createMediaStreamSource(stream);
-                    const audioProcessor = audioContext.createScriptProcessor(8192, 1, 1);
-
-                    this.audioContext = audioContext;
-                    this.audioStream = stream;
-                    this.microphoneSource = microphoneSource;
-                    this.audioProcessor = audioProcessor;
+                    acquiredAudioContext = new AudioContextClass({ sampleRate: 24000 });
+                    const microphoneSource = acquiredAudioContext.createMediaStreamSource(stream);
+                    const audioProcessor = acquiredAudioContext.createScriptProcessor(8192, 1, 1);
 
                     audioProcessor.onaudioprocess = (event) => {
-                        if (this.socket && this.socket.readyState === WebSocket.OPEN) {
+                        if (
+                            this.isCurrentCall(callGeneration) &&
+                            this.socket &&
+                            this.socket.readyState === WebSocket.OPEN
+                        ) {
                             const inputBuffer = event.inputBuffer.getChannelData(0);
                             const pcmData = this.floatTo16BitPCM(inputBuffer);
                             const base64PCM = this.base64EncodeAudio(new Uint8Array(pcmData));
@@ -995,13 +1119,33 @@
                     };
 
                     microphoneSource.connect(audioProcessor);
-                    audioProcessor.connect(audioContext.destination);
+                    audioProcessor.connect(acquiredAudioContext.destination);
+
+                    this.audioContext = acquiredAudioContext;
+                    this.audioStream = stream;
+                    this.microphoneSource = microphoneSource;
+                    this.audioProcessor = audioProcessor;
                     console.log("NavTalk: Recording started");
                 })
                 .catch(error => {
+                    if (acquiredStream) {
+                        this.stopAudioStream(acquiredStream);
+                    }
+
+                    if (
+                        acquiredAudioContext &&
+                        acquiredAudioContext !== this.audioContext &&
+                        acquiredAudioContext.state !== 'closed'
+                    ) {
+                        acquiredAudioContext.close().catch(() => {});
+                    }
+
                     // Do not show a permission error for an obsolete request
                     // belonging to a call that the user already ended.
-                    if (generation !== this.recordingGeneration) {
+                    if (
+                        recordingGeneration !== this.recordingGeneration ||
+                        !this.isCurrentCall(callGeneration)
+                    ) {
                         console.log("NavTalk: Ignored obsolete microphone request error");
                         return;
                     }
@@ -1017,6 +1161,28 @@
 
             this.recordingPromise = recordingPromise;
             return recordingPromise;
+        }
+
+        stopAudioStream(stream) {
+            if (!stream) {
+                return;
+            }
+
+            try {
+                stream.getTracks().forEach(track => {
+                    if (track.readyState !== 'ended') {
+                        track.stop();
+                    }
+                    console.log('NavTalk: Audio track stopped:', track.kind);
+                });
+            } catch (err) {
+                console.warn('NavTalk: Unable to stop an audio stream:', err);
+            }
+
+            this.activeMicrophoneStreams.delete(stream);
+            if (this.audioStream === stream) {
+                this.audioStream = null;
+            }
         }
         
         stopRecording() {
@@ -1055,16 +1221,15 @@
                 }
             }
 
-            // Stop all audio stream tracks
+            // Stop every stream acquired during the call, including any stream
+            // that resolved during a start/stop race before it became audioStream.
+            const streamsToStop = new Set(this.activeMicrophoneStreams);
             if (this.audioStream) {
-                const audioStream = this.audioStream;
-                this.audioStream = null;
-
-                audioStream.getTracks().forEach(track => {
-                    track.stop();
-                    console.log('NavTalk: Audio track stopped:', track.kind);
-                });
+                streamsToStop.add(this.audioStream);
             }
+            this.audioStream = null;
+            streamsToStop.forEach(stream => this.stopAudioStream(stream));
+            this.activeMicrophoneStreams.clear();
 
             // Close and clear audio context
             if (this.audioContext) {
@@ -1082,7 +1247,6 @@
 
             console.log('NavTalk: Recording stopped');
         }
-        
         stopMediaStream(videoElement) {
             if (!videoElement) return;
             

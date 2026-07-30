@@ -322,6 +322,11 @@ For support, please contact:
 
 ## Changelog
 
+### Version 1.1.6
+- Strengthened call lifecycle cleanup so modal, inline, page-leave, and stale WebSocket paths cannot leave microphone streams active
+- Added file modification timestamps to front-end style and real-time script versions for reliable cache refreshes after updates
+- Kept global floating icon settings scoped to the floating widget and improved icon compatibility with theme styles
+
 ### Version 1.1.5
 - Redesigned the global floating assistant to match the branded dark card layout
 - Added configurable assistant title and subtitle settings

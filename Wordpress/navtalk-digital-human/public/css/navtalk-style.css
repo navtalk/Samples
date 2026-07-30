@@ -75,7 +75,7 @@
 
 .navtalk-avatar-card {
     width: 100%; /* Fill Grid cell */
-    background: #fff;
+    background: transparent;
     border-radius: 24px;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
     overflow: hidden;
@@ -282,6 +282,24 @@
     transform: scale(1.1);
 }
 
+/* Keep list call buttons transparent when themes apply global button focus colors. */
+.navtalk-avatar-list .navtalk-icon-button:focus,
+.navtalk-avatar-list .navtalk-icon-button:focus-visible {
+    background: transparent;
+    color: #fff;
+    border: none;
+    box-shadow: none;
+}
+
+/* Keep overlay download icons white when theme link colors are more specific. */
+.navtalk-avatar-overlay .navtalk-download-btn {
+    color: rgba(255, 255, 255, 0.95);
+}
+
+.navtalk-avatar-overlay .navtalk-download-btn:hover {
+    color: #fff;
+}
+
 .navtalk-icon-button svg,
 .navtalk-icon-button .navtalk-phone-icon,
 .navtalk-icon-button .navtalk-download-icon {
@@ -329,6 +347,19 @@
 /* List mode: videos default to poster frame (not autoplay) */
 .navtalk-avatar-list .navtalk-avatar-preview-video {
     /* Browsers show poster by default when not playing */
+}
+
+/* Keep list media on the same rounded clipping surface as the card.
+   This prevents Chromium video compositing seams at the bottom corners. */
+.navtalk-avatar-list .navtalk-layout-overlay .navtalk-avatar-image {
+    border-radius: inherit;
+    -webkit-clip-path: inset(0 round 24px);
+    clip-path: inset(0 round 24px);
+}
+
+.navtalk-avatar-list .navtalk-layout-overlay .navtalk-avatar-image img,
+.navtalk-avatar-list .navtalk-layout-overlay .navtalk-avatar-preview-video {
+    border-radius: inherit;
 }
 
 /* Inline mode z-index layering */
@@ -662,6 +693,18 @@
 .navtalk-modal-close:hover {
     background: rgba(255, 255, 255, 0.3);
     transform: scale(1.1);
+}
+
+/* Prevent theme button padding from shrinking the close icon. */
+#navtalk-chat-modal .navtalk-modal-close {
+    padding: 0;
+    box-sizing: border-box;
+}
+
+#navtalk-chat-modal .navtalk-modal-close svg {
+    width: 24px;
+    height: 24px;
+    flex: 0 0 24px;
 }
 
 /* ==========================================================================

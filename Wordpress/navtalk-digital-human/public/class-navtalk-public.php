@@ -24,12 +24,17 @@ class NavTalk_Public {
      * Enqueue front-end styles and scripts
      */
     public function enqueue_scripts() {
+        $style_path = NAVTALK_PLUGIN_DIR . 'public/css/navtalk-style.css';
+        $style_version = file_exists($style_path)
+            ? NAVTALK_VERSION . '.' . filemtime($style_path)
+            : NAVTALK_VERSION;
+
         // Enqueue styles
         wp_enqueue_style(
             'navtalk-style',
             NAVTALK_PLUGIN_URL . 'public/css/navtalk-style.css',
             [],
-            NAVTALK_VERSION
+            $style_version
         );
         
         // Enqueue widget styles
@@ -40,12 +45,17 @@ class NavTalk_Public {
             NAVTALK_VERSION
         );
         
+        $realtime_script_path = NAVTALK_PLUGIN_DIR . 'public/js/navtalk-realtime.js';
+        $realtime_script_version = file_exists($realtime_script_path)
+            ? NAVTALK_VERSION . '.' . filemtime($realtime_script_path)
+            : NAVTALK_VERSION;
+
         // Enqueue script
         wp_enqueue_script(
             'navtalk-realtime',
             NAVTALK_PLUGIN_URL . 'public/js/navtalk-realtime.js',
             ['jquery'],
-            NAVTALK_VERSION,
+            $realtime_script_version,
             true
         );
         

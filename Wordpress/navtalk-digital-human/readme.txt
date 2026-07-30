@@ -3,7 +3,7 @@ Contributors: navtalk
 Tags: ai, avatar, chatbot, digital human, voice chat
 Requires at least: 5.0
 Tested up to: 7.0
-Stable tag: 1.1.5
+Stable tag: 1.1.6
 Requires PHP: 7.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
@@ -116,6 +116,11 @@ Uninstalling removes all settings stored in WordPress (including the license key
 
 == Changelog ==
 
+= 1.1.6 =
+* Fix: strengthened call lifecycle cleanup so closing a modal, ending an inline call, leaving the page, or receiving a stale WebSocket callback cannot leave microphone streams active.
+* Fix: front-end styles and the real-time script now use file modification timestamps for cache busting after plugin updates.
+* Fix: global floating icon settings no longer override standalone avatar buttons, and button icons remain correctly sized and colored under theme styles.
+
 = 1.1.5 =
 * Enhancement: redesigned the global floating assistant to match the branded dark card layout with a header, framed avatar and matching toggle button.
 * Enhancement: added configurable assistant title and subtitle fields under Settings > NavTalk Digital Human.
@@ -197,6 +202,9 @@ Uninstalling removes all settings stored in WordPress (including the license key
 * Avatar video preview support
 
 == Upgrade Notice ==
+
+= 1.1.6 =
+Improves microphone and call cleanup, refreshes changed front-end assets reliably, and fixes icon styling conflicts with WordPress themes.
 
 = 1.1.5 =
 Adds the redesigned global floating assistant card, configurable title/subtitle settings, NavTalk-style portrait avatar cards, searchable Include/Exclude controls, and Name sorting.

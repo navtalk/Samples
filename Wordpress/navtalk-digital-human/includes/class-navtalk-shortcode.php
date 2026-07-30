@@ -297,7 +297,7 @@ class NavTalk_Shortcode {
                                 data-config-voice="<?php echo esc_attr($voice); ?>"
                                 data-config-tools=""
                                 style="width: <?php echo esc_attr($button_size); ?>; height: <?php echo esc_attr($button_size); ?>; background: <?php echo esc_attr($button_background); ?>; color: <?php echo esc_attr($icon_color); ?>;">
-                            <?php echo wp_kses($this->get_phone_icon(), self::allowed_icon_html()); ?>
+                            <?php echo wp_kses($this->get_phone_icon('', true), self::allowed_icon_html()); ?>
                         </button>
                     </div>
                 </div>
@@ -752,23 +752,26 @@ class NavTalk_Shortcode {
     /**
      * Get SVG icon for phone
      * 
-     * @param string $custom_icon Custom icon URL or empty for default
+     * @param string $custom_icon           Custom icon URL or empty for default.
+     * @param bool   $use_floating_settings Whether to use the global floating button icon settings.
      * @return string SVG HTML
      */
-    private function get_phone_icon($custom_icon = '') {
+    private function get_phone_icon($custom_icon = '', $use_floating_settings = false) {
         if (!empty($custom_icon)) {
             if (filter_var($custom_icon, FILTER_VALIDATE_URL)) {
                 return '<img class="navtalk-phone-icon" src="' . esc_url($custom_icon) . '" alt="" width="24" height="24" aria-hidden="true">';
             }
         }
         
-        // Check global icon settings
-        $icon_type = get_option('navtalk_floating_button_icon_type', 'default');
-        
-        if ($icon_type === 'image') {
-            $icon_image = get_option('navtalk_floating_button_icon_image', '');
-            if (!empty($icon_image)) {
-                return '<img class="navtalk-phone-icon" src="' . esc_url($icon_image) . '" alt="" width="24" height="24" aria-hidden="true">';
+        // Global floating icon settings apply only to the floating widget.
+        if ($use_floating_settings) {
+            $icon_type = get_option('navtalk_floating_button_icon_type', 'default');
+
+            if ($icon_type === 'image') {
+                $icon_image = get_option('navtalk_floating_button_icon_image', '');
+                if (!empty($icon_image)) {
+                    return '<img class="navtalk-phone-icon" src="' . esc_url($icon_image) . '" alt="" width="24" height="24" aria-hidden="true">';
+                }
             }
         }
         
