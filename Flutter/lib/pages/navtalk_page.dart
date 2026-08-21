@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_webrtc/flutter_webrtc.dart';
@@ -116,9 +115,9 @@ class _NavTalkPageState extends State<NavTalkPage> {
     NavTalkManager.instance.characterThumbnailUrl = '';
     var avatart_info_url_string = '';
     if (NavTalkManager.instance.characterId.length > 0){
-      avatart_info_url_string = '${NavTalkManager.instance.baseUrl}/avatar/detail?avatarId=${NavTalkManager.instance.characterId}';
+      avatart_info_url_string = '${NavTalkManager.instance.fetchAvatarInfoById}${NavTalkManager.instance.characterId}';
     }else{
-      avatart_info_url_string = '${NavTalkManager.instance.baseUrl}/avatar/getByName?name=${NavTalkManager.instance.characterName}';
+      avatart_info_url_string = '${NavTalkManager.instance.fetchAvatarInfoByName}${NavTalkManager.instance.characterName}';
     }
     final avatart_info_url_uri = Uri.parse(avatart_info_url_string);
     try{
@@ -581,6 +580,30 @@ class _NavTalkPageState extends State<NavTalkPage> {
         },
       );
     }
+    //控件--返回按钮
+    Widget backButton(){
+      if (!NavTalkManager.instance.isShowBackButtonInNavTalkPage){
+        return const SizedBox.shrink();
+      }
+      return GestureDetector(
+        onTap: (){
+          if (_currentNavTalkStatus == .connecting){
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please end the NavTalk call first.')),
+              );
+            return;
+          }
+          if (_currentNavTalkStatus == .connected){
+            ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Please end the NavTalk call first.')),
+              );
+            return;
+          }
+          Navigator.of(context).maybePop();
+        },
+        child: Image.asset('lib/resource/images/navtalk_back.png',fit: .cover)
+      );
+    }
     return Scaffold(
       extendBodyBehindAppBar: true,
       backgroundColor: Colors.white,
@@ -603,6 +626,8 @@ class _NavTalkPageState extends State<NavTalkPage> {
           Positioned(left: screenWidth/2-80/2-80, bottom: bottomSafeHeight+10, width: 80, height: 60, child: micphoneStatusView()),
           //摄像机按钮
           Positioned(left: screenWidth/2-80/2+80, bottom: bottomSafeHeight+10, width: 80, height: 60, child: cameraStatusView()),
+          //返回按钮
+          Positioned(left: 20, top: statusBarHeight, width: 25, height: 25, child: backButton()),
         ],
       ),
     );

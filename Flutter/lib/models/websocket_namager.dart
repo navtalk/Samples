@@ -49,9 +49,9 @@ class WebsocketManager{
     //拼接WebSocket的连接地址 
     String current_WebSocket_url = '';
     if (NavTalkManager.instance.characterId.trim().isNotEmpty){
-      current_WebSocket_url = '${NavTalkManager.instance.websocketUrl}?license=${Uri.encodeQueryComponent(NavTalkManager.instance.license)}&avatarId=${Uri.encodeQueryComponent(NavTalkManager.instance.characterId)}'; 
+      current_WebSocket_url = '${NavTalkManager.instance.navtalkBaseURL}?license=${Uri.encodeQueryComponent(NavTalkManager.instance.license)}&avatarId=${Uri.encodeQueryComponent(NavTalkManager.instance.characterId)}'; 
     }else{
-      current_WebSocket_url = '${NavTalkManager.instance.websocketUrl}?license=${Uri.encodeQueryComponent(NavTalkManager.instance.license)}&name=${Uri.encodeQueryComponent(NavTalkManager.instance.characterName)}';
+      current_WebSocket_url = '${NavTalkManager.instance.navtalkBaseURL}?license=${Uri.encodeQueryComponent(NavTalkManager.instance.license)}&name=${Uri.encodeQueryComponent(NavTalkManager.instance.characterName)}';
     }
     try{
       //开始连接WebSocket
@@ -184,20 +184,11 @@ class WebsocketManager{
       print('只有open ai模型才支持在对话中添加Function Call');
       return;
     }
-
-    final functions = <Map<String, dynamic>>[
-      {
-        'type': 'function',
-        'name': 'function_call_close_talk',
-        'description':'Close the current user session',
-        'parameters': {
-          'type': 'object',
-          'properties': {},
-          'required': [],
-        },
-      },
-    ];
-   
+    if (NavTalkManager.instance.functionCalls.length <= 0){
+      print('没有有效的Function Call数据');
+      return;
+    }
+    final functions = NavTalkManager.instance.functionCalls;
     try{
       final functionsJsonString = jsonEncode(functions);
       final message = <String, dynamic>{

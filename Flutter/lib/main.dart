@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:navtalk_flutter_sample/pages/navtalk_page.dart';
-
+import 'package:navtalk_flutter_sample/pages/home_page.dart';
 void main(){
   runApp(MyCustomerApp());
 }
@@ -10,7 +9,7 @@ class MyCustomerApp extends StatelessWidget{
   @override
   Widget build(BuildContext context){
     return MaterialApp(
-      home: NavTalkPage(),
+      home: HomePage(),
       debugShowCheckedModeBanner: false,
       themeMode: ThemeMode.light,
     );
